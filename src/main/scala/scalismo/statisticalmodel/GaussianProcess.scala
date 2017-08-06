@@ -40,7 +40,7 @@ class GaussianProcess[D <: Dim: NDSpace, Value] protected (val mean: Field[D, Va
    *
    * Sample values of the Gaussian process evaluated at the given points.
    */
-  def sampleAtPoints(domain: DiscreteDomain[D])(implicit rand: Random): DiscreteField[D, Value] = {
+  def sampleAtPoints[Dom <: DiscreteDomain[D]](domain: Dom)(implicit rand: Random): DiscreteField[D, Dom, Value] = {
     this.marginal(domain).sample()
   }
 
@@ -48,8 +48,8 @@ class GaussianProcess[D <: Dim: NDSpace, Value] protected (val mean: Field[D, Va
    * Compute the marginal distribution for the given points. The result is again a Gaussian process, whose domain
    * is defined by the given points.
    */
-  def marginal(domain: DiscreteDomain[D]): DiscreteGaussianProcess[D, Value] = {
-    val meanField = DiscreteField(domain, domain.points.toIndexedSeq.map(pt => mean(pt)))
+  def marginal[Dom <: DiscreteDomain[D]](domain: Dom): DiscreteGaussianProcess[D, Dom, Value] = {
+    val meanField = DiscreteField[D, Dom, Value](domain, domain.points.toIndexedSeq.map(pt => mean(pt)))
     val pts = domain.points.toIndexedSeq
     def newCov(i: PointId, j: PointId): DenseMatrix[Double] = {
       cov(pts(i.id), pts(j.id))
