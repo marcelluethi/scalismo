@@ -16,14 +16,15 @@
 package scalismo.common
 
 import breeze.linalg.DenseVector
-import scalismo.geometry.{ Dim, NDSpace, Point, Vector }
+import scalismo.geometry.{Dim, NDSpace, Point, Vector}
 
+import scala.annotation.unchecked.uncheckedVariance
 import scala.reflect.ClassTag
 
 /**
  * Defines a discrete set of values, where each associated to a point of the domain.
  */
-class DiscreteField[D <: Dim, Dom <: DiscreteDomain[D], A](val domain: Dom, val data: IndexedSeq[A]) extends PartialFunction[PointId, A] { self =>
+class DiscreteField[D <: Dim, +Dom <: DiscreteDomain[D], A](val domain: Dom, val data: IndexedSeq[A]) extends PartialFunction[PointId, A] { self =>
 
   def values: Iterator[A] = data.iterator
   override def apply(ptId: PointId) = data(ptId.id)
@@ -34,6 +35,8 @@ class DiscreteField[D <: Dim, Dom <: DiscreteDomain[D], A](val domain: Dom, val 
   def pointsWithIds = domain.points.zipWithIndex
 
   def foreach(f: A => Unit): Unit = values.foreach(f)
+
+
   /**
    * Returns a continuous field, where the value at each point is that of the closest point in the discrete set
    * *
@@ -46,6 +49,10 @@ class DiscreteField[D <: Dim, Dom <: DiscreteDomain[D], A](val domain: Dom, val 
   //  def interpolateGeneric[B](interpolator : Interpolate[D, A, self.type]) : Field[D, Interpolate[D, A, self.type]#B] = {
   //    Field(RealSpace[D], interpolator.evaluate(this))
   //  }
+
+  def interpolate[B](interpolator : FieldInterpolator[D, Dom, A, B]) : Field[D, B] = {
+    interpolator.interpolate(this)
+  }
 
   override def equals(other: Any): Boolean =
     other match {
