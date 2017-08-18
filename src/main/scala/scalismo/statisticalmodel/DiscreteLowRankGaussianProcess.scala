@@ -21,6 +21,7 @@ import breeze.stats.distributions.Gaussian
 import scalismo.common._
 import scalismo.geometry._
 import scalismo.kernels.{ DiscreteMatrixValuedPDKernel, MatrixValuedPDKernel }
+import scalismo.mesh.Interpolator$
 import scalismo.mesh.kdtree.KDTreeMap
 import scalismo.numerics.Sampler
 import scalismo.registration.Transformation
@@ -183,6 +184,15 @@ case class DiscreteLowRankGaussianProcess[D <: Dim: NDSpace, Dom <: DiscreteDoma
     }
 
     DiscreteLowRankGaussianProcess[D, UnstructuredPointsDomain[D], Value](newMean, newKLBasis)
+  }
+
+  def interpolate(interpolator: FieldInterpolator[D, Dom, Value]): LowRankGaussianProcess[D, Value] = {
+    val newKLBasis = for (DiscreteEigenpair(eigenVal, eigenFun) <- klBasis) yield {
+      Eigenpair(eigenVal, eigenFun.interpolate(interpolator))
+    }
+    val newMean = this.mean.interpolate(interpolator)
+
+    new LowRankGaussianProcess[D, Value](newMean, newKLBasis)
   }
 
   /**

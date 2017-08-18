@@ -15,18 +15,19 @@
  */
 package scalismo.common
 
-import scalismo.geometry.{Dim, Point}
+import scalismo.geometry.{ Dim, Point }
+import scalismo.mesh.Interpolator$
 
-case class NearestNeighborInterpolator[D <: Dim, A]() extends FieldInterpolator[D, DiscreteDomain[D], A, A] {
+case class NearestNeighborInterpolator[D <: Dim, A]() extends FieldInterpolator[D, DiscreteDomain[D], A] {
 
+  override def interpolate(df: DiscreteField[D, DiscreteDomain[D], A]): Field[D, A] = {
 
-  override def interpolate(df: DiscreteField[D, DiscreteDomain[D], A]) : Field[D, A] = {
-
-    def valueAtClosestPoint(p : Point[D]) : A = {
+    def valueAtClosestPoint(p: Point[D]): A = {
       val closestPointId = df.domain.findClosestPoint(p).id
       df(closestPointId)
     }
 
     Field(RealSpace[D], valueAtClosestPoint)
   }
+
 }

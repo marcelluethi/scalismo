@@ -59,6 +59,9 @@ trait Interpolator[@specialized(Double, Float) A] {
 }
 
 object Interpolator {
+
+  def apply[A](implicit convexInterpolator: Interpolator[A]): Interpolator[A] = convexInterpolator
+
   implicit val floatInterpolator = new Interpolator[Float] {
     override def blend(obj1: Float, obj2: Float, l: Double): Float = (obj1 * l + obj2 * (1.0 - l)).toFloat
   }
@@ -102,6 +105,10 @@ object Interpolator {
       val n = rest.size + 1.0
       Vector1D(x / n)
     }
+  }
+
+  implicit def vectorBlender[D <: Dim] = new Interpolator[Vector[D]] {
+    override def blend(obj1: Vector[D], obj2: Vector[D], l: Double): Vector[D] = obj1 + (1.0 - l) *: (obj2 - obj1)
   }
 
   implicit val vectorBlender2D = new Interpolator[Vector2D] {

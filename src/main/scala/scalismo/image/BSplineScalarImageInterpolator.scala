@@ -18,17 +18,16 @@ package scalismo.image
 
 import breeze.linalg.DenseVector
 import scalismo.common._
-import scalismo.geometry.{IntVector, Point, _3D, Vector}
+import scalismo.geometry.{ IntVector, Point, _3D, Vector }
 import scalismo.numerics.BSpline
 
-case class BSplineInterpolator[A: Scalar](degree: Int) extends FieldInterpolator[_3D, DiscreteImageDomain[_3D], A, Float] {
+case class BSplineScalarImageInterpolator[A <: AnyVal: Scalar](degree: Int) extends FieldInterpolator[_3D, DiscreteImageDomain[_3D], A] {
 
-
-  override def interpolate(discreteField: DiscreteField[_3D, DiscreteImageDomain[_3D], A]): Field[_3D, Float] = {
+  def interpolate(discreteField: DiscreteField[_3D, DiscreteImageDomain[_3D], A]): Field[_3D, A] = {
 
     val domain = discreteField.domain
 
-    def doInterpolation(): DifferentiableScalarImage[_3D] = {
+    def doInterpolation(): Field[_3D, A] = {
       val ck = determineCoefficients3D(degree, discreteField)
       val pointToIdx = domain.indexToPhysicalCoordinateTransform.inverse
 
@@ -72,9 +71,9 @@ case class BSplineInterpolator[A: Scalar](degree: Int) extends FieldInterpolator
       val bSplineNthOrder = BSpline.nthOrderBSpline(degree) _
       val bSplineNmin1thOrder = BSpline.nthOrderBSpline(degree - 1) _
 
-      def f(x: Point[_3D]) = {
+      def f(x: Point[_3D]): A = {
         val splineBasis = (x: Double, y: Double, z: Double) => bSplineNthOrder(x) * bSplineNthOrder(y) * bSplineNthOrder(z)
-        iterateOnPoints(x, splineBasis).toFloat
+        Scalar[A].fromFloat(iterateOnPoints(x, splineBasis).toFloat)
       }
 
       def df(x: Point[_3D]) = {
@@ -88,7 +87,7 @@ case class BSplineInterpolator[A: Scalar](degree: Int) extends FieldInterpolator
       }
 
       val bbox = domain.boundingBox
-      DifferentiableScalarImage(BoxDomain3D(bbox.origin, bbox.oppositeCorner), f, df)
+      Field(BoxDomain3D(bbox.origin, bbox.oppositeCorner), f)
 
     }
 
@@ -118,6 +117,4 @@ case class BSplineInterpolator[A: Scalar](degree: Int) extends FieldInterpolator
   }
 
 }
-
-
 

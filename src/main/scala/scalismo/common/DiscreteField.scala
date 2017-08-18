@@ -16,7 +16,8 @@
 package scalismo.common
 
 import breeze.linalg.DenseVector
-import scalismo.geometry.{Dim, NDSpace, Point, Vector}
+import scalismo.geometry.{ Dim, NDSpace, Point, Vector }
+import scalismo.mesh.Interpolator$
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.reflect.ClassTag
@@ -36,7 +37,6 @@ class DiscreteField[D <: Dim, +Dom <: DiscreteDomain[D], A](val domain: Dom, val
 
   def foreach(f: A => Unit): Unit = values.foreach(f)
 
-
   /**
    * Returns a continuous field, where the value at each point is that of the closest point in the discrete set
    * *
@@ -50,7 +50,7 @@ class DiscreteField[D <: Dim, +Dom <: DiscreteDomain[D], A](val domain: Dom, val
   //    Field(RealSpace[D], interpolator.evaluate(this))
   //  }
 
-  def interpolate[B](interpolator : FieldInterpolator[D, Dom, A, B]) : Field[D, B] = {
+  def interpolate(interpolator: FieldInterpolator[D, Dom, A]): Field[D, A] = {
     interpolator.interpolate(this)
   }
 

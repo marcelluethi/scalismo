@@ -16,9 +16,9 @@
 package scalismo.common
 
 import scalismo.geometry.Dim
+import scalismo.mesh.Interpolator$
 
-trait FieldInterpolator[D <: Dim, -Dom <: DiscreteDomain[D], A, B] {
+trait FieldInterpolator[D <: Dim, -Dom <: DiscreteDomain[D], A] {
 
-
-  def interpolate(df : DiscreteField[D, Dom, A]) : Field[D, B]
+  def interpolate(df: DiscreteField[D, Dom, A]): Field[D, A]
 }
