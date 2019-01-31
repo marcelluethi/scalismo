@@ -16,6 +16,7 @@
 package scalismo.common
 
 import scalismo.geometry._
+import scalismo.image.DiscreteImageDomain
 
 import scala.reflect.ClassTag
 
@@ -41,7 +42,6 @@ object Field {
         def domain = img.domain
       }
   }
-
 }
 
 /**
@@ -49,6 +49,8 @@ object Field {
  * function is defined.
  */
 trait Field[D, A] extends Function1[Point[D], A] { self =>
+
+  def ndSpace : NDSpace[D]
 
   /** a function that defines the image values. It must be defined on the full domain */
   protected[scalismo] val f: Point[D] => A
@@ -79,6 +81,25 @@ trait Field[D, A] extends Function1[Point[D], A] { self =>
     }
     override def domain = RealSpace[D]
   }
+
+
+  def sample[NewDomain <: DiscreteDomain[D]](domain: NewDomain, outsideValue: A): DiscreteField[D, NewDomain, A] = {
+
+    // TODO this should be parallelized
+    val values = domain.points.map(pt => {
+      if (isDefinedAt(pt)) f(pt)
+      else outsideValue
+    })
+    DiscreteField[D, NewDomain, A](domain, values.toIndexedSeq)(ndSpace)
+  }
+
+
+}
+
+
+case class DifferentiableField[D : NDSpace, A, DxA](domain : Domain[D],
+                                                    f : Point[D] => A,
+                                                    df : Point[D] => DxA) extends Field[D, A] {
 
 }
 

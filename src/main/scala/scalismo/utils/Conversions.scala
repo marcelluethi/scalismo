@@ -15,9 +15,10 @@
  */
 package scalismo.utils
 
+import scalismo.common.DiscreteField.DiscreteImage
 import scalismo.common._
 import scalismo.geometry._
-import scalismo.image.{DiscreteImageDomain, DiscreteScalarImage}
+import scalismo.image.DiscreteImageDomain
 import scalismo.io.ImageIO
 import scalismo.mesh._
 import spire.math.{UByte, UInt, ULong, UShort}
@@ -336,7 +337,7 @@ object MeshConversion {
 }
 
 trait CanConvertToVtk[D] {
-  def toVtk[Pixel: Scalar: ClassTag: TypeTag](img: DiscreteScalarImage[D, Pixel]): vtkStructuredPoints = {
+  def toVtk[Pixel: Scalar: ClassTag: TypeTag](img: DiscreteImage[D, Pixel]): vtkStructuredPoints = {
     val sp = new vtkStructuredPoints()
     sp.SetNumberOfScalarComponents(1, new vtkInformation())
     val dataArray = VtkHelpers.scalarArrayToVtkDataArray(img.data, 1)
@@ -354,7 +355,7 @@ trait CanConvertToVtk[D] {
 
   def setDomainInfo(domain: DiscreteImageDomain[D], sp: vtkStructuredPoints): vtkStructuredPoints
 
-  def fromVtk[Pixel: Scalar: TypeTag: ClassTag](sp: vtkImageData): Try[DiscreteScalarImage[D, Pixel]]
+  def fromVtk[Pixel: Scalar: TypeTag: ClassTag](sp: vtkImageData): Try[DiscreteImage[D, Pixel]]
 
   // ATTENTION: Writing out (signed) bytes using vtkCharArray seems to be broken in VTK, so we need to work around it.
   // We do this by writing the bytes into a vtkUnsignedCharArray first, then converting the scalar data.
@@ -499,11 +500,11 @@ object CanConvertToVtk {
 
 object ImageConversion {
 
-  def imageToVtkStructuredPoints[D: CanConvertToVtk, Pixel: Scalar: ClassTag: TypeTag](img: DiscreteScalarImage[D, Pixel]): vtkStructuredPoints = {
+  def imageToVtkStructuredPoints[D: CanConvertToVtk, Pixel: Scalar: ClassTag: TypeTag](img: DiscreteImage[D, Pixel]): vtkStructuredPoints = {
     implicitly[CanConvertToVtk[D]].toVtk(img)
   }
 
-  def vtkStructuredPointsToScalarImage[D: CanConvertToVtk, Pixel: Scalar: TypeTag: ClassTag](sp: vtkImageData): Try[DiscreteScalarImage[D, Pixel]] = {
+  def vtkStructuredPointsToScalarImage[D: CanConvertToVtk, Pixel: Scalar: TypeTag: ClassTag](sp: vtkImageData): Try[DiscreteImage[D, Pixel]] = {
     implicitly[CanConvertToVtk[D]].fromVtk(sp)
   }
 }

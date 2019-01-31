@@ -18,14 +18,14 @@ package scalismo.statisticalmodel.asm
 
 import breeze.linalg.DenseVector
 import ncsa.hdf.`object`.Group
-import scalismo.common.{ Domain, Field, VectorField }
-import scalismo.geometry.{ Point, _3D }
-import scalismo.image.DiscreteScalarImage
+import scalismo.common.DiscreteField.DiscreteImage
+import scalismo.common.{Domain, Field, VectorField}
+import scalismo.geometry.{Point, _3D}
 import scalismo.image.filter.DiscreteImageFilter
 import scalismo.io.HDF5File
 import scalismo.statisticalmodel.asm.PreprocessedImage.Type
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 /**
  * A preprocessed image, which can be fed to a [[FeatureExtractor]].
@@ -50,7 +50,7 @@ trait PreprocessedImage extends Field[_3D, DenseVector[Float]] {
  * @see ImagePreprocessorIOHandler
  * @see ImagePreprocessorIOHandlers
  */
-trait ImagePreprocessor extends Function1[DiscreteScalarImage[_3D, Float], PreprocessedImage] with HasIOMetadata
+trait ImagePreprocessor extends Function1[DiscreteImage[_3D, Float], PreprocessedImage] with HasIOMetadata
 
 /**
  * IO Handler for the [[ImagePreprocessor]] type.
@@ -79,7 +79,7 @@ object IdentityImagePreprocessor {
  * @param ioMetadata IO Metadata
  */
 case class IdentityImagePreprocessor(override val ioMetadata: IOMetadata = IdentityImagePreprocessor.IOMetadata_Default) extends ImagePreprocessor {
-  override def apply(inputImage: DiscreteScalarImage[_3D, Float]): PreprocessedImage = new PreprocessedImage {
+  override def apply(inputImage: DiscreteImage[_3D, Float]): PreprocessedImage = new PreprocessedImage {
     override val valueType = PreprocessedImage.Intensity
 
     val interpolated = inputImage.interpolate(3)
@@ -125,7 +125,7 @@ object GaussianGradientImagePreprocessor {
  * @param ioMetadata IO Metadata
  */
 case class GaussianGradientImagePreprocessor(stddev: Float, override val ioMetadata: IOMetadata = GaussianGradientImagePreprocessor.IOMetadata_Default) extends ImagePreprocessor {
-  override def apply(inputImage: DiscreteScalarImage[_3D, Float]): PreprocessedImage = new PreprocessedImage {
+  override def apply(inputImage: DiscreteImage[_3D, Float]): PreprocessedImage = new PreprocessedImage {
     override val valueType = PreprocessedImage.Gradient
 
     val gradientImage: VectorField[_3D, _3D] = {

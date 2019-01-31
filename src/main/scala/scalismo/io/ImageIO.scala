@@ -15,21 +15,22 @@
  */
 package scalismo.io
 
-import java.io.{ File, IOException }
+import java.io.{File, IOException}
 
-import breeze.linalg.{ DenseMatrix, DenseVector }
-import niftijio.{ NiftiHeader, NiftiVolume }
-import scalismo.common.{ RealSpace, Scalar }
+import breeze.linalg.{DenseMatrix, DenseVector}
+import niftijio.{NiftiHeader, NiftiVolume}
+import scalismo.common.DiscreteField.DiscreteImage
+import scalismo.common.{DiscreteField, RealSpace, Scalar}
 import scalismo.geometry._
-import scalismo.image.{ DiscreteImageDomain, DiscreteScalarImage }
+import scalismo.image.DiscreteImageDomain
 import scalismo.registration._
-import scalismo.utils.{ CanConvertToVtk, ImageConversion, VtkHelpers }
-import spire.math.{ UByte, UInt, UShort }
+import scalismo.utils.{CanConvertToVtk, ImageConversion, VtkHelpers}
+import spire.math.{UByte, UInt, UShort}
 import vtk._
 
 import scala.reflect.ClassTag
-import scala.reflect.runtime.universe.{ TypeTag, typeOf }
-import scala.util.{ Failure, Success, Try }
+import scala.reflect.runtime.universe.{TypeTag, typeOf}
+import scala.util.{Failure, Success, Try}
 
 /**
  * Implements methods for reading and writing D-dimensional images
@@ -176,11 +177,11 @@ object ImageIO {
   }
 
   trait WriteNifti[D] {
-    def write[A: Scalar: TypeTag: ClassTag](img: DiscreteScalarImage[D, A], f: File): Try[Unit]
+    def write[A: Scalar: TypeTag: ClassTag](img: DiscreteImage[D, A], f: File): Try[Unit]
   }
 
   implicit object DiscreteScalarImage3DNifti extends WriteNifti[_3D] {
-    def write[A: Scalar: TypeTag: ClassTag](img: DiscreteScalarImage[_3D, A], f: File): Try[Unit] = {
+    def write[A: Scalar: TypeTag: ClassTag](img: DiscreteImage[_3D, A], f: File): Try[Unit] = {
       writeNifti[A](img, f)
     }
   }
@@ -193,7 +194,7 @@ object ImageIO {
    * @tparam S Voxel type of the image
    *
    */
-  def read3DScalarImage[S: Scalar: TypeTag: ClassTag](file: File, resampleOblique: Boolean = false, favourQform: Boolean = false): Try[DiscreteScalarImage[_3D, S]] = {
+  def read3DScalarImage[S: Scalar: TypeTag: ClassTag](file: File, resampleOblique: Boolean = false, favourQform: Boolean = false): Try[DiscreteImage[_3D, S]] = {
 
     file match {
       case f if f.getAbsolutePath.endsWith(".vtk") =>
@@ -230,8 +231,8 @@ object ImageIO {
    * @tparam S Voxel type of the image
    *
    */
-  def read3DScalarImageAsType[S: Scalar: TypeTag: ClassTag](file: File, resampleOblique: Boolean = false, favourQform: Boolean = false): Try[DiscreteScalarImage[_3D, S]] = {
-    def loadAs[T: Scalar: TypeTag: ClassTag]: Try[DiscreteScalarImage[_3D, T]] = {
+  def read3DScalarImageAsType[S: Scalar: TypeTag: ClassTag](file: File, resampleOblique: Boolean = false, favourQform: Boolean = false): Try[DiscreteImage[_3D, S]] = {
+    def loadAs[T: Scalar: TypeTag: ClassTag]: Try[DiscreteImage[_3D, T]] = {
       read3DScalarImage[T](file, resampleOblique, favourQform)
     }
 
@@ -266,7 +267,7 @@ object ImageIO {
    * @tparam S Voxel type of the image
    *
    */
-  def read2DScalarImage[S: Scalar: ClassTag: TypeTag](file: File): Try[DiscreteScalarImage[_2D, S]] = {
+  def read2DScalarImage[S: Scalar: ClassTag: TypeTag](file: File): Try[DiscreteImage[_2D, S]] = {
 
     file match {
       case f if f.getAbsolutePath.endsWith(".vtk") =>
@@ -300,8 +301,8 @@ object ImageIO {
    * @tparam S Voxel type of the image
    *
    */
-  def read2DScalarImageAsType[S: Scalar: TypeTag: ClassTag](file: File): Try[DiscreteScalarImage[_2D, S]] = {
-    def loadAs[T: Scalar: TypeTag: ClassTag]: Try[DiscreteScalarImage[_2D, T]] = {
+  def read2DScalarImageAsType[S: Scalar: TypeTag: ClassTag](file: File): Try[DiscreteImage[_2D, S]] = {
+    def loadAs[T: Scalar: TypeTag: ClassTag]: Try[DiscreteImage[_2D, T]] = {
       read2DScalarImage[T](file)
     }
 
@@ -330,7 +331,7 @@ object ImageIO {
     result
   }
 
-  private def readNifti[S: Scalar: TypeTag: ClassTag](file: File, resampleOblique: Boolean, favourQform: Boolean): Try[DiscreteScalarImage[_3D, S]] = {
+  private def readNifti[S: Scalar: TypeTag: ClassTag](file: File, resampleOblique: Boolean, favourQform: Boolean): Try[DiscreteImage[_3D, S]] = {
 
     for {
 
@@ -390,7 +391,7 @@ object ImageIO {
       if (approxErrors.max > 0.01f) throw new Exception("Unable to approximate Nifti affine transform with anisotropic similarity transform")
       else {
         val newDomain = DiscreteImageDomain[_3D](IntVector(nx, ny, nz), transform)
-        val im = DiscreteScalarImage(newDomain, volume.dataAsScalarArray)
+        val im = DiscreteField[_3D, DiscreteImageDomain[_3D], S](newDomain, volume.dataAsScalarArray)
 
         // if the domain is rotated, we resample the image to RAI voxel ordering
         if (rotationResiduals.exists(_ >= 0.001)) {
@@ -470,7 +471,7 @@ object ImageIO {
     }
   }
 
-  def writeNifti[S: Scalar: TypeTag: ClassTag](img: DiscreteScalarImage[_3D, S], file: File): Try[Unit] = {
+  def writeNifti[S: Scalar: TypeTag: ClassTag](img: DiscreteImage[_3D, S], file: File): Try[Unit] = {
 
     val scalarConv = implicitly[Scalar[S]]
 
@@ -523,7 +524,7 @@ object ImageIO {
     }
   }
 
-  def writeVTK[D: NDSpace: CanConvertToVtk, S: Scalar: TypeTag: ClassTag](img: DiscreteScalarImage[D, S], file: File): Try[Unit] = {
+  def writeVTK[D: NDSpace: CanConvertToVtk, S: Scalar: TypeTag: ClassTag](img: DiscreteImage[D, S], file: File): Try[Unit] = {
 
     val imgVtk = ImageConversion.imageToVtkStructuredPoints(img)
 

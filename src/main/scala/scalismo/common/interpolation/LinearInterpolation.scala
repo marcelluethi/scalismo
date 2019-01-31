@@ -16,9 +16,10 @@
 
 package scalismo.common.interpolation
 
-import scalismo.common.{ DiscreteField, Field }
+import scalismo.common.{DiscreteField, Field, UnstructuredPointsDomain}
 import scalismo.geometry._
 import scalismo.image.DiscreteImageDomain
+import scalismo.mesh.{TriangleList, TriangleMesh}
 import scalismo.numerics.ValueInterpolator
 
 trait LinearImageInterpolator[D, A] extends FieldInterpolator[D, DiscreteImageDomain[D], A] {
@@ -43,14 +44,34 @@ trait LinearImageInterpolator[D, A] extends FieldInterpolator[D, DiscreteImageDo
 
 object LinearImageInterpolator {
 
-  def apply[D, A: ValueInterpolator]()(implicit interpolator: LinearImageInterpolator[D, A]): LinearImageInterpolator[D, A] = interpolator
+  def apply[D](implicit interpolator : LinearImageInterpolator[D, _]) : LinearImageInterpolator[D, _] =
+    interpolator
 
-  implicit def linearImageInterpolator1D[A: ValueInterpolator] = LinearImageInterpolator1D[A]()
+  trait Create[D] {
+    def createLinearImageInterpolator[A : ValueInterpolator]() : LinearImageInterpolator[D, A]
+  }
 
-  implicit def linearImageInterpolator2D[A: ValueInterpolator] = LinearImageInterpolator2D[A]()
+  implicit object create1D extends Create[_1D] {
+    override def createLinearImageInterpolator[A : ValueInterpolator]():
+    LinearImageInterpolator[_1D, A] = new LinearImageInterpolator1D[A]
+  }
 
-  implicit def linearImageInterpolator3D[A: ValueInterpolator] = LinearImageInterpolator3D[A]()
+  implicit object create2D extends Create[_2D] {
+    override def createLinearImageInterpolator[A : ValueInterpolator]():
+    LinearImageInterpolator[_2D, A] = new LinearImageInterpolator2D[A]
+  }
+
+  implicit object create3D extends Create[_3D] {
+    override def createLinearImageInterpolator[A : ValueInterpolator]():
+    LinearImageInterpolator[_3D, A] = new LinearImageInterpolator3D[A]
+  }
+
+
+  def create[D, A](implicit vi : ValueInterpolator[A], creator : Create[D]) : LinearImageInterpolator[D, A] = {
+    creator.createLinearImageInterpolator()
+  }
 }
+
 
 case class LinearImageInterpolator1D[A: ValueInterpolator]() extends LinearImageInterpolator[_1D, A] {
 

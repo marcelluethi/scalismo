@@ -15,11 +15,12 @@
  */
 package scalismo.image
 
+import scalismo.common.DiscreteField.DiscreteImage
 import scalismo.common._
 import scalismo.geometry._
 import scalismo.image.filter.Filter
-import scalismo.numerics.{ GridSampler, Integrator }
-import scalismo.registration.{ CanDifferentiate, Transformation }
+import scalismo.numerics.{GridSampler, Integrator}
+import scalismo.registration.{CanDifferentiate, Transformation}
 
 import scala.reflect.ClassTag
 
@@ -105,7 +106,7 @@ class ScalarImage[D: NDSpace] protected (override val domain: Domain[D], overrid
    * Returns a discrete scalar image with the given domain, whose values are obtained by sampling the scalarImage at the domain points.
    * If the image is not defined at a domain point, the outside value is used.
    */
-  def sample[Pixel: Scalar: ClassTag](domain: DiscreteImageDomain[D], outsideValue: Float)(implicit ev: DiscreteScalarImage.Create[D]): DiscreteScalarImage[D, Pixel] = {
+  def sample[Pixel: Scalar: ClassTag](domain: DiscreteImageDomain[D], outsideValue: Float): DiscreteImage[D, Pixel] = {
     val numeric = implicitly[Scalar[Pixel]]
     val convertedOutsideValue = numeric.fromFloat(outsideValue)
 
@@ -117,7 +118,7 @@ class ScalarImage[D: NDSpace] protected (override val domain: Domain[D], overrid
       }).toArray
     }
 
-    DiscreteScalarImage(domain, ScalarArray(parallelArrays.reduce(_ ++ _)))
+    DiscreteField[D, DiscreteImageDomain[D], Pixel](domain, ScalarArray(parallelArrays.reduce(_ ++ _)))
   }
 
 }
