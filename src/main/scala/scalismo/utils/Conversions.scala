@@ -46,7 +46,7 @@ object VtkHelpers {
   // ATTENTION: Writing out (signed) bytes using vtkCharArray seems to be broken in VTK, so we need to work around it.
   // We do this by writing the bytes into a vtkUnsignedCharArray first, then converting the scalar data.
   // This conversion must take place on the vtkStructuredPoints object containing the data, so we leave it to the caller of this method.
-  def scalarArrayToVtkDataArray[A: TypeTag](data: ScalarArray[A], numComp: Int): vtkDataArray = {
+  def scalarArrayToVtkDataArray[A: Scalar : TypeTag](data: IndexedSeq[A], numComp: Int): vtkDataArray = {
     def init[T <: vtkDataArray](a: T): T = {
       a.SetNumberOfComponents(numComp)
       a.SetNumberOfTuples(data.length / numComp)
@@ -384,7 +384,7 @@ object CanConvertToVtk {
       sp
     }
 
-    override def fromVtk[Pixel: Scalar: TypeTag: ClassTag](sp: vtkImageData): Try[DiscreteScalarImage[_2D, Pixel]] = {
+    override def fromVtk[Pixel: Scalar: TypeTag: ClassTag](sp: vtkImageData): Try[DiscreteImage[_2D, Pixel]] = {
       if (sp.GetNumberOfScalarComponents() != 1) {
         return Failure(new Exception(s"The image is not a scalar image (number of components is ${sp.GetNumberOfScalarComponents()}"))
       }
@@ -408,7 +408,7 @@ object CanConvertToVtk {
       val scalars = sp.GetPointData().GetScalars()
 
       val pixelArrayOrFailure = VtkHelpers.vtkDataArrayToScalarArray[Pixel](sp.GetScalarType(), scalars)
-      pixelArrayOrFailure.map(pixelArray => DiscreteScalarImage(domain, pixelArray))
+      pixelArrayOrFailure.map(pixelArray => DiscreteField(domain, pixelArray))
 
     }
   }
@@ -468,7 +468,7 @@ object CanConvertToVtk {
       conv.GetStructuredPointsOutput()
     }
 
-    override def fromVtk[Pixel: Scalar: TypeTag: ClassTag](sp: vtkImageData): Try[DiscreteScalarImage[_3D, Pixel]] = {
+    override def fromVtk[Pixel: Scalar: TypeTag: ClassTag](sp: vtkImageData): Try[DiscreteImage[_3D, Pixel]] = {
       if (sp.GetNumberOfScalarComponents() != 1) {
         return Failure(new Exception(s"The image is not a scalar image (number of components is ${sp.GetNumberOfScalarComponents()}"))
       }
@@ -491,7 +491,7 @@ object CanConvertToVtk {
       val domain = DiscreteImageDomain[_3D](origin, spacing, size)
       val scalars = sp.GetPointData().GetScalars()
       val pixelArrayOrFailure = VtkHelpers.vtkDataArrayToScalarArray[Pixel](sp.GetScalarType(), scalars)
-      pixelArrayOrFailure.map(pixelArray => DiscreteScalarImage(domain, pixelArray))
+      pixelArrayOrFailure.map(pixelArray => DiscreteField(domain, pixelArray))
     }
 
   }

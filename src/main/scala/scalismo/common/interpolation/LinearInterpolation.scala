@@ -44,9 +44,6 @@ trait LinearImageInterpolator[D, A] extends FieldInterpolator[D, DiscreteImageDo
 
 object LinearImageInterpolator {
 
-  def apply[D](implicit interpolator : LinearImageInterpolator[D, _]) : LinearImageInterpolator[D, _] =
-    interpolator
-
   trait Create[D] {
     def createLinearImageInterpolator[A : ValueInterpolator]() : LinearImageInterpolator[D, A]
   }

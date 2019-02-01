@@ -20,43 +20,13 @@ import scalismo.image.DiscreteImageDomain
 
 import scala.reflect.ClassTag
 
-/**
- * Utility functions to create and manipulate images
- */
-object Field {
-
-  def apply[D, A](dom: Domain[D], fun: Point[D] => A) = new Field[D, A] {
-    override def domain = dom
-    override val f = fun
-  }
-
-  /**
-   * Lifts a function between pixel values such that it acts on image intensities.
-   * This is useful to write functions that manipulate the image intensities.
-   */
-  def lift[D, A](fl: A => A): Field[D, A] => Field[D, A] = {
-    img: Field[D, A] =>
-      new Field[D, A] {
-        override def apply(x: Point[D]) = fl(img.apply(x))
-        override val f = img.f
-        def domain = img.domain
-      }
-  }
-}
 
 /**
  * An image is simply a function from points to values, together with a domain on which the
  * function is defined.
  */
-trait Field[D, A] extends Function1[Point[D], A] { self =>
+class Field[D : NDSpace, A](val domain : Domain[D], val f : Point[D] => A) extends Function1[Point[D], A] { self =>
 
-  def ndSpace : NDSpace[D]
-
-  /** a function that defines the image values. It must be defined on the full domain */
-  protected[scalismo] val f: Point[D] => A
-
-  /** The domain on which the image is defined */
-  def domain: Domain[D]
 
   /** True if the image is defined at the given point */
   def isDefinedAt(pt: Point[D]): Boolean = domain.isDefinedAt(pt)
@@ -74,12 +44,15 @@ trait Field[D, A] extends Function1[Point[D], A] { self =>
    * Lifts the definition of the value function such that it is defined everywhere,
    * but yields none if the value is outside of the domain
    */
-  def liftValues: (Point[D] => Option[A]) = new Field[D, Option[A]] {
-    override val f = { (x: Point[D]) =>
-      if (self.isDefinedAt(x)) Some(self.f(x))
-      else None
+  def liftValues: (Point[D] => Option[A]) =  {
+      val optionF = { (x: Point[D]) =>
+        if (self.isDefinedAt(x)) Some(self.f(x))
+        else None
+      }
+
+      new Field[D, Option[A]](domain, optionF) {
     }
-    override def domain = RealSpace[D]
+    optionF
   }
 
 
@@ -90,67 +63,55 @@ trait Field[D, A] extends Function1[Point[D], A] { self =>
       if (isDefinedAt(pt)) f(pt)
       else outsideValue
     })
-    DiscreteField[D, NewDomain, A](domain, values.toIndexedSeq)(ndSpace)
+    DiscreteField[D, NewDomain, A](domain, values.toIndexedSeq)
+  }
+  def +(that: Field[D, A])(implicit scalar : Scalar[A]): Field[D, A] = {
+    def f(x: Point[D]): A = scalar.fromDouble(scalar.toDouble(this.f(x)) + scalar.toDouble(that.f(x)))
+    new Field[D, A](Domain.intersection[D](domain, that.domain), f)
   }
 
+  /** subtract two images. The domain of the new image is the intersection of the domains of the individual images*/
+  def -(that: Field[D, A])(implicit scalar : Scalar[A]): Field[D, A] = {
+    def f(x: Point[D]): A = scalar.fromDouble(scalar.toDouble(this.f(x)) - scalar.toDouble(that.f(x)))
+    val newDomain = Domain.intersection[D](domain, that.domain)
+    new Field[D, A](newDomain, f)
+  }
+
+  /** scalar multiplication of a vector field */
+  def *(s: Double)(implicit scalar : Scalar[A]): Field[D, A] = {
+
+    def f(x: Point[D]): A = scalar.fromDouble(scalar.toDouble(this.f(x)) * s)
+    new Field[D, A](domain, f)
+  }
 
 }
 
 
-case class DifferentiableField[D : NDSpace, A, DxA](domain : Domain[D],
+/**
+  * Utility functions to create and manipulate images
+  */
+object Field {
+
+  def apply[D : NDSpace, A](dom: Domain[D], fun: Point[D] => A) = new Field[D, A](dom, fun) {}
+
+  /**
+    * Lifts a function between pixel values such that it acts on image intensities.
+    * This is useful to write functions that manipulate the image intensities.
+    */
+  def lift[D : NDSpace, A](fl: A => A): Field[D, A] => Field[D, A] = {
+    img: Field[D, A] => {
+      val f = (x: Point[D]) => fl(img.apply(x))
+      new Field(img.domain, f)
+    }
+  }
+}
+
+class DifferentiableField[D : NDSpace, A, DxA](domain : Domain[D],
                                                     f : Point[D] => A,
-                                                    df : Point[D] => DxA) extends Field[D, A] {
+                                                    df : Point[D] => DxA) extends Field[D, A](domain, f) {
+
+  def differentiate: Field[D, DxA] = Field(domain, df)
 
 }
 
-/**
- * A scalar valued field.
- */
-case class ScalarField[D, A: Scalar: ClassTag](domain: Domain[D], f: Point[D] => A) extends Field[D, A] {
 
-  val ev = implicitly[Scalar[A]]
-  /** adds two images. The domain of the new image is the intersection of both */
-  def +(that: ScalarField[D, A]): ScalarField[D, A] = {
-    def f(x: Point[D]): A = ev.fromDouble(ev.toDouble(this.f(x)) + ev.toDouble(that.f(x)))
-    new ScalarField(Domain.intersection[D](domain, that.domain), f)
-  }
-
-  /** subtract two images. The domain of the new image is the intersection of the domains of the individual images*/
-  def -(that: ScalarField[D, A]): ScalarField[D, A] = {
-    def f(x: Point[D]): A = ev.fromDouble(ev.toDouble(this.f(x)) - ev.toDouble(that.f(x)))
-    val newDomain = Domain.intersection[D](domain, that.domain)
-    new ScalarField(newDomain, f)
-  }
-
-  /** scalar multiplication of a vector field */
-  def *(s: Double): ScalarField[D, A] = {
-
-    def f(x: Point[D]): A = ev.fromDouble(ev.toDouble(this.f(x)) * s)
-    new ScalarField(domain, f)
-  }
-}
-
-/**
- * An vector valued image.
- */
-case class VectorField[D, DO](domain: Domain[D], f: Point[D] => EuclideanVector[DO]) extends Field[D, EuclideanVector[DO]] {
-
-  /** adds two images. The domain of the new image is the intersection of both */
-  def +(that: VectorField[D, DO]): VectorField[D, DO] = {
-    def f(x: Point[D]): EuclideanVector[DO] = this.f(x) + that.f(x)
-    new VectorField(Domain.intersection[D](domain, that.domain), f)
-  }
-
-  /** subtract two images. The domain of the new image is the intersection of the domains of the individual images*/
-  def -(that: VectorField[D, DO]): VectorField[D, DO] = {
-    def f(x: Point[D]): EuclideanVector[DO] = this.f(x) - that.f(x)
-    val newDomain = Domain.intersection[D](domain, that.domain)
-    new VectorField(newDomain, f)
-  }
-
-  /** scalar multiplication of a vector field */
-  def *(s: Double): VectorField[D, DO] = {
-    def f(x: Point[D]): EuclideanVector[DO] = this.f(x) * s
-    new VectorField(domain, f)
-  }
-}

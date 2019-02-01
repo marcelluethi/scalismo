@@ -29,29 +29,25 @@ import scala.annotation._
  *  A transformation in our library is seen as a particular type of Field (or image)  mapping points
  *  to values that are also of type [[scalismo.geometry.Point]]
  */
-trait Transformation[D] extends Field[D, Point[D]] {}
 /** Trait for parametric D-dimensional transformation */
+
+class Transformation[D : NDSpace](domain : Domain[D], t : Point[D] => Point[D]) extends Field(domain, t)
 
 object Transformation {
 
   /**
    * Create a transformation defined on the whole real space with the given function
    */
-  def apply[D](t: Point[D] => Point[D]): Transformation[D] = {
-    new Transformation[D] {
-      override val f: (Point[D]) => Point[D] = t
-
-      override def domain: Domain[D] = RealSpace[D]
-    }
+  def apply[D : NDSpace](t: Point[D] => Point[D]): Transformation[D] = {
+    new Transformation[D](RealSpace[D], t)
   }
 
   /**
    * Returns a new transformation that memoizes (caches) the values that have already been
    * computed. The size of the cache used is given by the argument cacheSizeHint.
    */
-  def memoize[D](t: Transformation[D], cacheSizeHint: Int) = new Transformation[D] {
-    override protected[scalismo] val f: (Point[D]) => Point[D] = Memoize(t.f, cacheSizeHint)
-    override def domain: Domain[D] = t.domain
+  def memoize[D : NDSpace](t: Transformation[D], cacheSizeHint: Int) = {
+    new Transformation[D](t.domain, Memoize(t.f, cacheSizeHint))
   }
 
 }

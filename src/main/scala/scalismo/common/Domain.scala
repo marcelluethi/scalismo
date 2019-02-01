@@ -16,7 +16,7 @@
 package scalismo.common
 
 import scalismo.geometry._
-import scalismo.registration.{ CanInvert, Transformation }
+import scalismo.registration.{CanInvert, Transformation}
 
 trait Domain[D] {
   self =>
