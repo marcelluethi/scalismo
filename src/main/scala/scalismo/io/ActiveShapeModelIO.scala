@@ -15,9 +15,9 @@
  */
 package scalismo.io
 
-import java.io.{ File, IOException }
+import java.io.{File, IOException}
 
-import breeze.linalg.{ DenseMatrix, DenseVector }
+import breeze.linalg.{DenseMatrix, DenseVector}
 import ncsa.hdf.`object`.Group
 import scalismo.common.PointId
 import scalismo.geometry._3D
@@ -26,7 +26,7 @@ import scalismo.statisticalmodel.MultivariateNormalDistribution
 import scalismo.statisticalmodel.asm._
 
 import scala.collection.immutable
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 object ActiveShapeModelIO {
 

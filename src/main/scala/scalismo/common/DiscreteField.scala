@@ -17,10 +17,8 @@ package scalismo.common
 
 import breeze.linalg.DenseVector
 import scalismo.common.interpolation.FieldInterpolator
-import scalismo.geometry.{EuclideanVector, IntVector, NDSpace, Point}
+import scalismo.geometry.{IntVector, NDSpace}
 import scalismo.image.DiscreteImageDomain
-
-import scala.reflect.ClassTag
 
 /**
  * Defines a discrete set of values, where each associated to a point of the domain.

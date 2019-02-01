@@ -25,7 +25,7 @@ import spray.json._
 
 import scala.io.Source
 import scala.language.implicitConversions
-import scala.util.{ Failure, Try }
+import scala.util.{Failure, Try}
 
 object LandmarkIO {
 

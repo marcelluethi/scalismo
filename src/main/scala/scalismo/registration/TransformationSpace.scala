@@ -31,23 +31,37 @@ import scala.annotation._
  */
 /** Trait for parametric D-dimensional transformation */
 
-class Transformation[D : NDSpace](domain : Domain[D], t : Point[D] => Point[D]) extends Field(domain, t)
+trait Transformation[D] extends PartialFunction[Point[D], Point[D]] {
+  def domain : Domain[D]
+  def t : Point[D] => Point[D]
+
+  override def apply(p : Point[D]) : Point[D] = t(p)
+  override def isDefinedAt(x: Point[D]): Boolean = {
+    domain.isDefinedAt(x)
+  }
+}
 
 object Transformation {
 
   /**
    * Create a transformation defined on the whole real space with the given function
    */
-  def apply[D : NDSpace](t: Point[D] => Point[D]): Transformation[D] = {
-    new Transformation[D](RealSpace[D], t)
+  def apply[D : NDSpace](transformation: Point[D] => Point[D]): Transformation[D] = {
+    new Transformation[D] {
+      override val domain =RealSpace[D]
+      override val t = transformation
+    }
   }
 
   /**
    * Returns a new transformation that memoizes (caches) the values that have already been
    * computed. The size of the cache used is given by the argument cacheSizeHint.
    */
-  def memoize[D : NDSpace](t: Transformation[D], cacheSizeHint: Int) = {
-    new Transformation[D](t.domain, Memoize(t.f, cacheSizeHint))
+  def memoize[D : NDSpace](transformation: Transformation[D], cacheSizeHint: Int) = {
+    new Transformation[D] {
+      override val domain = transformation.domain
+      override val t = Memoize(transformation.t, cacheSizeHint)
+    }
   }
 
 }
@@ -160,7 +174,7 @@ class ProductTransformationSpace[D, OT <: ParametricTransformation[D] with CanDi
 case class CompositeTransformation[D](outerTransform: ParametricTransformation[D] with CanDifferentiate[D], innerTransform: ParametricTransformation[D] with CanDifferentiate[D]) extends ParametricTransformation[D] with CanDifferentiate[D] {
 
   override val domain = innerTransform.domain
-  override val f = (x: Point[D]) => {
+  override val t = (x: Point[D]) => {
     (outerTransform compose innerTransform)(x)
   }
 
@@ -185,7 +199,7 @@ case class ProductTransformation[D](outerTransform: ParametricTransformation[D] 
   /** The domain on which the image is defined */
   override def domain: Domain[D] = compositeTransformation.domain
 
-  override val f: (Point[D]) => Point[D] = compositeTransformation.f
+  override val t: (Point[D]) => Point[D] = compositeTransformation.t
 }
 
 /**
@@ -215,13 +229,13 @@ object TranslationSpace {
  *
  *  @param t Translation vector
  */
-case class TranslationTransform[D: NDSpace](t: EuclideanVector[D]) extends ParametricTransformation[D] with CanInvert[D] with CanDifferentiate[D] {
-  override val f = (pt: Point[D]) => pt + t
+case class TranslationTransform[D: NDSpace](translationVector: EuclideanVector[D]) extends ParametricTransformation[D] with CanInvert[D] with CanDifferentiate[D] {
+  override val t = (pt: Point[D]) => pt + translationVector
   override val domain = RealSpace[D]
   override def takeDerivative(x: Point[D]): SquareMatrix[D] = SquareMatrix.eye[D]
-  override def inverse: TranslationTransform[D] = new TranslationTransform(t * (-1f))
+  override def inverse: TranslationTransform[D] = new TranslationTransform(translationVector * (-1f))
   /**parameters are the coordinates of the translation vector*/
-  val parameters = t.toBreezeVector
+  val parameters = translationVector.toBreezeVector
 }
 
 /**
@@ -411,7 +425,7 @@ abstract class RotationTransform[D: NDSpace] extends ParametricTransformation[D]
 }
 
 private case class RotationTransform3D(rotMatrix: SquareMatrix[_3D], val center: Point[_3D]) extends RotationTransform[_3D] {
-  override val f = (pt: Point[_3D]) => {
+  override val t = (pt: Point[_3D]) => {
     val ptCentered = pt - center
     val rotCentered = rotMatrix * ptCentered
     center + EuclideanVector(rotCentered(0), rotCentered(1), rotCentered(2))
@@ -431,7 +445,7 @@ private case class RotationTransform3D(rotMatrix: SquareMatrix[_3D], val center:
 }
 
 private case class RotationTransform2D(rotMatrix: SquareMatrix[_2D], val center: Point[_2D]) extends RotationTransform[_2D] {
-  override val f = (pt: Point[_2D]) => {
+  override val t = (pt: Point[_2D]) => {
     val ptCentered = pt - center
     val rotCentered = rotMatrix * ptCentered
     center + EuclideanVector(rotCentered(0), rotCentered(1))
@@ -450,7 +464,7 @@ private case class RotationTransform2D(rotMatrix: SquareMatrix[_2D], val center:
 }
 
 private[scalismo] case class RotationTransform1D() extends RotationTransform[_1D] {
-  override val f = (pt: Point[_1D]) => {
+  override val t = (pt: Point[_1D]) => {
     pt
   }
   override val center = Point(0)
@@ -587,7 +601,7 @@ object ScalingSpace {
  *  @param s Scalar by which to scale each dimension
  */
 class ScalingTransformation[D: NDSpace] private (s: Double) extends ParametricTransformation[D] with CanInvert[D] with CanDifferentiate[D] {
-  override val f = (x: Point[D]) => (x.toVector * s).toPoint
+  override val t = (x: Point[D]) => (x.toVector * s).toPoint
   override val domain = RealSpace[D]
 
   val parameters = DenseVector(s)
@@ -748,7 +762,7 @@ case class SimilarityTransformationSpace[D: NDSpace: CreateRotationSpace: Scalin
  */
 case class AnisotropicScalingTransformation[D: NDSpace](s: geometry.EuclideanVector[D]) extends ParametricTransformation[D] with CanInvert[D] with CanDifferentiate[D] {
   override val domain = RealSpace[D]
-  override val f = (x: Point[D]) => Point((x.toVector.toBreezeVector *:* s.toBreezeVector).data)
+  override val t = (x: Point[D]) => Point((x.toVector.toBreezeVector *:* s.toBreezeVector).data)
 
   val parameters = s.toBreezeVector
   def takeDerivative(x: Point[D]): SquareMatrix[D] = SquareMatrix[D](breeze.linalg.diag(s.toBreezeVector).data)

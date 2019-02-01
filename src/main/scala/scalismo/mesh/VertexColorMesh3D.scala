@@ -1,7 +1,7 @@
 package scalismo.mesh
 
 import scalismo.color.RGBA
-import scalismo.geometry.{ Point, _3D }
+import scalismo.geometry.{Point, _3D}
 
 /**
  * colored mesh with RGBA color per vertex

@@ -370,8 +370,8 @@ object ImageIO {
 
       /* get a rigid registration by mapping a few points */
       val origPs = List(Point(0, 0, nz), Point(0, ny, 0), Point(0, ny, nz), Point(nx, 0, 0), Point(nx, 0, nz), Point(nx, ny, 0), Point(nx, ny, nz))
-      val scaledPS = origPs.map(anisotropicScaling)
-      val imgPs = origPs.map(transVoxelToWorld)
+      val scaledPS = origPs.map( p => anisotropicScaling(p))
+      val imgPs = origPs.map(p => transVoxelToWorld(p))
 
       val rigidReg = LandmarkRegistration.rigid3DLandmarkRegistration((scaledPS zip imgPs).toIndexedSeq, Point(0, 0, 0))
       val transform = AnisotropicSimilarityTransformationSpace[_3D](Point(0, 0, 0)).transformForParameters(DenseVector(rigidReg.parameters.data ++ spacing.data))
@@ -387,7 +387,7 @@ object ImageIO {
       }
 
       /* Test that were able to reconstruct the transform */
-      val approxErrors = (origPs.map(transform) zip imgPs).map { case (o, i) => (o - i).norm }
+      val approxErrors = (origPs.map(p => transform(p)) zip imgPs).map { case (o, i) => (o - i).norm }
       if (approxErrors.max > 0.01f) throw new Exception("Unable to approximate Nifti affine transform with anisotropic similarity transform")
       else {
         val newDomain = DiscreteImageDomain[_3D](IntVector(nx, ny, nz), transform)
@@ -453,7 +453,10 @@ object ImageIO {
         Point(t(0).toFloat * -1f, t(1).toFloat * -1f, t(2).toFloat)
       }
 
-      val t = new Transformation[_3D](RealSpace[_3D], f)
+      val t = new Transformation[_3D] {
+        override val domain = RealSpace[_3D]
+        override val t = f
+      }
 
       val affineTransMatrixInv: DenseMatrix[Double] = breeze.linalg.inv(affineTransMatrix)
 
@@ -463,7 +466,10 @@ object ImageIO {
         val t: DenseVector[Float] = (affineTransMatrixInv * xh).map(_.toFloat)
         Point(t(0), t(1), t(2))
       }
-      val tinv = new Transformation[_3D](RealSpace[_3D], fInv)
+      val tinv = new Transformation[_3D]{
+        override val domain = RealSpace[_3D]
+        override val t = fInv
+      }
 
       (t, tinv)
     }

@@ -16,15 +16,15 @@
 
 package scalismo.image
 
-import breeze.linalg.DenseVector
-import scalismo.common._
-import scalismo.common.interpolation.FieldInterpolator
-import scalismo.geometry._
-import scalismo.numerics.BSpline
-
-import scala.reflect.ClassTag
-
-
+//import breeze.linalg.DenseVector
+//import scalismo.common._
+//import scalismo.common.interpolation.FieldInterpolator
+//import scalismo.geometry._
+//import scalismo.numerics.BSpline
+//
+//import scala.reflect.ClassTag
+//
+//
 ///**
 // * A scalar valued discrete image.
 // *

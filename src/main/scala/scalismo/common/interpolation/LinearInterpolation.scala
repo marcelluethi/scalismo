@@ -16,10 +16,9 @@
 
 package scalismo.common.interpolation
 
-import scalismo.common.{DiscreteField, Field, UnstructuredPointsDomain}
+import scalismo.common.{DiscreteField, Field}
 import scalismo.geometry._
 import scalismo.image.DiscreteImageDomain
-import scalismo.mesh.{TriangleList, TriangleMesh}
 import scalismo.numerics.ValueInterpolator
 
 trait LinearImageInterpolator[D, A] extends FieldInterpolator[D, DiscreteImageDomain[D], A] {

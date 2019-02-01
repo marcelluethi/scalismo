@@ -16,7 +16,7 @@
 package scalismo.mesh
 
 import scalismo.common.BoxDomain
-import scalismo.geometry.{ Point, _3D }
+import scalismo.geometry.{Point, _3D}
 import scalismo.numerics.UniformSampler
 import scalismo.registration.LandmarkRegistration
 import scalismo.utils.Random

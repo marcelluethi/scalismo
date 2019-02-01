@@ -18,11 +18,12 @@ package scalismo.registration
 
 import breeze.linalg.DenseVector
 import breeze.numerics._
+import scalismo.common.Field.{DifferentiableImage, Image}
 import scalismo.geometry._
-import scalismo.image.{ DifferentiableScalarImage, DiscreteImageDomain, ScalarImage }
+import scalismo.image.DiscreteImageDomain
 import scalismo.numerics._
 import scalismo.registration.RegistrationMetric.ValueAndDerivative
-import scalismo.utils.{ Memoize, Random }
+import scalismo.utils.{Memoize, Random}
 
 /**
  * Implementation of the Mutual Information Metric, described in the following paper:
@@ -39,9 +40,9 @@ import scalismo.utils.{ Memoize, Random }
  *                recommended choice is a random sampler (which combined with a gradient descent algorithm leads to a stochastic gradient descent.
  * @param numberOfBins The number of bins used for the intensity histograms (which approximates the joint distribution)
  */
-case class MutualInformationMetric[D: NDSpace](fixedImage: ScalarImage[D],
+case class MutualInformationMetric[D: NDSpace](fixedImage: Image[D, Float],
     fixedImageDomain: DiscreteImageDomain[D],
-    movingImage: DifferentiableScalarImage[D],
+    movingImage: DifferentiableImage[D, Float, EuclideanVector[D]],
     transformationSpace: TransformationSpace[D],
     sampler: Sampler[D],
     numberOfBins: Int = 30)(implicit rng: Random) extends ImageMetric[D] {
@@ -60,7 +61,7 @@ case class MutualInformationMetric[D: NDSpace](fixedImage: ScalarImage[D],
   // All the computations are done only once, when the metric is computed. Hence it is okay to use a rather large number of points
   private val fixedImagePoints = UniformSampler(fixedImageDomain.boundingBox, numberOfPoints = 100000).sample().map(_._1)
 
-  private def minMaxValue(img: ScalarImage[D]): (Float, Float) = {
+  private def minMaxValue(img: Image[D, Float]): (Float, Float) = {
     val values = for (pt <- fixedImagePoints if img.isDefinedAt(pt)) yield img(pt)
     (values.min, values.max)
   }

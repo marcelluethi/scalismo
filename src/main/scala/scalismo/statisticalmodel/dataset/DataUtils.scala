@@ -46,7 +46,7 @@ private object DataUtils {
     else {
       val t = new Transformation[_3D] {
         override val domain = refMesh.boundingBox
-        override val f = (x: Point[_3D]) => {
+        override val t = (x: Point[_3D]) => {
           val ptId = refMesh.pointSet.findClosestPoint(x).id
           targetMesh.pointSet.point(ptId)
         }

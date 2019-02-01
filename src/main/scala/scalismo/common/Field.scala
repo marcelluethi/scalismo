@@ -16,41 +16,39 @@
 package scalismo.common
 
 import scalismo.geometry._
-import scalismo.image.DiscreteImageDomain
-
-import scala.reflect.ClassTag
 
 
 /**
  * An image is simply a function from points to values, together with a domain on which the
  * function is defined.
  */
-class Field[D : NDSpace, A](val domain : Domain[D], val f : Point[D] => A) extends Function1[Point[D], A] { self =>
+class Field[D : NDSpace, A](val domain : Domain[D], val f : Point[D] => A) extends Function1[Point[D], A] {
+  self =>
 
 
   /** True if the image is defined at the given point */
   def isDefinedAt(pt: Point[D]): Boolean = domain.isDefinedAt(pt)
 
   /**
-   * The value of the image at a given point.
-   * if an image is accessed outside of its definition, an exception is thrown
-   */
+    * The value of the image at a given point.
+    * if an image is accessed outside of its definition, an exception is thrown
+    */
   override def apply(x: Point[D]): A = {
     if (!isDefinedAt(x)) throw new IllegalArgumentException(s"Point $x is outside the domain")
     f(x)
   }
 
   /**
-   * Lifts the definition of the value function such that it is defined everywhere,
-   * but yields none if the value is outside of the domain
-   */
-  def liftValues: (Point[D] => Option[A]) =  {
-      val optionF = { (x: Point[D]) =>
-        if (self.isDefinedAt(x)) Some(self.f(x))
-        else None
-      }
+    * Lifts the definition of the value function such that it is defined everywhere,
+    * but yields none if the value is outside of the domain
+    */
+  def liftValues: (Point[D] => Option[A]) = {
+    val optionF = { (x: Point[D]) =>
+      if (self.isDefinedAt(x)) Some(self.f(x))
+      else None
+    }
 
-      new Field[D, Option[A]](domain, optionF) {
+    new Field[D, Option[A]](domain, optionF) {
     }
     optionF
   }
@@ -65,24 +63,41 @@ class Field[D : NDSpace, A](val domain : Domain[D], val f : Point[D] => A) exten
     })
     DiscreteField[D, NewDomain, A](domain, values.toIndexedSeq)
   }
-  def +(that: Field[D, A])(implicit scalar : Scalar[A]): Field[D, A] = {
+
+  def +(that: Field[D, A])(implicit scalar: Scalar[A]): Field[D, A] = {
     def f(x: Point[D]): A = scalar.fromDouble(scalar.toDouble(this.f(x)) + scalar.toDouble(that.f(x)))
+
     new Field[D, A](Domain.intersection[D](domain, that.domain), f)
   }
 
-  /** subtract two images. The domain of the new image is the intersection of the domains of the individual images*/
-  def -(that: Field[D, A])(implicit scalar : Scalar[A]): Field[D, A] = {
+  /** subtract two images. The domain of the new image is the intersection of the domains of the individual images */
+  def -(that: Field[D, A])(implicit scalar: Scalar[A]): Field[D, A] = {
     def f(x: Point[D]): A = scalar.fromDouble(scalar.toDouble(this.f(x)) - scalar.toDouble(that.f(x)))
+
     val newDomain = Domain.intersection[D](domain, that.domain)
     new Field[D, A](newDomain, f)
   }
 
   /** scalar multiplication of a vector field */
-  def *(s: Double)(implicit scalar : Scalar[A]): Field[D, A] = {
+  def *(s: Double)(implicit scalar: Scalar[A]): Field[D, A] = {
 
     def f(x: Point[D]): A = scalar.fromDouble(scalar.toDouble(this.f(x)) * s)
+
     new Field[D, A](domain, f)
   }
+
+  def compose(t: Point[D] => Point[D]): Field[D, A] = {
+    def f(x: Point[D]) = this.f(t(x))
+
+    val newDomain = Domain.fromPredicate[D]((pt: Point[D]) => isDefinedAt(t(pt)))
+    new Field(newDomain, f)
+  }
+
+    /** applies the given function to the image values */
+  def andThen(g: A => A): Field[D, A] = {
+      new Field(domain, f andThen g)
+    }
+
 
 }
 
@@ -104,6 +119,10 @@ object Field {
       new Field(img.domain, f)
     }
   }
+
+  type Image[D, A] = Field[D, A]
+  type DifferentiableImage[D, A, DxA] = DifferentiableField[D, A, DxA]
+
 }
 
 class DifferentiableField[D : NDSpace, A, DxA](domain : Domain[D],
