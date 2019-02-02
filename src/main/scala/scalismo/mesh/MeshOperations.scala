@@ -80,7 +80,7 @@ class TriangleMesh3DOperations(private val mesh: TriangleMesh3D) {
   /**
    * Returns a new continuous [[DifferentiableScalarImage]] defined on 3-dimensional [[RealSpace]] which is the distance transform of the mesh
    */
-  def toDistanceImage: DifferentiableImage[_3D, Float, EuclideanVector[_3D]] = {
+  def toDistanceImage: DifferentiableImage[_3D, Float] = {
     def dist(pt: Point[_3D]): Float = Math.sqrt(shortestDistanceToSurfaceSquared(pt)).toFloat
 
     def grad(pt: Point[_3D]) = {

@@ -42,7 +42,7 @@ import scalismo.utils.{Memoize, Random}
  */
 case class MutualInformationMetric[D: NDSpace](fixedImage: Image[D, Float],
     fixedImageDomain: DiscreteImageDomain[D],
-    movingImage: DifferentiableImage[D, Float, EuclideanVector[D]],
+    movingImage: DifferentiableImage[D, Float],
     transformationSpace: TransformationSpace[D],
     sampler: Sampler[D],
     numberOfBins: Int = 30)(implicit rng: Random) extends ImageMetric[D] {
@@ -59,7 +59,7 @@ case class MutualInformationMetric[D: NDSpace](fixedImage: Image[D, Float],
 
   // we choose a reasonably sized number of points from the fixed image domain to compute the image characteristics.
   // All the computations are done only once, when the metric is computed. Hence it is okay to use a rather large number of points
-  private val fixedImagePoints = UniformSampler(fixedImageDomain.boundingBox, numberOfPoints = 100000).sample().map(_._1)
+  private val fixedImagePoints = new UniformSampler(fixedImageDomain.boundingBox, numberOfPoints = 100000).sample().map(_._1)
 
   private def minMaxValue(img: Image[D, Float]): (Float, Float) = {
     val values = for (pt <- fixedImagePoints if img.isDefinedAt(pt)) yield img(pt)

@@ -17,12 +17,18 @@
 package scalismo.common
 
 import scalismo.common.UnstructuredPointsDomain.Create
+import scalismo.common.UnstructuredPointsDomain.Create.{CreateUnstructuredPointsDomain1D, CreateUnstructuredPointsDomain2D, CreateUnstructuredPointsDomain3D}
 import scalismo.geometry._
-import scalismo.mesh.kdtree.{ KDTreeMap, RegionBuilder }
+import scalismo.mesh.kdtree.{KDTreeMap, RegionBuilder}
 
 import scala.language.implicitConversions
 
-sealed abstract class UnstructuredPointsDomain[D: NDSpace: Create] private[scalismo] (private[scalismo] val pointSequence: IndexedSeq[Point[D]]) extends DiscreteDomain[D] {
+trait UnstructuredPointsDomain[D] extends DiscreteDomain[D] {
+
+  implicit def ndSpace : NDSpace[D]
+  implicit def create : Create[D]
+
+  def pointSequence: IndexedSeq[Point[D]]
 
   override def points: Iterator[Point[D]] = pointSequence.toIterator
   override def numberOfPoints = pointSequence.size
@@ -114,7 +120,10 @@ object UnstructuredPointsDomain {
 
 }
 
-class UnstructuredPointsDomain1D private[scalismo] (pointSequence: IndexedSeq[Point[_1D]]) extends UnstructuredPointsDomain[_1D](pointSequence) {
+case class UnstructuredPointsDomain1D(pointSequence: IndexedSeq[Point[_1D]]) extends UnstructuredPointsDomain[_1D] {
+
+  implicit val ndSpace = NDSpace[_1D]
+  implicit val create = CreateUnstructuredPointsDomain1D.create
 
   override def boundingBox: BoxDomain[_1D] = {
     val minx = pointSequence.map(_(0)).min
@@ -128,7 +137,10 @@ class UnstructuredPointsDomain1D private[scalismo] (pointSequence: IndexedSeq[Po
 
 }
 
-class UnstructuredPointsDomain2D private[scalismo] (pointSequence: IndexedSeq[Point[_2D]]) extends UnstructuredPointsDomain[_2D](pointSequence) {
+case class UnstructuredPointsDomain2D(pointSequence: IndexedSeq[Point[_2D]]) extends UnstructuredPointsDomain[_2D] {
+
+  override implicit val ndSpace = NDSpace[_2D]
+  implicit val create = CreateUnstructuredPointsDomain2D.create
 
   override def boundingBox: BoxDomain[_2D] = {
     val minx = pointSequence.map(_(0)).min
@@ -144,7 +156,10 @@ class UnstructuredPointsDomain2D private[scalismo] (pointSequence: IndexedSeq[Po
 
 }
 
-class UnstructuredPointsDomain3D private[scalismo] (pointSequence: IndexedSeq[Point[_3D]]) extends UnstructuredPointsDomain[_3D](pointSequence) {
+case class UnstructuredPointsDomain3D(pointSequence: IndexedSeq[Point[_3D]]) extends UnstructuredPointsDomain[_3D] {
+
+  implicit val ndSpace : NDSpace[_3D] = NDSpace[_3D]
+  implicit val create = CreateUnstructuredPointsDomain3D.create
 
   override def boundingBox: BoxDomain[_3D] = {
     val minx = pointSequence.map(_(0)).min

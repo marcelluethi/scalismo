@@ -30,7 +30,7 @@ import scalismo.registration.RegistrationMetric.ValueAndDerivative
  */
 
 abstract class MeanPointwiseLossMetric[D: NDSpace](fixedImage: Image[D, Float],
-                                                   movingImage: DifferentiableImage[D, Float, EuclideanVector[D]],
+                                                   movingImage: DifferentiableImage[D, Float],
                                                    transformationSpace: TransformationSpace[D],
                                                    sampler: Sampler[D]) extends ImageMetric[D] {
 

@@ -17,7 +17,7 @@
 package scalismo.registration
 
 import scalismo.common.Field.{DifferentiableImage, Image}
-import scalismo.geometry.{EuclideanVector, NDSpace}
+import scalismo.geometry.{NDSpace}
 import scalismo.numerics._
 
 /**
@@ -28,7 +28,7 @@ import scalismo.numerics._
  *
  */
 case class MeanHuberLossMetric[D: NDSpace](fixedImage: Image[D, Float],
-                                           movingImage: DifferentiableImage[D, Float, EuclideanVector[D]],
+                                           movingImage: DifferentiableImage[D, Float],
                                            transformationSpace: TransformationSpace[D],
                                            sampler: Sampler[D],
                                            delta: Double = 1.345)

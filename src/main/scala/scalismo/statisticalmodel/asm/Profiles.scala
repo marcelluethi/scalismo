@@ -17,7 +17,7 @@ package scalismo.statisticalmodel.asm
 
 import breeze.linalg.DenseVector
 import scalismo.common._
-import scalismo.geometry.{NDSpace, Point}
+import scalismo.geometry.{NDSpace}
 import scalismo.statisticalmodel.MultivariateNormalDistribution
 
 import scala.collection.immutable

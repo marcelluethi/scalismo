@@ -19,9 +19,9 @@ package scalismo.statisticalmodel.asm
 import breeze.linalg.DenseVector
 import ncsa.hdf.`object`.Group
 import scalismo.common.DiscreteField.DiscreteImage
-import scalismo.common.interpolation.{BSplineInterpolator3D, LinearImageInterpolator, LinearImageInterpolator3D}
-import scalismo.common.{Domain, Field, interpolation}
-import scalismo.geometry.{EuclideanVector, NDSpace, Point, _3D}
+import scalismo.common.interpolation.{BSplineInterpolator3D}
+import scalismo.common.{Domain, Field}
+import scalismo.geometry.{Point, _3D}
 import scalismo.image.filter.DiscreteImageFilter
 import scalismo.io.HDF5File
 import scalismo.statisticalmodel.asm.PreprocessedImage.Type

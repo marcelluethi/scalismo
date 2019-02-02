@@ -20,7 +20,7 @@ import scalismo.common.Field.Image
 import scalismo.common.{Field, Scalar}
 import scalismo.geometry._
 
-case class Integrator[D: NDSpace](sampler: Sampler[D]) {
+class Integrator[D: NDSpace](sampler: Sampler[D]) {
 
   def integrateScalar[A : Scalar](img: Image[D, A]): A = {
     integrateScalar(img.liftValues)
@@ -60,3 +60,22 @@ case class Integrator[D: NDSpace](sampler: Sampler[D]) {
 
 }
 
+object Integrator1D {
+  def apply(sampler: Sampler[_1D]): Integrator[_1D] = {
+    new Integrator[_1D](sampler)
+  }
+}
+
+
+object Integrato_2D {
+  def apply(sampler: Sampler[_2D]): Integrator[_2D] = {
+    new Integrator[_2D](sampler)
+  }
+}
+
+
+object Integrato3D {
+  def apply(sampler: Sampler[_3D]): Integrator[_3D] = {
+    new Integrator[_3D](sampler)
+  }
+}

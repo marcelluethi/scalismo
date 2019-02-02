@@ -17,13 +17,13 @@ package scalismo.registration
 
 import breeze.linalg.DenseMatrix
 import scalismo.ScalismoTestSuite
-import scalismo.common.BoxDomain
+import scalismo.common.{BoxDomain, BoxDomain1D, BoxDomain2D, DifferentiableImage1D}
 import scalismo.geometry.Point.implicits._
 import scalismo.geometry._
 import scalismo.geometry.EuclideanVector._
-import scalismo.image.{ DifferentiableScalarImage, DiscreteImageDomain }
-import scalismo.kernels.{ DiagonalKernel, GaussianKernel, Kernel }
-import scalismo.numerics.{ GridSampler, Integrator, RandomSVD, UniformSampler }
+import scalismo.image.DiscreteImageDomain
+import scalismo.kernels._
+import scalismo.numerics._
 import scalismo.statisticalmodel.LowRankGaussianProcess.Eigenpair
 import scalismo.utils.Random
 
@@ -39,10 +39,10 @@ class KernelTransformationTests extends ScalismoTestSuite {
 
   describe("The Nystroem approximation of a Kernel matrix") {
     it("Is close enough to a scalar valued kernel matrix") {
-      val kernel = DiagonalKernel(GaussianKernel[_1D](20), 1)
-      val domain = BoxDomain(-5.0, 195.0)
+      val kernel = DiagonalKernel(GaussianKernel1D(20), 1)
+      val domain = BoxDomain1D(Point1D(-5.0), Point1D(195.0))
 
-      val sampler = UniformSampler(domain, 500)
+      val sampler = UniformSampler1D(domain, 500)
 
       val eigPairs = Kernel.computeNystromApproximation[_1D, EuclideanVector[_1D]](kernel, sampler)
 
@@ -62,10 +62,10 @@ class KernelTransformationTests extends ScalismoTestSuite {
 
     it("Its eigenvalues are close enough to the real eigenvalues for 1D") {
       val kernelDim = 1
-      val scalarKernel = DiagonalKernel(GaussianKernel[_1D](10), 1)
-      val domain = BoxDomain(0.0, 10.0)
+      val scalarKernel = DiagonalKernel(GaussianKernel1D(10), 1)
+      val domain = BoxDomain1D(Point1D(0.0), Point1D(10.0))
       val numPoints = 500
-      val sampler = UniformSampler(domain, numPoints)
+      val sampler = UniformSampler1D(domain, numPoints)
       val (points, _) = sampler.sample.unzip
       val eigPairsApprox = Kernel.computeNystromApproximation[_1D, EuclideanVector[_1D]](scalarKernel, sampler)
       val approxLambdas = eigPairsApprox.map(_.eigenvalue)
@@ -87,10 +87,10 @@ class KernelTransformationTests extends ScalismoTestSuite {
     it("Its eigenvalues are close enough to the real eigenvalues in 2D") {
 
       val kernelDim = 2
-      val scalarKernel = GaussianKernel[_2D](10)
+      val scalarKernel = GaussianKernel2D(10)
       val ndKernel = DiagonalKernel(scalarKernel, kernelDim)
-      val domain = BoxDomain((0.0, 0.0), (5.0, 5.0))
-      val sampler = UniformSampler(domain, 400)
+      val domain = BoxDomain2D(Point2D(0.0, 0.0), Point2D(5.0, 5.0))
+      val sampler = UniformSampler2D(domain, 400)
       val (pts, _) = sampler.sample.unzip
 
       val eigPairsApprox = Kernel.computeNystromApproximation[_2D, EuclideanVector[_2D]](ndKernel, sampler)
@@ -109,32 +109,32 @@ class KernelTransformationTests extends ScalismoTestSuite {
     }
 
     it("It leads to orthogonal basis functions on the domain (-5, 5)") {
-      val kernel = DiagonalKernel(GaussianKernel[_1D](1.0), 1)
+      val kernel = DiagonalKernel(GaussianKernel1D(1.0), 1)
       val domain = BoxDomain(-5.0, 5.0)
       val grid = DiscreteImageDomain(domain.origin, domain.extent * (1.0 / 1000.0), IntVector(1000))
-      val sampler = GridSampler(grid)
+      val sampler = GridSampler1D(grid)
 
       val eigPairs = Kernel.computeNystromApproximation[_1D, EuclideanVector[_1D]](kernel, sampler)
 
-      val integrator = Integrator(sampler)
+      val integrator = Integrator1D(sampler)
 
       for (i <- 0 until 20) {
 
         val Eigenpair(_, phi_i) = eigPairs(i)
         def p(x: Point[_1D]) = 1.0 / domain.volume // the eigenfunction is orthogonal with respect to the measure p(x) (from the sampler)
-        val phiImg = DifferentiableScalarImage(domain, (x: Point[_1D]) => phi_i(x)(0) * phi_i(x)(0) * p(x), (pt: Point[_1D]) => EuclideanVector(0.0))
+        val phiImg = DifferentiableImage1D(domain, (x: Point[_1D]) => phi_i(x)(0) * phi_i(x)(0) * p(x), (pt: Point[_1D]) => EuclideanVector(0.0))
 
         val v = integrator.integrateScalar(phiImg)
-        v should be(1f +- 0.1)
+        v should be(1.0 +- 0.1)
       }
     }
 
     it("leads to fewer eigenfunctions when the kernel is more smooth") {
-      val kernelLessSmooth = DiagonalKernel(GaussianKernel[_1D](0.5), 1)
-      val kernelMoreSmooth = DiagonalKernel(GaussianKernel[_1D](2.0), 1)
+      val kernelLessSmooth = DiagonalKernel(GaussianKernel1D(0.5), 1)
+      val kernelMoreSmooth = DiagonalKernel(GaussianKernel1D(2.0), 1)
       val domain = BoxDomain(-5.0, 5.0)
       val grid = DiscreteImageDomain(domain.origin, domain.extent * (1.0 / 1000.0), IntVector(1000))
-      val sampler = GridSampler(grid)
+      val sampler = GridSampler1D(grid)
 
       val eigPairsLessSmooth = Kernel.computeNystromApproximation[_1D, EuclideanVector[_1D]](kernelLessSmooth, sampler)
       val eigPairsMoreSmooth = Kernel.computeNystromApproximation[_1D, EuclideanVector[_1D]](kernelMoreSmooth, sampler)

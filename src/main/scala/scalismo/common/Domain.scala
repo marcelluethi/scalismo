@@ -53,6 +53,11 @@ object RealSpace {
   def apply[D] = new RealSpace[D]
 }
 
+object RealSpace1D extends RealSpace[_1D]
+object RealSpace2D extends RealSpace[_2D]
+object RealSpace3D extends RealSpace[_3D]
+
+
 trait BoxDomain[D] extends Domain[D] {
 
   val origin: Point[D]

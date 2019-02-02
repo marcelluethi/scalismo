@@ -251,10 +251,18 @@ case class DiscreteImageDomain1D(size: IntVector[_1D], indexToPhysicalCoordinate
 }
 
 object DiscreteImageDomain1D {
+
+  /** Create a new discreteImageDomain with given image box (i.e. a box that determines the area where the image is defined) and size */
+  def apply(imageBox: BoxDomain[_1D], size: IntVector[_1D]): DiscreteImageDomain[_1D] = {
+    val spacing = imageBox.extent.mapWithIndex({ case (ithExtent, i) => ithExtent / size(i) })
+    CreateDiscreteImageDomain1D.createImageDomain(imageBox.origin, spacing, size)
+  }
+
   def apply(origin: Point[_1D], spacing: EuclideanVector[_1D], size: IntVector[_1D]): DiscreteImageDomain[_1D] = {
     CreateDiscreteImageDomain1D.createImageDomain(origin, spacing, size)
   }
 }
+
 
 case class DiscreteImageDomain2D(size: IntVector[_2D], indexToPhysicalCoordinateTransform: AnisotropicSimilarityTransformation[_2D]) extends DiscreteImageDomain[_2D] {
 
@@ -308,6 +316,12 @@ object DiscreteImageDomain2D {
   def apply(origin: Point[_2D], spacing: EuclideanVector[_2D], size: IntVector[_2D]): DiscreteImageDomain[_2D] = {
     CreateDiscreteImageDomain2D.createImageDomain(origin, spacing, size)
   }
+
+  def apply(imageBox: BoxDomain[_2D], size: IntVector[_2D]): DiscreteImageDomain[_2D] = {
+    val spacing = imageBox.extent.mapWithIndex({ case (ithExtent, i) => ithExtent / size(i) })
+    CreateDiscreteImageDomain2D.createImageDomain(imageBox.origin, spacing, size)
+  }
+
 }
 
 
@@ -395,6 +409,12 @@ object DiscreteImageDomain3D {
   def apply(origin: Point[_3D], spacing: EuclideanVector[_3D], size: IntVector[_3D]): DiscreteImageDomain[_3D] = {
     CreateDiscreteImageDomain3D.createImageDomain(origin, spacing, size)
   }
+
+  def apply(imageBox: BoxDomain[_3D], size: IntVector[_3D]): DiscreteImageDomain[_3D] = {
+    val spacing = imageBox.extent.mapWithIndex({ case (ithExtent, i) => ithExtent / size(i) })
+    CreateDiscreteImageDomain3D.createImageDomain(imageBox.origin, spacing, size)
+  }
+
 }
 
 /** Typeclass for creating domains of arbitrary dimensionality */

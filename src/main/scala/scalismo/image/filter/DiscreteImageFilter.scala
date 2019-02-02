@@ -17,7 +17,7 @@ package scalismo.image.filter
 
 import scalismo.common.DiscreteField.DiscreteImage
 import scalismo.common.interpolation.LinearImageInterpolator
-import scalismo.common.{DiscreteField, NearestNeighborInterpolator, Scalar, ScalarArray}
+import scalismo.common.{DiscreteField, Scalar, ScalarArray}
 import scalismo.geometry._
 import scalismo.numerics.ValueInterpolator
 import scalismo.utils.{CanConvertToVtk, ImageConversion}

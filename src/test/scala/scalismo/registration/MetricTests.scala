@@ -19,12 +19,13 @@ import _root_.java.io.File
 
 import breeze.linalg.DenseVector
 import scalismo.ScalismoTestSuite
-import scalismo.common.BoxDomain
+import scalismo.common.interpolation.{BSplineInterpolator2D}
+import scalismo.common.{BoxDomain1D, DifferentiableImage1D}
 import scalismo.geometry.Point.implicits._
 import scalismo.geometry._
-import scalismo.image.{ DiscreteImageDomain, DifferentiableScalarImage }
+import scalismo.image.{DiscreteImageDomain, DiscreteImageDomain2D}
 import scalismo.io.ImageIO
-import scalismo.numerics.{ LBFGSOptimizer, GridSampler, UniformSampler }
+import scalismo.numerics._
 import scalismo.utils.Random
 
 class MetricTests extends ScalismoTestSuite {
@@ -34,12 +35,12 @@ class MetricTests extends ScalismoTestSuite {
   describe("A mean squares metric (1D)") {
     it("returns 0 if provided twice the same image") {
 
-      val domain = BoxDomain(0.0, 1.0)
-      val img = DifferentiableScalarImage(BoxDomain(0.0, 1.0),
+      val domain = BoxDomain1D(Point1D(0.0), Point1D(1.0))
+      val img = DifferentiableImage1D(domain,
         (x: Point[_1D]) => (x * x).toFloat,
         (x: Point[_1D]) => EuclideanVector(2.0) * x(0))
       val transSpace = TranslationSpace[_1D]
-      val sampler = UniformSampler(domain, 1000)
+      val sampler = UniformSampler1D(domain, 1000)
       MeanSquaresMetric(img, img, transSpace, sampler).value(transSpace.identityTransformParameters) should be(0.0 +- 0.001)
     }
   }
@@ -48,9 +49,10 @@ class MetricTests extends ScalismoTestSuite {
     val testImgURL = getClass.getResource("/dm128.vtk").getPath
 
     val fixedImage = ImageIO.read2DScalarImage[Float](new File(testImgURL)).get
-    val fixedImageCont = fixedImage.interpolate(3)
-    val translationSpace = TranslationSpace[_2D]
-    val sampler = GridSampler(DiscreteImageDomain(fixedImage.domain.boundingBox, size = IntVector(50, 50)))
+    val fixedImageCont = BSplineInterpolator2D[Float](3).interpolate(fixedImage)
+    val translationSpace = TranslationSpace2D
+    val domain  = DiscreteImageDomain2D(fixedImage.domain.boundingBox, size = IntVector(50, 50))
+    val sampler = GridSampler2D(domain)
 
     it("has the global minimum where the images are similar") {
 
@@ -95,9 +97,9 @@ class MetricTests extends ScalismoTestSuite {
     val testImgURL = getClass.getResource("/dm128.vtk").getPath
 
     val fixedImage = ImageIO.read2DScalarImage[Float](new File(testImgURL)).get
-    val fixedImageCont = fixedImage.interpolate(3)
+    val fixedImageCont = BSplineInterpolator2D[Float](3).interpolate(fixedImage)
     val translationSpace = TranslationSpace[_2D]
-    val sampler = GridSampler(DiscreteImageDomain(fixedImage.domain.boundingBox, size = IntVector(50, 50)))
+    val sampler = GridSampler2D(DiscreteImageDomain(fixedImage.domain.boundingBox, size = IntVector(50, 50)))
 
     it("has the global minimum where the images are similar") {
 

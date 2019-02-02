@@ -19,13 +19,14 @@ import java.io.File
 
 import breeze.linalg.DenseVector
 import scalismo.ScalismoTestSuite
-import scalismo.common.PointId
+import scalismo.common.interpolation.BSplineInterpolator3D
+import scalismo.common.{DifferentiableImage1D, PointId}
 import scalismo.geometry.IntVector.implicits._
 import scalismo.geometry.Point.implicits._
 import scalismo.geometry.EuclideanVector.implicits._
 import scalismo.geometry._
-import scalismo.image.{ DifferentiableScalarImage, DiscreteImageDomain }
-import scalismo.io.{ ImageIO, MeshIO }
+import scalismo.image.{DiscreteImageDomain1D}
+import scalismo.io.{ImageIO, MeshIO}
 
 import scala.language.implicitConversions
 
@@ -128,13 +129,13 @@ class TransformationTests extends ScalismoTestSuite {
     }
 
     it("translates a 1D image") {
-      val domain = DiscreteImageDomain[_1D](-50.0, 1.0, 100)
-      val continuousImage = DifferentiableScalarImage(domain.boundingBox, (x: Point[_1D]) => (x * x), (x: Point[_1D]) => EuclideanVector(2f * x))
+      val domain = DiscreteImageDomain1D(-50.0, 1.0, 100)
+      val continuousImage = DifferentiableImage1D(domain.boundingBox, (x: Point[_1D]) => (x * x), (x: Point[_1D]) => EuclideanVector(2f * x))
 
-      val translation = TranslationSpace[_1D].transformForParameters(DenseVector[Double](10))
+      val translation = TranslationSpace1D.transformForParameters(DenseVector[Double](10))
       val translatedImg = continuousImage.compose(translation)
 
-      translatedImg(-10) should equal(0)
+      translatedImg(Point1D(-10)) should equal(0)
     }
   }
 
@@ -142,7 +143,7 @@ class TransformationTests extends ScalismoTestSuite {
 
     val path = getClass.getResource("/3dimage.nii").getPath
     val discreteImage = ImageIO.read3DScalarImage[Short](new File(path)).get
-    val continuousImage = discreteImage.interpolate(0)
+    val continuousImage = BSplineInterpolator3D[Short](1).interpolate(discreteImage)
 
     it("translation forth and back of a real dataset yields the same image") {
 

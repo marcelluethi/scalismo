@@ -118,6 +118,16 @@ object EuclideanVector1D {
   val unit = EuclideanVector1D(1.0)
   val zero = EuclideanVector1D(0.0)
   val ones = EuclideanVector1D(1.0)
+
+
+  implicit object EuclideanVector1DVectorizer extends Vectorizer[EuclideanVector1D] {
+
+    override def dim: Int = 1
+
+    override def vectorize(v: EuclideanVector1D): DenseVector[Double] = DenseVector[Double](v.x)
+
+    override def unvectorize(d: DenseVector[Double]): EuclideanVector1D = EuclideanVector1D(d(0))
+  }
 }
 
 /** 2D Vector */
@@ -154,6 +164,16 @@ object EuclideanVector2D {
 
   val zero = EuclideanVector2D(0.0, 0.0)
   val ones = EuclideanVector2D(1.0, 1.0)
+
+
+  implicit object EuclideanVector2DVectorizer extends Vectorizer[EuclideanVector2D] {
+
+    override def dim: Int = 2
+
+    override def vectorize(v: EuclideanVector2D): DenseVector[Double] = DenseVector[Double](v.x, v.y)
+
+    override def unvectorize(d: DenseVector[Double]): EuclideanVector2D = EuclideanVector2D(d(0), d(1))
+  }
 }
 
 /** 3D Vector */
@@ -186,7 +206,6 @@ case class EuclideanVector3D(x: Double, y: Double, z: Double) extends EuclideanV
   }
 
   override def mapWithIndex(f: (Double, Int) => Double): EuclideanVector3D = EuclideanVector3D(f(x, 0), f(y, 1), f(z, 2))
-
 }
 
 object EuclideanVector3D {
@@ -196,6 +215,15 @@ object EuclideanVector3D {
 
   val zero = EuclideanVector3D(0.0, 0.0, 0.0)
   val ones = EuclideanVector3D(1.0, 1.0, 1.0)
+
+  implicit object EuclideanVector3DVectorizer extends Vectorizer[EuclideanVector3D] {
+
+    override def dim: Int = 3
+
+    override def vectorize(v: EuclideanVector3D): DenseVector[Double] = DenseVector[Double](v.x, v.y, v.z)
+
+    override def unvectorize(d: DenseVector[Double]): EuclideanVector3D = EuclideanVector3D(d(0), d(1), d(2))
+  }
 }
 
 object EuclideanVector {

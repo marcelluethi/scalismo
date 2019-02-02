@@ -63,7 +63,7 @@ trait ImageMetric[D] extends RegistrationMetric[D] {
 
   def fixedImage: Image[D, Float]
 
-  def movingImage: DifferentiableImage[D, Float, EuclideanVector[D]]
+  def movingImage: DifferentiableImage[D, Float]
 
 }
 

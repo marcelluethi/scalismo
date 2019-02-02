@@ -15,8 +15,9 @@
  */
 package scalismo.common
 
-import scalismo.common.Field.{DifferentiableImage, Image}
+import scalismo.common.Field.{DifferentiableImage}
 import scalismo.geometry._
+import scalismo.registration.{CanDifferentiate, Transformation}
 
 
 /**
@@ -123,55 +124,65 @@ object Field {
   }
 
   type Image[D, A] = Field[D, A]
-  type DifferentiableImage[D, A, DxA] = DifferentiableField[D, A, DxA]
+  type DifferentiableImage[D, A] = DifferentiableField[D, A]
 
 }
 
-object Image1D {
-  def apply[A](domain : Domain[_1D], f : Point[_1D] => A) : Image[_1D, A] = {
+object Field1D {
+  def apply[A](domain : Domain[_1D], f : Point[_1D] => A) : Field[_1D, A] = {
     new Field(domain, f)
   }
 }
 
-object Image2D {
-  def apply[A](domain : Domain[_2D], f : Point[_2D] => A) : Image[_2D, A] = {
+object Field2D {
+  def apply[A](domain : Domain[_2D], f : Point[_2D] => A) : Field[_2D, A] = {
     new Field(domain, f)
   }
 }
 
-object Image3D {
-  def apply[A](domain : Domain[_3D], f : Point[_3D] => A) : Image[_3D, A] = {
+object Field3D {
+  def apply[A](domain : Domain[_3D], f : Point[_3D] => A) : Field[_3D, A] = {
     new Field(domain, f)
   }
 }
 
-class DifferentiableField[D : NDSpace, A, DxA](domain : Domain[D],
+
+
+class DifferentiableField[D : NDSpace, A : Scalar](domain : Domain[D],
                                                     f : Point[D] => A,
-                                                    df : Point[D] => DxA) extends Field[D, A](domain, f) {
+                                                    df : Point[D] => EuclideanVector[D]) extends Field[D, A](domain, f) {
 
-  def differentiate: Field[D, DxA] = Field(domain, df)
+  def differentiate: Field[D, EuclideanVector[D]] = Field(domain, df)
+
+
+  def compose(t: Transformation[D] with CanDifferentiate[D]): DifferentiableField[D, A] = {
+    def f(x: Point[D]) = this.f(t(x))
+    def dfx(x : Point[D]) : EuclideanVector[D] =  t.takeDerivative(x) * df(t(x))
+    val newDomain = Domain.fromPredicate[D]((pt: Point[D]) => isDefinedAt(t(pt)))
+    new DifferentiableField(newDomain, f, dfx)
+  }
 
 }
 
 object DifferentiableImage1D {
-  def apply[A, DxA](domain : Domain[_1D], f : Point[_1D] => A, df : Point[_1D] => DxA)
-  : DifferentiableImage[_1D, A, DxA] = {
+  def apply[A : Scalar](domain : Domain[_1D], f : Point[_1D] => A, df : Point[_1D] => EuclideanVector[_1D])
+  : DifferentiableImage[_1D, A ] = {
 
     new DifferentiableImage(domain, f, df)
   }
 }
 
 object DifferentiableImage2D {
-  def apply[A, DxA](domain : Domain[_2D], f : Point[_2D] => A, df : Point[_2D] => DxA)
-  : DifferentiableImage[_2D, A, DxA] = {
+  def apply[A : Scalar](domain : Domain[_2D], f : Point[_2D] => A, df : Point[_2D] => EuclideanVector[_2D])
+  : DifferentiableImage[_2D, A] = {
 
     new DifferentiableImage(domain, f, df)
   }
 }
 
 object DifferentiableImage3D {
-  def apply[A, DxA](domain : Domain[_3D], f : Point[_3D] => A, df : Point[_3D] => DxA)
-  : DifferentiableImage[_3D, A, DxA] = {
+  def apply[A : Scalar](domain : Domain[_3D], f : Point[_3D] => A, df : Point[_3D] => EuclideanVector[_3D])
+  : DifferentiableImage[_3D, A] = {
 
     new DifferentiableImage(domain, f, df)
   }

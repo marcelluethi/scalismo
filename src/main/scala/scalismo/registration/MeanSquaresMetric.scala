@@ -17,7 +17,7 @@
 package scalismo.registration
 
 import scalismo.common.Field.{DifferentiableImage, Image}
-import scalismo.geometry.{EuclideanVector, NDSpace}
+import scalismo.geometry.{NDSpace}
 import scalismo.numerics.Sampler
 
 /**
@@ -25,7 +25,7 @@ import scalismo.numerics.Sampler
  * It is implemented as the squared loss function in terms of the pointwise pixel differences.
  */
 case class MeanSquaresMetric[D: NDSpace](fixedImage: Image[D, Float],
-                                         movingImage: DifferentiableImage[D, Float, EuclideanVector[D]],
+                                         movingImage: DifferentiableImage[D, Float],
                                          transformationSpace: TransformationSpace[D],
                                          sampler: Sampler[D])
     extends MeanPointwiseLossMetric[D](fixedImage, movingImage, transformationSpace, sampler) {
