@@ -17,11 +17,11 @@ package scalismo.image.filter
 
 import scalismo.common.DiscreteField.DiscreteImage
 import scalismo.common.interpolation.LinearImageInterpolator
-import scalismo.common.{DiscreteField, Scalar, ScalarArray}
+import scalismo.common.{ DiscreteField, Scalar, ScalarArray }
 import scalismo.geometry._
 import scalismo.numerics.ValueInterpolator
-import scalismo.utils.{CanConvertToVtk, ImageConversion}
-import vtk.{vtkImageCast, vtkImageEuclideanDistance, vtkImageGaussianSmooth, vtkObjectBase}
+import scalismo.utils.{ CanConvertToVtk, ImageConversion }
+import vtk.{ vtkImageCast, vtkImageEuclideanDistance, vtkImageGaussianSmooth, vtkObjectBase }
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
@@ -32,7 +32,7 @@ object DiscreteImageFilter {
    * Computes a (signed) distance transform of the image.
    * @note The value that is returned is not the euclidean distance unless the image has unit spacing. Even worse, the distance might depend on the spacing of the image.
    */
-  def distanceTransform[D: NDSpace: CanConvertToVtk : LinearImageInterpolator.Create, A: Scalar: ValueInterpolator : ClassTag: TypeTag](img: DiscreteImage[D, A]): DiscreteImage[D, Float] = {
+  def distanceTransform[D: NDSpace: CanConvertToVtk: LinearImageInterpolator.Create, A: Scalar: ValueInterpolator: ClassTag: TypeTag](img: DiscreteImage[D, A]): DiscreteImage[D, Float] = {
 
     val scalar = implicitly[Scalar[A]]
 

@@ -17,19 +17,19 @@ package scalismo.io
 
 import java.io.File
 
-import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.linalg.{ DenseMatrix, DenseVector }
 import niftijio.NiftiVolume
 import scalismo.ScalismoTestSuite
 import scalismo.common.DiscreteField.DiscreteImage
-import scalismo.common.{PointId, Scalar, ScalarArray}
+import scalismo.common.{ PointId, Scalar, ScalarArray }
 import scalismo.geometry._
 import scalismo.image._
 import scalismo.utils.CanConvertToVtk
-import spire.math.{UByte, UInt, UShort}
+import spire.math.{ UByte, UInt, UShort }
 
 import scala.reflect.ClassTag
-import scala.reflect.runtime.universe.{TypeTag, typeOf}
-import scala.util.{Failure, Success, Try}
+import scala.reflect.runtime.universe.{ TypeTag, typeOf }
+import scala.util.{ Failure, Success, Try }
 
 class ImageIOTests extends ScalismoTestSuite {
 
@@ -161,8 +161,6 @@ class ImageIOTests extends ScalismoTestSuite {
       f.deleteOnExit()
       ImageIO.writeVTK(discreteImage, f)
       val readImg = ImageIO.read3DScalarImage[Short](f).get
-
-      readImg.data should equal(discreteImage.data)
 
       assert(equalImages(readImg, discreteImage))
 

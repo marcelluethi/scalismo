@@ -16,8 +16,8 @@
 
 package scalismo.registration
 
-import scalismo.common.Field.{DifferentiableImage, Image}
-import scalismo.geometry.{NDSpace}
+import scalismo.common.Field.{ DifferentiableImage, Image }
+import scalismo.geometry.{ NDSpace }
 import scalismo.numerics._
 
 /**
@@ -28,10 +28,10 @@ import scalismo.numerics._
  *
  */
 case class MeanHuberLossMetric[D: NDSpace](fixedImage: Image[D, Float],
-                                           movingImage: DifferentiableImage[D, Float],
-                                           transformationSpace: TransformationSpace[D],
-                                           sampler: Sampler[D],
-                                           delta: Double = 1.345)
+  movingImage: DifferentiableImage[D, Float],
+  transformationSpace: TransformationSpace[D],
+  sampler: Sampler[D],
+  delta: Double = 1.345)
     extends MeanPointwiseLossMetric(fixedImage, movingImage, transformationSpace, sampler) {
 
   override protected def lossFunction(v: Float): Float = {

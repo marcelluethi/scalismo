@@ -17,24 +17,26 @@ package scalismo.numerics
 
 import breeze.linalg.DenseVector
 import scalismo.common.Field.Image
-import scalismo.common.{Field, Scalar}
+import scalismo.common.{ Field, Scalar }
 import scalismo.geometry._
 
 class Integrator[D: NDSpace](sampler: Sampler[D]) {
 
-  def integrateScalar[A : Scalar](img: Image[D, A]): A = {
+  def integrateScalar[A: Scalar](img: Image[D, A]): A = {
     integrateScalar(img.liftValues)
   }
 
-  def integrateScalar[A : Scalar](f: Function1[Point[D], Option[A]]): A = {
+  def integrateScalar[A: Scalar](f: Function1[Point[D], Option[A]]): A = {
     val samples = sampler.sample
     val scalar = Scalar[A]
     val zero = scalar.fromDouble(0.0)
 
     // TODO, this might be very inefficient due to conversions.
-    val sum = samples.par.map { case (pt, p) => {
-      scalar.toDouble(f(pt).getOrElse(zero)) * (1.0 / p.toFloat)
-    } }.sum
+    val sum = samples.par.map {
+      case (pt, p) => {
+        scalar.toDouble(f(pt).getOrElse(zero)) * (1.0 / p.toFloat)
+      }
+    }.sum
     scalar.fromDouble(sum / samples.size)
   }
 
@@ -66,13 +68,11 @@ object Integrator1D {
   }
 }
 
-
 object Integrato_2D {
   def apply(sampler: Sampler[_2D]): Integrator[_2D] = {
     new Integrator[_2D](sampler)
   }
 }
-
 
 object Integrato3D {
   def apply(sampler: Sampler[_3D]): Integrator[_3D] = {

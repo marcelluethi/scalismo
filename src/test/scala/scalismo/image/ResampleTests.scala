@@ -19,7 +19,7 @@ import java.io.File
 
 import scalismo.ScalismoTestSuite
 import scalismo.common.PointId
-import scalismo.common.interpolation.{BSplineInterpolator2D, BSplineInterpolator3D}
+import scalismo.common.interpolation.{ BSplineInterpolator2D, BSplineInterpolator3D }
 import scalismo.io.ImageIO
 
 class ResampleTests extends ScalismoTestSuite {

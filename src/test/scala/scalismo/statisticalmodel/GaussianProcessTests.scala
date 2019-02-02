@@ -15,13 +15,13 @@
  */
 package scalismo.statisticalmodel
 
-import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.linalg.{ DenseMatrix, DenseVector }
 import breeze.stats.distributions.Gaussian
 import scalismo.ScalismoTestSuite
 import scalismo.common._
 import scalismo.geometry.Point.implicits._
 import scalismo.geometry._
-import scalismo.image.{DiscreteImageDomain, DiscreteImageDomain3D}
+import scalismo.image.{ DiscreteImageDomain, DiscreteImageDomain3D }
 import scalismo.io.StatismoIO
 import scalismo.kernels._
 import scalismo.numerics._

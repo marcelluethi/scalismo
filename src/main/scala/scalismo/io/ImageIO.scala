@@ -15,22 +15,22 @@
  */
 package scalismo.io
 
-import java.io.{File, IOException}
+import java.io.{ File, IOException }
 
-import breeze.linalg.{DenseMatrix, DenseVector}
-import niftijio.{NiftiHeader, NiftiVolume}
+import breeze.linalg.{ DenseMatrix, DenseVector }
+import niftijio.{ NiftiHeader, NiftiVolume }
 import scalismo.common.DiscreteField.DiscreteImage
-import scalismo.common.{DiscreteField, RealSpace, Scalar}
+import scalismo.common.{ DiscreteField, RealSpace, Scalar }
 import scalismo.geometry._
 import scalismo.image.DiscreteImageDomain
 import scalismo.registration._
-import scalismo.utils.{CanConvertToVtk, ImageConversion, VtkHelpers}
-import spire.math.{UByte, UInt, UShort}
+import scalismo.utils.{ CanConvertToVtk, ImageConversion, VtkHelpers }
+import spire.math.{ UByte, UInt, UShort }
 import vtk._
 
 import scala.reflect.ClassTag
-import scala.reflect.runtime.universe.{TypeTag, typeOf}
-import scala.util.{Failure, Success, Try}
+import scala.reflect.runtime.universe.{ TypeTag, typeOf }
+import scala.util.{ Failure, Success, Try }
 
 /**
  * Implements methods for reading and writing D-dimensional images
@@ -370,7 +370,7 @@ object ImageIO {
 
       /* get a rigid registration by mapping a few points */
       val origPs = List(Point(0, 0, nz), Point(0, ny, 0), Point(0, ny, nz), Point(nx, 0, 0), Point(nx, 0, nz), Point(nx, ny, 0), Point(nx, ny, nz))
-      val scaledPS = origPs.map( p => anisotropicScaling(p))
+      val scaledPS = origPs.map(p => anisotropicScaling(p))
       val imgPs = origPs.map(p => transVoxelToWorld(p))
 
       val rigidReg = LandmarkRegistration.rigid3DLandmarkRegistration((scaledPS zip imgPs).toIndexedSeq, Point(0, 0, 0))
@@ -446,7 +446,7 @@ object ImageIO {
     transformMatrixFromNifti(volume, favourQform).map { affineTransMatrix =>
 
       val f = (x: Point[_3D]) => {
-       val xh = DenseVector(x(0), x(1), x(2), 1.0)
+        val xh = DenseVector(x(0), x(1), x(2), 1.0)
         val t: DenseVector[Double] = affineTransMatrix * xh
 
         // We flip after applying the transform as Nifti uses RAS coordinates
@@ -466,7 +466,7 @@ object ImageIO {
         val t: DenseVector[Float] = (affineTransMatrixInv * xh).map(_.toFloat)
         Point(t(0), t(1), t(2))
       }
-      val tinv = new Transformation[_3D]{
+      val tinv = new Transformation[_3D] {
         override val domain = RealSpace[_3D]
         override val t = fInv
       }

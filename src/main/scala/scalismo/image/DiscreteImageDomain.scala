@@ -15,11 +15,11 @@
  */
 package scalismo.image
 
-import breeze.linalg.{DenseMatrix, DenseVector, diag}
+import breeze.linalg.{ DenseMatrix, DenseVector, diag }
 import scalismo.common._
 import scalismo.geometry._
-import scalismo.image.CreateDiscreteImageDomain.{CreateDiscreteImageDomain1D, CreateDiscreteImageDomain2D, CreateDiscreteImageDomain3D}
-import scalismo.registration.{AnisotropicSimilarityTransformation, AnisotropicSimilarityTransformationSpace, RotationSpace}
+import scalismo.image.CreateDiscreteImageDomain.{ CreateDiscreteImageDomain1D, CreateDiscreteImageDomain2D, CreateDiscreteImageDomain3D }
+import scalismo.registration.{ AnisotropicSimilarityTransformation, AnisotropicSimilarityTransformationSpace, RotationSpace }
 
 import scala.language.implicitConversions
 
@@ -263,7 +263,6 @@ object DiscreteImageDomain1D {
   }
 }
 
-
 case class DiscreteImageDomain2D(size: IntVector[_2D], indexToPhysicalCoordinateTransform: AnisotropicSimilarityTransformation[_2D]) extends DiscreteImageDomain[_2D] {
 
   override val origin = {
@@ -323,7 +322,6 @@ object DiscreteImageDomain2D {
   }
 
 }
-
 
 case class DiscreteImageDomain3D(size: IntVector[_3D], indexToPhysicalCoordinateTransform: AnisotropicSimilarityTransformation[_3D]) extends DiscreteImageDomain[_3D] {
 

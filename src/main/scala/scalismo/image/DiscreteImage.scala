@@ -20,13 +20,11 @@ import scalismo.geometry._
 
 object DiscreteImage1D {
 
-  def apply[A](domain : DiscreteImageDomain[_1D], values: IndexedSeq[A])
-  : DiscreteField[_1D, DiscreteImageDomain[_1D], A] = {
+  def apply[A](domain: DiscreteImageDomain[_1D], values: IndexedSeq[A]): DiscreteField[_1D, DiscreteImageDomain[_1D], A] = {
     new DiscreteField(domain, values)
   }
 
-  def apply[A](domain : DiscreteImageDomain[_1D], f: Point[_1D] => A)
-  : DiscreteField[_1D, DiscreteImageDomain[_1D], A] = {
+  def apply[A](domain: DiscreteImageDomain[_1D], f: Point[_1D] => A): DiscreteField[_1D, DiscreteImageDomain[_1D], A] = {
 
     val data = domain.points.map(f).toIndexedSeq
     new DiscreteField(domain, data)
@@ -35,28 +33,23 @@ object DiscreteImage1D {
 }
 
 object DiscreteImage2D {
-  def apply[A](domain : DiscreteImageDomain[_2D], values: IndexedSeq[A])
-  : DiscreteField[_2D, DiscreteImageDomain[_2D], A] = {
+  def apply[A](domain: DiscreteImageDomain[_2D], values: IndexedSeq[A]): DiscreteField[_2D, DiscreteImageDomain[_2D], A] = {
     new DiscreteField(domain, values)
   }
 
-  def apply[A](domain : DiscreteImageDomain[_2D], f: Point[_2D] => A)
-  : DiscreteField[_2D, DiscreteImageDomain[_2D], A] = {
+  def apply[A](domain: DiscreteImageDomain[_2D], f: Point[_2D] => A): DiscreteField[_2D, DiscreteImageDomain[_2D], A] = {
 
     val data = domain.points.map(f).toIndexedSeq
     new DiscreteField(domain, data)
   }
 }
 
-
 object DiscreteImage3D {
-  def apply[A](domain : DiscreteImageDomain[_3D], values: IndexedSeq[A])
-  : DiscreteField[_3D, DiscreteImageDomain[_3D], A] = {
+  def apply[A](domain: DiscreteImageDomain[_3D], values: IndexedSeq[A]): DiscreteField[_3D, DiscreteImageDomain[_3D], A] = {
     new DiscreteField(domain, values)
   }
 
-  def apply[A](domain : DiscreteImageDomain[_3D], f: Point[_3D] => A)
-  : DiscreteField[_3D, DiscreteImageDomain[_3D], A] = {
+  def apply[A](domain: DiscreteImageDomain[_3D], f: Point[_3D] => A): DiscreteField[_3D, DiscreteImageDomain[_3D], A] = {
 
     val data = domain.points.map(f).toIndexedSeq
     new DiscreteField(domain, data)

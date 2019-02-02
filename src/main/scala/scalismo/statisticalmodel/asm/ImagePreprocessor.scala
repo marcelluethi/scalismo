@@ -19,14 +19,14 @@ package scalismo.statisticalmodel.asm
 import breeze.linalg.DenseVector
 import ncsa.hdf.`object`.Group
 import scalismo.common.DiscreteField.DiscreteImage
-import scalismo.common.interpolation.{BSplineInterpolator3D}
-import scalismo.common.{Domain, Field}
-import scalismo.geometry.{Point, _3D}
+import scalismo.common.interpolation.{ BSplineInterpolator3D }
+import scalismo.common.{ Domain, Field }
+import scalismo.geometry.{ Point, _3D }
 import scalismo.image.filter.DiscreteImageFilter
 import scalismo.io.HDF5File
 import scalismo.statisticalmodel.asm.PreprocessedImage.Type
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 /**
  * A preprocessed image, which can be fed to a [[FeatureExtractor]].
@@ -39,7 +39,7 @@ object PreprocessedImage {
   object Intensity extends Type
 }
 
-abstract class PreprocessedImage(domain : Domain[_3D], f : Point[_3D] => DenseVector[Float]) extends Field(domain, f) {
+abstract class PreprocessedImage(domain: Domain[_3D], f: Point[_3D] => DenseVector[Float]) extends Field(domain, f) {
   def valueType: Type
 }
 

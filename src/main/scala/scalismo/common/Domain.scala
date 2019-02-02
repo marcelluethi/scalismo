@@ -16,7 +16,7 @@
 package scalismo.common
 
 import scalismo.geometry._
-import scalismo.registration.{CanInvert, Transformation}
+import scalismo.registration.{ CanInvert, Transformation }
 
 trait Domain[D] {
   self =>
@@ -56,7 +56,6 @@ object RealSpace {
 object RealSpace1D extends RealSpace[_1D]
 object RealSpace2D extends RealSpace[_2D]
 object RealSpace3D extends RealSpace[_3D]
-
 
 trait BoxDomain[D] extends Domain[D] {
 

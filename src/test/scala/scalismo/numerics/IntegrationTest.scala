@@ -16,10 +16,10 @@
 package scalismo.numerics
 
 import scalismo.ScalismoTestSuite
-import scalismo.common.{BoxDomain1D, DifferentiableImage1D}
+import scalismo.common.{ BoxDomain1D, DifferentiableImage1D }
 import scalismo.geometry.Point.implicits._
 import scalismo.geometry._
-import scalismo.image.{DiscreteImageDomain, DiscreteImageDomain1D, Image1D}
+import scalismo.image.{ DiscreteImageDomain, DiscreteImageDomain1D, Image1D }
 import scalismo.utils.Random
 
 import scala.language.implicitConversions

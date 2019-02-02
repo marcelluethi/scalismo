@@ -18,14 +18,14 @@ package scalismo.registration
 import java.io.File
 
 import breeze.linalg.DenseVector
-import scalismo.common.interpolation.{BSplineInterpolator2D, BSplineInterpolator3D}
-import scalismo.{ScalismoTestSuite, numerics}
+import scalismo.common.interpolation.{ BSplineInterpolator2D, BSplineInterpolator3D }
+import scalismo.{ ScalismoTestSuite, numerics }
 import scalismo.common._
 import scalismo.geometry._
-import scalismo.io.{ImageIO, MeshIO}
-import scalismo.kernels.{DiagonalKernel, GaussianKernel2D}
-import scalismo.numerics.{LBFGSOptimizer, UniformSampler2D, UniformSampler3D}
-import scalismo.statisticalmodel.{GaussianProcess2D, LowRankGaussianProcess}
+import scalismo.io.{ ImageIO, MeshIO }
+import scalismo.kernels.{ DiagonalKernel, GaussianKernel2D }
+import scalismo.numerics.{ LBFGSOptimizer, UniformSampler2D, UniformSampler3D }
+import scalismo.statisticalmodel.{ GaussianProcess2D, LowRankGaussianProcess }
 import scalismo.utils.Random
 
 import scala.language.implicitConversions

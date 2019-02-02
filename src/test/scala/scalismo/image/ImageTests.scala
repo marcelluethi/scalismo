@@ -22,7 +22,7 @@ import scalismo.geometry.IntVector.implicits._
 import scalismo.geometry.Point.implicits._
 import scalismo.geometry.EuclideanVector.implicits._
 import scalismo.geometry._
-import scalismo.registration.{TranslationSpace1D, TranslationSpace2D}
+import scalismo.registration.{ TranslationSpace1D, TranslationSpace2D }
 
 import scala.language.implicitConversions
 import scala.reflect.ClassTag

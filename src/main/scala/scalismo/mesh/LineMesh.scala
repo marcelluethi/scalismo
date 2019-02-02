@@ -16,7 +16,7 @@
 
 package scalismo.mesh
 
-import scalismo.common.{Cell, PointId, UnstructuredPointsDomain}
+import scalismo.common.{ Cell, PointId, UnstructuredPointsDomain }
 import scalismo.geometry._
 
 import scala.language.implicitConversions

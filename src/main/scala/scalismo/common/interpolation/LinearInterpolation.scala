@@ -16,7 +16,7 @@
 
 package scalismo.common.interpolation
 
-import scalismo.common.{DiscreteField, Field}
+import scalismo.common.{ DiscreteField, Field }
 import scalismo.geometry._
 import scalismo.image.DiscreteImageDomain
 import scalismo.numerics.ValueInterpolator
@@ -44,30 +44,25 @@ trait LinearImageInterpolator[D, A] extends FieldInterpolator[D, DiscreteImageDo
 object LinearImageInterpolator {
 
   trait Create[D] {
-    def createLinearImageInterpolator[A : ValueInterpolator]() : LinearImageInterpolator[D, A]
+    def createLinearImageInterpolator[A: ValueInterpolator](): LinearImageInterpolator[D, A]
   }
 
   implicit object create1D extends Create[_1D] {
-    override def createLinearImageInterpolator[A : ValueInterpolator]():
-    LinearImageInterpolator[_1D, A] = new LinearImageInterpolator1D[A]
+    override def createLinearImageInterpolator[A: ValueInterpolator](): LinearImageInterpolator[_1D, A] = new LinearImageInterpolator1D[A]
   }
 
   implicit object create2D extends Create[_2D] {
-    override def createLinearImageInterpolator[A : ValueInterpolator]():
-    LinearImageInterpolator[_2D, A] = new LinearImageInterpolator2D[A]
+    override def createLinearImageInterpolator[A: ValueInterpolator](): LinearImageInterpolator[_2D, A] = new LinearImageInterpolator2D[A]
   }
 
   implicit object create3D extends Create[_3D] {
-    override def createLinearImageInterpolator[A : ValueInterpolator]():
-    LinearImageInterpolator[_3D, A] = new LinearImageInterpolator3D[A]
+    override def createLinearImageInterpolator[A: ValueInterpolator](): LinearImageInterpolator[_3D, A] = new LinearImageInterpolator3D[A]
   }
 
-
-  def create[D, A](implicit vi : ValueInterpolator[A], creator : Create[D]) : LinearImageInterpolator[D, A] = {
+  def create[D, A](implicit vi: ValueInterpolator[A], creator: Create[D]): LinearImageInterpolator[D, A] = {
     creator.createLinearImageInterpolator()
   }
 }
-
 
 case class LinearImageInterpolator1D[A: ValueInterpolator]() extends LinearImageInterpolator[_1D, A] {
 

@@ -20,13 +20,13 @@ import java.io.File
 import breeze.linalg.DenseVector
 import scalismo.ScalismoTestSuite
 import scalismo.common.interpolation.BSplineInterpolator3D
-import scalismo.common.{DifferentiableImage1D, PointId}
+import scalismo.common.{ DifferentiableImage1D, PointId }
 import scalismo.geometry.IntVector.implicits._
 import scalismo.geometry.Point.implicits._
 import scalismo.geometry.EuclideanVector.implicits._
 import scalismo.geometry._
-import scalismo.image.{DiscreteImageDomain1D}
-import scalismo.io.{ImageIO, MeshIO}
+import scalismo.image.{ DiscreteImageDomain1D }
+import scalismo.io.{ ImageIO, MeshIO }
 
 import scala.language.implicitConversions
 

@@ -21,11 +21,11 @@ import scalismo.ScalismoTestSuite
 import scalismo.common.Field
 import scalismo.geometry._
 import scalismo.io.MeshIO
-import scalismo.kernels.{DiagonalKernel, GaussianKernel3D}
-import scalismo.mesh.{MeshMetrics, TriangleMesh}
+import scalismo.kernels.{ DiagonalKernel, GaussianKernel3D }
+import scalismo.mesh.{ MeshMetrics, TriangleMesh }
 import scalismo.numerics.UniformMeshSampler3D
-import scalismo.registration.{LandmarkRegistration, TranslationTransform}
-import scalismo.statisticalmodel.{GaussianProcess, GaussianProcess3D, LowRankGaussianProcess, StatisticalMeshModel}
+import scalismo.registration.{ LandmarkRegistration, TranslationTransform }
+import scalismo.statisticalmodel.{ GaussianProcess, GaussianProcess3D, LowRankGaussianProcess, StatisticalMeshModel }
 import scalismo.utils.Random
 
 class DataCollectionTests extends ScalismoTestSuite {

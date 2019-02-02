@@ -27,7 +27,7 @@ import scala.reflect.ClassTag
  * @constructor Returns a scalar mesh data given a triangle mesh and an array of values.
  * The number of values and mesh points must be equal.
  */
-case class ScalarMeshField[S: Scalar: ClassTag](mesh: TriangleMesh[_3D],  data: ScalarArray[S]) {
+case class ScalarMeshField[S: Scalar: ClassTag](mesh: TriangleMesh[_3D], data: ScalarArray[S]) {
   require(mesh.pointSet.numberOfPoints == data.size)
 
   val discreteField = DiscreteField[_3D, UnstructuredPointsDomain[_3D], S](mesh.pointSet, data)

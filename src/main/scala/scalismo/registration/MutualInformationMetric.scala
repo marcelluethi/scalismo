@@ -18,12 +18,12 @@ package scalismo.registration
 
 import breeze.linalg.DenseVector
 import breeze.numerics._
-import scalismo.common.Field.{DifferentiableImage, Image}
+import scalismo.common.Field.{ DifferentiableImage, Image }
 import scalismo.geometry._
 import scalismo.image.DiscreteImageDomain
 import scalismo.numerics._
 import scalismo.registration.RegistrationMetric.ValueAndDerivative
-import scalismo.utils.{Memoize, Random}
+import scalismo.utils.{ Memoize, Random }
 
 /**
  * Implementation of the Mutual Information Metric, described in the following paper:

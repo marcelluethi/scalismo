@@ -18,9 +18,9 @@ package scalismo.kernels
 import scalismo.common._
 import scalismo.geometry.Point.implicits._
 import scalismo.geometry._
-import scalismo.numerics.{UniformSampler3D}
+import scalismo.numerics.{ UniformSampler3D }
 import scalismo.registration.Transformation
-import scalismo.statisticalmodel.{GaussianProcess3D, LowRankGaussianProcess}
+import scalismo.statisticalmodel.{ GaussianProcess3D, LowRankGaussianProcess }
 import scalismo.utils.Random
 import scalismo.ScalismoTestSuite
 

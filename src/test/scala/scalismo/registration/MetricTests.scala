@@ -19,11 +19,11 @@ import _root_.java.io.File
 
 import breeze.linalg.DenseVector
 import scalismo.ScalismoTestSuite
-import scalismo.common.interpolation.{BSplineInterpolator2D}
-import scalismo.common.{BoxDomain1D, DifferentiableImage1D}
+import scalismo.common.interpolation.{ BSplineInterpolator2D }
+import scalismo.common.{ BoxDomain1D, DifferentiableImage1D }
 import scalismo.geometry.Point.implicits._
 import scalismo.geometry._
-import scalismo.image.{DiscreteImageDomain, DiscreteImageDomain2D}
+import scalismo.image.{ DiscreteImageDomain, DiscreteImageDomain2D }
 import scalismo.io.ImageIO
 import scalismo.numerics._
 import scalismo.utils.Random
@@ -51,7 +51,7 @@ class MetricTests extends ScalismoTestSuite {
     val fixedImage = ImageIO.read2DScalarImage[Float](new File(testImgURL)).get
     val fixedImageCont = BSplineInterpolator2D[Float](3).interpolate(fixedImage)
     val translationSpace = TranslationSpace2D
-    val domain  = DiscreteImageDomain2D(fixedImage.domain.boundingBox, size = IntVector(50, 50))
+    val domain = DiscreteImageDomain2D(fixedImage.domain.boundingBox, size = IntVector(50, 50))
     val sampler = GridSampler2D(domain)
 
     it("has the global minimum where the images are similar") {

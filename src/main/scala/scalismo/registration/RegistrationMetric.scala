@@ -17,7 +17,7 @@
 package scalismo.registration
 
 import breeze.linalg.DenseVector
-import scalismo.common.Field.{DifferentiableImage, Image}
+import scalismo.common.Field.{ DifferentiableImage, Image }
 import scalismo.geometry._
 import scalismo.registration.RegistrationMetric.ValueAndDerivative
 

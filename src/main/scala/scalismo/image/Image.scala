@@ -16,27 +16,24 @@
 
 package scalismo.image
 
-import scalismo.common.{Domain, Field}
+import scalismo.common.{ Domain, Field }
 import scalismo.common.Field.Image
-import scalismo.geometry.{Point, _1D, _2D, _3D}
-
+import scalismo.geometry.{ Point, _1D, _2D, _3D }
 
 object Image1D {
-  def apply[A](domain : Domain[_1D], f : Point[_1D] => A) : Image[_1D, A] = {
+  def apply[A](domain: Domain[_1D], f: Point[_1D] => A): Image[_1D, A] = {
     new Field(domain, f)
   }
 }
-
 
 object Image2D {
-  def apply[A](domain : Domain[_2D], f : Point[_2D] => A) : Image[_2D, A] = {
+  def apply[A](domain: Domain[_2D], f: Point[_2D] => A): Image[_2D, A] = {
     new Field(domain, f)
   }
 }
 
-
 object Image3D {
-  def apply[A](domain : Domain[_3D], f : Point[_3D] => A) : Image[_3D, A] = {
+  def apply[A](domain: Domain[_3D], f: Point[_3D] => A): Image[_3D, A] = {
     new Field(domain, f)
   }
 }

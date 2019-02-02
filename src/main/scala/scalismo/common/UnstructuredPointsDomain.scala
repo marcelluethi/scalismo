@@ -17,16 +17,16 @@
 package scalismo.common
 
 import scalismo.common.UnstructuredPointsDomain.Create
-import scalismo.common.UnstructuredPointsDomain.Create.{CreateUnstructuredPointsDomain1D, CreateUnstructuredPointsDomain2D, CreateUnstructuredPointsDomain3D}
+import scalismo.common.UnstructuredPointsDomain.Create.{ CreateUnstructuredPointsDomain1D, CreateUnstructuredPointsDomain2D, CreateUnstructuredPointsDomain3D }
 import scalismo.geometry._
-import scalismo.mesh.kdtree.{KDTreeMap, RegionBuilder}
+import scalismo.mesh.kdtree.{ KDTreeMap, RegionBuilder }
 
 import scala.language.implicitConversions
 
 trait UnstructuredPointsDomain[D] extends DiscreteDomain[D] {
 
-  implicit def ndSpace : NDSpace[D]
-  implicit def create : Create[D]
+  implicit def ndSpace: NDSpace[D]
+  implicit def create: Create[D]
 
   def pointSequence: IndexedSeq[Point[D]]
 
@@ -122,8 +122,8 @@ object UnstructuredPointsDomain {
 
 case class UnstructuredPointsDomain1D(pointSequence: IndexedSeq[Point[_1D]]) extends UnstructuredPointsDomain[_1D] {
 
-  implicit val ndSpace = NDSpace[_1D]
-  implicit val create = CreateUnstructuredPointsDomain1D.create
+  val ndSpace = NDSpace[_1D]
+  val create = implicitly[Create[_1D]]
 
   override def boundingBox: BoxDomain[_1D] = {
     val minx = pointSequence.map(_(0)).min
@@ -139,8 +139,8 @@ case class UnstructuredPointsDomain1D(pointSequence: IndexedSeq[Point[_1D]]) ext
 
 case class UnstructuredPointsDomain2D(pointSequence: IndexedSeq[Point[_2D]]) extends UnstructuredPointsDomain[_2D] {
 
-  override implicit val ndSpace = NDSpace[_2D]
-  implicit val create = CreateUnstructuredPointsDomain2D.create
+  val ndSpace = NDSpace[_2D]
+  val create = implicitly[Create[_2D]]
 
   override def boundingBox: BoxDomain[_2D] = {
     val minx = pointSequence.map(_(0)).min
@@ -158,8 +158,8 @@ case class UnstructuredPointsDomain2D(pointSequence: IndexedSeq[Point[_2D]]) ext
 
 case class UnstructuredPointsDomain3D(pointSequence: IndexedSeq[Point[_3D]]) extends UnstructuredPointsDomain[_3D] {
 
-  implicit val ndSpace : NDSpace[_3D] = NDSpace[_3D]
-  implicit val create = CreateUnstructuredPointsDomain3D.create
+  val ndSpace: NDSpace[_3D] = NDSpace[_3D]
+  val create = implicitly[Create[_3D]]
 
   override def boundingBox: BoxDomain[_3D] = {
     val minx = pointSequence.map(_(0)).min

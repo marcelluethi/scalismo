@@ -16,7 +16,7 @@
 package scalismo.utils
 
 import scalismo.common.DiscreteField.DiscreteImage
-import scalismo.common._
+import scalismo.common.{PrimitiveScalarArray, _}
 import scalismo.geometry._
 import scalismo.image.DiscreteImageDomain
 import scalismo.io.ImageIO
@@ -56,11 +56,17 @@ object VtkHelpers {
     typeOf[A] match {
       case t if t =:= typeOf[Short] =>
         val a = init(new vtkShortArray())
-        a.SetJavaArray(data.asInstanceOf[PrimitiveScalarArray[Short]].rawData)
+        data match {
+          case psa : PrimitiveScalarArray[Short] => a.SetJavaArray(psa.rawData)
+          case _ => a.SetJavaArray(data.asInstanceOf[IndexedSeq[Short]].toArray)
+        }
         a
       case t if t =:= typeOf[Int] =>
         val a = init(new vtkIntArray())
-        a.SetJavaArray(data.asInstanceOf[PrimitiveScalarArray[Int]].rawData)
+        data match {
+          case psa : PrimitiveScalarArray[Int] => a.SetJavaArray(psa.rawData)
+          case _ => a.SetJavaArray(data.asInstanceOf[IndexedSeq[Int]].toArray)
+        }
         a
       case t if t =:= typeOf[Long] =>
         val a = init(new vtkLongArray())
@@ -68,11 +74,17 @@ object VtkHelpers {
         a
       case t if t =:= typeOf[Float] =>
         val a = init(new vtkFloatArray())
-        a.SetJavaArray(data.asInstanceOf[PrimitiveScalarArray[Float]].rawData)
+        data match {
+          case psa : PrimitiveScalarArray[Float] => a.SetJavaArray(psa.rawData)
+          case _ => a.SetJavaArray(data.asInstanceOf[IndexedSeq[Float]].toArray)
+        }
         a
       case t if t =:= typeOf[Double] =>
         val a = init(new vtkDoubleArray())
-        a.SetJavaArray(data.asInstanceOf[PrimitiveScalarArray[Double]].rawData)
+        data match {
+          case psa : PrimitiveScalarArray[Double] => a.SetJavaArray(psa.rawData)
+          case _ => a.SetJavaArray(data.asInstanceOf[IndexedSeq[Double]].toArray)
+        }
         a
       case t if t =:= typeOf[Byte] =>
         /* ATTENTION: The following does NOT produce the correct result!
@@ -81,25 +93,47 @@ object VtkHelpers {
          * Here is the workaround:
          */
         val a = init(new vtkUnsignedCharArray())
-        a.SetJavaArray(data.asInstanceOf[PrimitiveScalarArray[Byte]].rawData)
+        data match {
+          case psa : PrimitiveScalarArray[Byte] => a.SetJavaArray(psa.rawData)
+          case _ => a.SetJavaArray(data.asInstanceOf[IndexedSeq[Byte]].toArray)
+        }
         a
       case t if t =:= typeOf[UByte] =>
         val a = init(new vtkUnsignedCharArray())
         //        a.SetJavaArray(data.asInstanceOf[Array[UByte]].map(_.toByte))
-        a.SetJavaArray(data.asInstanceOf[ValueClassScalarArray[UByte, Byte]].rawData)
+        data match {
+          case psa : ValueClassScalarArray[UByte, Byte] => a.SetJavaArray(data.asInstanceOf[ValueClassScalarArray[UByte, Byte]].rawData)
+          case _ => a.SetJavaArray(data.asInstanceOf[IndexedSeq[UByte]].toArray.map(_.toByte))
+        }
         a
       case t if t =:= typeOf[UShort] =>
         val a = init(new vtkUnsignedShortArray())
-        val raw = data.asInstanceOf[ValueClassScalarArray[UShort, Char]].rawData
-        a.SetJavaArray(ArrayUtils.fastMap[Char, Short](raw, _.toShort))
+        data match {
+          case psa : ValueClassScalarArray[UShort, Char] => {
+            val raw = data.asInstanceOf[ValueClassScalarArray[UShort, Char]].rawData
+            a.SetJavaArray(ArrayUtils.fastMap[Char, Short](raw, _.toShort))
+          }
+          case _ => a.SetJavaArray(data.asInstanceOf[IndexedSeq[UShort]].toArray.map(_.toShort))
+        }
         a
       case t if t =:= typeOf[UInt] =>
         val a = init(new vtkUnsignedIntArray())
-        a.SetJavaArray(data.asInstanceOf[ValueClassScalarArray[UInt, Int]].rawData)
+
+        data match {
+          case psa : ValueClassScalarArray[UInt, Int] => {
+            val raw = a.SetJavaArray(data.asInstanceOf[ValueClassScalarArray[UInt, Int]].rawData)
+          }
+          case _ => a.SetJavaArray(data.asInstanceOf[IndexedSeq[UInt]].toArray.map(_.toInt))
+        }
         a
       case t if t =:= typeOf[ULong] =>
         val a = init(new vtkUnsignedLongArray())
-        a.SetJavaArray(data.asInstanceOf[ValueClassScalarArray[ULong, Long]].rawData)
+        data match {
+          case psa : ValueClassScalarArray[ULong, Long] => {
+            val raw = a.SetJavaArray(data.asInstanceOf[ValueClassScalarArray[ULong, Long]].rawData)
+          }
+          case _ => a.SetJavaArray(data.asInstanceOf[IndexedSeq[ULong]].toArray.map(_.toLong))
+        }
         a
       case _ => throw new NotImplementedError("Invalid scalar Pixel Type " + typeOf[A])
     }

@@ -15,10 +15,10 @@
  */
 package scalismo.io
 
-import java.io.{File, IOException}
+import java.io.{ File, IOException }
 
-import scalismo.color.{RGB, RGBA}
-import scalismo.common.{PointId, Scalar, UnstructuredPointsDomain}
+import scalismo.color.{ RGB, RGBA }
+import scalismo.common.{ PointId, Scalar, UnstructuredPointsDomain }
 import scalismo.geometry._
 import scalismo.mesh.TriangleMesh._
 import scalismo.mesh._
@@ -27,7 +27,7 @@ import vtk._
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 object MeshIO {
   /**

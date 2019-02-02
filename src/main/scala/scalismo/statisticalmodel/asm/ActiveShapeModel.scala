@@ -15,18 +15,18 @@
  */
 package scalismo.statisticalmodel.asm
 
-import breeze.linalg.{DenseVector, convert}
+import breeze.linalg.{ DenseVector, convert }
 import scalismo.common.DiscreteField.DiscreteImage
-import scalismo.common.{PointId, UnstructuredPointsDomain, UnstructuredPointsDomain3D}
-import scalismo.geometry.{Point, _3D}
+import scalismo.common.{ PointId, UnstructuredPointsDomain, UnstructuredPointsDomain3D }
+import scalismo.geometry.{ Point, _3D }
 import scalismo.mesh.TriangleMesh
 import scalismo.numerics.Sampler
-import scalismo.registration.{LandmarkRegistration, RigidTransformation, RigidTransformationSpace, Transformation}
-import scalismo.statisticalmodel.{MultivariateNormalDistribution, StatisticalMeshModel}
+import scalismo.registration.{ LandmarkRegistration, RigidTransformation, RigidTransformationSpace, Transformation }
+import scalismo.statisticalmodel.{ MultivariateNormalDistribution, StatisticalMeshModel }
 import scalismo.utils.Random
 
 import scala.collection.immutable
-import scala.util.{Failure, Try}
+import scala.util.{ Failure, Try }
 
 object ActiveShapeModel {
   type TrainingData = Iterator[(DiscreteImage[_3D, Float], Transformation[_3D])]

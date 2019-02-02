@@ -119,7 +119,6 @@ object EuclideanVector1D {
   val zero = EuclideanVector1D(0.0)
   val ones = EuclideanVector1D(1.0)
 
-
   implicit object EuclideanVector1DVectorizer extends Vectorizer[EuclideanVector1D] {
 
     override def dim: Int = 1
@@ -164,7 +163,6 @@ object EuclideanVector2D {
 
   val zero = EuclideanVector2D(0.0, 0.0)
   val ones = EuclideanVector2D(1.0, 1.0)
-
 
   implicit object EuclideanVector2DVectorizer extends Vectorizer[EuclideanVector2D] {
 

@@ -19,7 +19,7 @@ import java.io.File
 
 import org.scalatest.PrivateMethodTester
 import scalismo.ScalismoTestSuite
-import scalismo.common.interpolation.{BSplineInterpolator1D, BSplineInterpolator2D, BSplineInterpolator3D}
+import scalismo.common.interpolation.{ BSplineInterpolator1D, BSplineInterpolator2D, BSplineInterpolator3D }
 import scalismo.common._
 import scalismo.geometry.IntVector.implicits._
 import scalismo.geometry.Point.implicits._

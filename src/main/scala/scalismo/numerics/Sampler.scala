@@ -49,21 +49,19 @@ class GridSampler[D: NDSpace](val domain: DiscreteImageDomain[D]) extends Sample
 }
 
 object GridSampler1D {
-  def apply(domain: DiscreteImageDomain[_1D]) : GridSampler[_1D] = {
+  def apply(domain: DiscreteImageDomain[_1D]): GridSampler[_1D] = {
     new GridSampler[_1D](domain)
   }
 }
 
-
 object GridSampler2D {
-  def apply(domain: DiscreteImageDomain[_2D]) : GridSampler[_2D] = {
+  def apply(domain: DiscreteImageDomain[_2D]): GridSampler[_2D] = {
     new GridSampler[_2D](domain)
   }
 }
 
-
 object GridSampler3D {
-  def apply(domain: DiscreteImageDomain[_3D]) : GridSampler[_3D] = {
+  def apply(domain: DiscreteImageDomain[_3D]): GridSampler[_3D] = {
     new GridSampler[_3D](domain)
   }
 }
@@ -84,20 +82,16 @@ class UniformSampler[D: NDSpace](val domain: BoxDomain[D], val numberOfPoints: I
 }
 
 object UniformSampler1D {
-  def apply(domain: BoxDomain[_1D], numberOfPoints: Int)(implicit rand: Random)
-  : UniformSampler[_1D] = new UniformSampler(domain, numberOfPoints)
+  def apply(domain: BoxDomain[_1D], numberOfPoints: Int)(implicit rand: Random): UniformSampler[_1D] = new UniformSampler(domain, numberOfPoints)
 }
 
 object UniformSampler2D {
-  def apply(domain: BoxDomain[_2D], numberOfPoints: Int)(implicit rand: Random)
-  : UniformSampler[_2D] = new UniformSampler(domain, numberOfPoints)
+  def apply(domain: BoxDomain[_2D], numberOfPoints: Int)(implicit rand: Random): UniformSampler[_2D] = new UniformSampler(domain, numberOfPoints)
 }
 
 object UniformSampler3D {
-  def apply(domain: BoxDomain[_3D], numberOfPoints: Int)(implicit rand: Random)
-  : UniformSampler[_3D] = new UniformSampler(domain, numberOfPoints)
+  def apply(domain: BoxDomain[_3D], numberOfPoints: Int)(implicit rand: Random): UniformSampler[_3D] = new UniformSampler(domain, numberOfPoints)
 }
-
 
 case class RandomMeshSampler3D(mesh: TriangleMesh[_3D], numberOfPoints: Int, seed: Int)(implicit rand: Random) extends Sampler[_3D] {
 

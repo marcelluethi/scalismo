@@ -15,14 +15,14 @@
  */
 package scalismo.registration
 
-import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.linalg.{ DenseMatrix, DenseVector }
 import scalismo.geometry.EuclideanVector.VectorVectorizer
-import scalismo.geometry.{EuclideanVector, NDSpace, Point}
+import scalismo.geometry.{ EuclideanVector, NDSpace, Point }
 import scalismo.registration.TransformationSpace.ParameterVector
 import scalismo.statisticalmodel.LowRankGaussianProcess
 import scalismo.statisticalmodel.LowRankGaussianProcess.Eigenpair
 
-class GaussianProcessTransformationSpace[D : NDSpace] private (gp: LowRankGaussianProcess[D, EuclideanVector[D]])(implicit vectorizer: VectorVectorizer[D])
+class GaussianProcessTransformationSpace[D: NDSpace] private (gp: LowRankGaussianProcess[D, EuclideanVector[D]])(implicit vectorizer: VectorVectorizer[D])
     extends TransformationSpace[D] {
 
   override type T = GaussianProcessTransformation[D]
@@ -52,7 +52,7 @@ class GaussianProcessTransformationSpace[D : NDSpace] private (gp: LowRankGaussi
 
 }
 
-class GaussianProcessTransformation[D : NDSpace] private (gp: LowRankGaussianProcess[D, EuclideanVector[D]], alpha: ParameterVector)
+class GaussianProcessTransformation[D: NDSpace] private (gp: LowRankGaussianProcess[D, EuclideanVector[D]], alpha: ParameterVector)
     extends ParametricTransformation[D] {
 
   val instance = gp.instance(alpha)
@@ -68,13 +68,13 @@ class GaussianProcessTransformation[D : NDSpace] private (gp: LowRankGaussianPro
 }
 
 object GaussianProcessTransformation {
-  def apply[D : NDSpace](gp: LowRankGaussianProcess[D, EuclideanVector[D]], alpha: TransformationSpace.ParameterVector) = {
+  def apply[D: NDSpace](gp: LowRankGaussianProcess[D, EuclideanVector[D]], alpha: TransformationSpace.ParameterVector) = {
     new GaussianProcessTransformation[D](gp, alpha)
   }
 }
 
 object GaussianProcessTransformationSpace {
-  def apply[D : NDSpace](gp: LowRankGaussianProcess[D, EuclideanVector[D]])(implicit vectorizer: VectorVectorizer[D]) = {
+  def apply[D: NDSpace](gp: LowRankGaussianProcess[D, EuclideanVector[D]])(implicit vectorizer: VectorVectorizer[D]) = {
     new GaussianProcessTransformationSpace[D](gp)
   }
 }

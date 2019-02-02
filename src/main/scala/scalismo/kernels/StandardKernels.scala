@@ -34,26 +34,22 @@ class GaussianKernel[D](val sigma: Double) extends PDKernel[D] {
 }
 
 object GaussianKernel1D {
-  def apply(sigma : Double) : GaussianKernel[_1D] = {
+  def apply(sigma: Double): GaussianKernel[_1D] = {
     new GaussianKernel[_1D](sigma)
   }
 }
 
-
 object GaussianKernel2D {
-  def apply(sigma : Double) : GaussianKernel[_2D] = {
+  def apply(sigma: Double): GaussianKernel[_2D] = {
     new GaussianKernel[_2D](sigma)
   }
 }
 
-
 object GaussianKernel3D {
-  def apply(sigma : Double) : GaussianKernel[_3D] = {
+  def apply(sigma: Double): GaussianKernel[_3D] = {
     new GaussianKernel[_3D](sigma)
   }
 }
-
-
 
 class SampleCovarianceKernel[D: NDSpace](val ts: IndexedSeq[Transformation[D]], cacheSizeHint: Int = 100000) extends MatrixValuedPDKernel[D] {
 
@@ -92,19 +88,19 @@ class SampleCovarianceKernel[D: NDSpace](val ts: IndexedSeq[Transformation[D]], 
 }
 
 object SampleCovarianceKernel1D {
-  def apply(ts: IndexedSeq[Transformation[_1D]], cacheSizeHint: Int = 100000) : SampleCovarianceKernel[_1D] = {
+  def apply(ts: IndexedSeq[Transformation[_1D]], cacheSizeHint: Int = 100000): SampleCovarianceKernel[_1D] = {
     new SampleCovarianceKernel[_1D](ts, cacheSizeHint)
   }
 }
 
 object SampleCovarianceKernel2D {
-  def apply(ts: IndexedSeq[Transformation[_2D]], cacheSizeHint: Int = 100000) : SampleCovarianceKernel[_2D] = {
+  def apply(ts: IndexedSeq[Transformation[_2D]], cacheSizeHint: Int = 100000): SampleCovarianceKernel[_2D] = {
     new SampleCovarianceKernel[_2D](ts, cacheSizeHint)
   }
 }
 
 object SampleCovarianceKernel3D {
-  def apply(ts: IndexedSeq[Transformation[_3D]], cacheSizeHint: Int = 100000) : SampleCovarianceKernel[_3D] = {
+  def apply(ts: IndexedSeq[Transformation[_3D]], cacheSizeHint: Int = 100000): SampleCovarianceKernel[_3D] = {
     new SampleCovarianceKernel[_3D](ts, cacheSizeHint)
   }
 }
