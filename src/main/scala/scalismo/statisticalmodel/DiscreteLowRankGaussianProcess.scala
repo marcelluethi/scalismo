@@ -279,7 +279,7 @@ case class DiscreteLowRankGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain
         meanFun(findClosestPointMemo)),
       interpolatedKLBasis,
       this,
-      NearestNeighborInterpolator[D, Value]()
+      new NearestNeighborInterpolator[D, Value]()
     )
   }
 

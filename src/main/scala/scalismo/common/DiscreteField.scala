@@ -17,7 +17,7 @@ package scalismo.common
 
 import breeze.linalg.DenseVector
 import scalismo.common.interpolation.FieldInterpolator
-import scalismo.geometry.{IntVector, NDSpace}
+import scalismo.geometry._
 import scalismo.image.DiscreteImageDomain
 
 /**
@@ -110,4 +110,35 @@ object DiscreteField {
   }
 }
 
+object DiscreteField1D {
+  def apply[DDomain <: DiscreteDomain[_1D], A](domain: DDomain, data: IndexedSeq[A]) : DiscreteField[_1D, DDomain, A] = {
+    new DiscreteField(domain, data)
+  }
 
+  def apply[DDomain <: DiscreteDomain[_1D], A](domain: DDomain, f : Point[_1D] => A) : DiscreteField[_1D, DDomain, A] = {
+    val data = domain.points.map(f).toIndexedSeq
+    new DiscreteField(domain, data)
+  }
+}
+
+object DiscreteField2D {
+  def apply[DDomain <: DiscreteDomain[_2D], A](domain: DDomain, data: IndexedSeq[A]) : DiscreteField[_2D, DDomain, A] = {
+    new DiscreteField[_2D, DDomain, A](domain, data)
+  }
+
+  def apply[DDomain <: DiscreteDomain[_2D], A](domain: DDomain, f : Point[_2D] => A) : DiscreteField[_2D, DDomain, A] = {
+    val data = domain.points.map(f).toIndexedSeq
+    new DiscreteField[_2D, DDomain, A](domain, data)
+  }
+}
+
+object DiscreteField3D {
+  def apply[DDomain <: DiscreteDomain[_3D], A](domain: DDomain, data: IndexedSeq[A]) : DiscreteField[_3D, DDomain, A] = {
+    new DiscreteField[_3D, DDomain, A](domain, data)
+  }
+
+  def apply[DDomain <: DiscreteDomain[_3D], A](domain: DDomain, f : Point[_3D] => A) : DiscreteField[_3D, DDomain, A] = {
+    val data = domain.points.map(f).toIndexedSeq
+    new DiscreteField(domain, data)
+  }
+}

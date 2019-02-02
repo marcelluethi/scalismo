@@ -16,13 +16,14 @@
 package scalismo.common
 
 import scalismo.common.interpolation.FieldInterpolator
-import scalismo.geometry.{NDSpace, Point}
+import scalismo.geometry._
 
 /**
  * Nearest neighbor interpolation of a discrete field. This implementation is generic and
  * works for any discrete field.
  */
-case class NearestNeighborInterpolator[D : NDSpace, A]() extends FieldInterpolator[D, DiscreteDomain[D], A] {
+class NearestNeighborInterpolator[D : NDSpace, A]() extends FieldInterpolator[D, DiscreteDomain[D], A] {
+
 
   override def interpolate(df: DiscreteField[D, DiscreteDomain[D], A]): Field[D, A] = {
 
@@ -34,4 +35,22 @@ case class NearestNeighborInterpolator[D : NDSpace, A]() extends FieldInterpolat
     Field(RealSpace[D], valueAtClosestPoint)
   }
 
+}
+
+object NearestNeighborInterpolator1D {
+  def apply[A]() : NearestNeighborInterpolator[_1D, A] = {
+    new NearestNeighborInterpolator[_1D, A]()
+  }
+}
+
+object NearestNeighborInterpolator2D {
+  def apply[A]() : NearestNeighborInterpolator[_2D, A] = {
+    new NearestNeighborInterpolator[_2D, A]()
+  }
+}
+
+object NearestNeighborInterpolator3D {
+  def apply[A]() : NearestNeighborInterpolator[_3D, A] = {
+    new NearestNeighborInterpolator[_3D, A]()
+  }
 }

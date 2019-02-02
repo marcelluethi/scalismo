@@ -205,7 +205,7 @@ case class ProductTransformation[D](outerTransform: ParametricTransformation[D] 
 /**
  * Parametric transformation space producing translation transforms
  */
-class TranslationSpace[D: NDSpace] private () extends TransformationSpace[D] with DifferentiableTransforms[D] {
+class TranslationSpace[D: NDSpace]() extends TransformationSpace[D] with DifferentiableTransforms[D] {
 
   override type T = TranslationTransform[D]
 
@@ -221,8 +221,16 @@ class TranslationSpace[D: NDSpace] private () extends TransformationSpace[D] wit
 object TranslationSpace {
   /** factory method to create a D-dimensional Translation space*/
   def apply[D: NDSpace] = new TranslationSpace[D]
-
 }
+
+object TranslationSpace1D extends TranslationSpace[_1D]
+
+
+object TranslationSpace2D extends TranslationSpace[_2D]
+
+
+object TranslationSpace3D extends TranslationSpace[_3D]
+
 
 /**
  * D-dimensional translation transform that is parametric, invertible and differentiable

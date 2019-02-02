@@ -15,6 +15,7 @@
  */
 package scalismo.common
 
+import scalismo.common.Field.{DifferentiableImage, Image}
 import scalismo.geometry._
 
 
@@ -57,7 +58,7 @@ class Field[D : NDSpace, A](val domain : Domain[D], val f : Point[D] => A) exten
   def sample[NewDomain <: DiscreteDomain[D]](domain: NewDomain, outsideValue: A): DiscreteField[D, NewDomain, A] = {
 
     // TODO this should be parallelized
-    val values = domain.points.map(pt => {
+    val values : Iterator[A] = domain.points.map(pt => {
       if (isDefinedAt(pt)) f(pt)
       else outsideValue
     })
@@ -107,6 +108,7 @@ class Field[D : NDSpace, A](val domain : Domain[D], val f : Point[D] => A) exten
   */
 object Field {
 
+
   def apply[D : NDSpace, A](dom: Domain[D], fun: Point[D] => A) = new Field[D, A](dom, fun) {}
 
   /**
@@ -125,6 +127,24 @@ object Field {
 
 }
 
+object Image1D {
+  def apply[A](domain : Domain[_1D], f : Point[_1D] => A) : Image[_1D, A] = {
+    new Field(domain, f)
+  }
+}
+
+object Image2D {
+  def apply[A](domain : Domain[_2D], f : Point[_2D] => A) : Image[_2D, A] = {
+    new Field(domain, f)
+  }
+}
+
+object Image3D {
+  def apply[A](domain : Domain[_3D], f : Point[_3D] => A) : Image[_3D, A] = {
+    new Field(domain, f)
+  }
+}
+
 class DifferentiableField[D : NDSpace, A, DxA](domain : Domain[D],
                                                     f : Point[D] => A,
                                                     df : Point[D] => DxA) extends Field[D, A](domain, f) {
@@ -133,4 +153,26 @@ class DifferentiableField[D : NDSpace, A, DxA](domain : Domain[D],
 
 }
 
+object DifferentiableImage1D {
+  def apply[A, DxA](domain : Domain[_1D], f : Point[_1D] => A, df : Point[_1D] => DxA)
+  : DifferentiableImage[_1D, A, DxA] = {
 
+    new DifferentiableImage(domain, f, df)
+  }
+}
+
+object DifferentiableImage2D {
+  def apply[A, DxA](domain : Domain[_2D], f : Point[_2D] => A, df : Point[_2D] => DxA)
+  : DifferentiableImage[_2D, A, DxA] = {
+
+    new DifferentiableImage(domain, f, df)
+  }
+}
+
+object DifferentiableImage3D {
+  def apply[A, DxA](domain : Domain[_3D], f : Point[_3D] => A, df : Point[_3D] => DxA)
+  : DifferentiableImage[_3D, A, DxA] = {
+
+    new DifferentiableImage(domain, f, df)
+  }
+}
