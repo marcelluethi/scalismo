@@ -22,14 +22,13 @@ import scalismo.common.{DiscreteDomain, DiscreteField, Field}
  * @tparam D Dimensionality
  * @tparam DDomain Type of the [[DiscreteDomain]] that the interpolator can interpolate
  * @tparam A The value type
- * @tparam B The value after interpolation
  */
-trait FieldInterpolator[D, -DDomain <: DiscreteDomain[D], A, B] {
+trait FieldInterpolator[D, -DDomain <: DiscreteDomain[D], A] {
 
   /**
    * Interpolates a given discrete field using the given interpolator.
    * @param df the discrete field to be interpolated
    * @return A continuous field of the same type.
    */
-  def interpolate(df: DiscreteField[D, DDomain, A]): Field[D, B]
+  def interpolate(df: DiscreteField[D, DDomain, A]): Field[D, A]
 }

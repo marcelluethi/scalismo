@@ -7,7 +7,7 @@ import scalismo.image.{ BSplineCoefficients, DiscreteImageDomain }
 import scalismo.numerics.{ BSpline }
 
 trait BSplineInterpolator[D, A] extends FieldInterpolator[D, DiscreteImageDomain[D], A] {
-  implicit val scalar : Scalar[A]
+  protected def scalar: Scalar[A]
 
   private[scalismo] def applyMirrorBoundaryCondition(k: Int, numCoefficients: Int) = {
     if (k < 0) -k
@@ -38,7 +38,9 @@ object BSplineInterpolator {
 
 case class BSplineInterpolator1D[A: Scalar](degree: Int) extends BSplineInterpolator[_1D, A] {
 
-  override def interpolate(discreteField: DiscreteField[_1D, DiscreteImageDomain[_1D], A])(implicit canInterpolate : CanInterpolate[A]): DifferentiableField[_1D, canInterpolate.InterpolationType] = {
+  override protected val scalar = Scalar[A]
+
+  override def interpolate(discreteField: DiscreteField[_1D, DiscreteImageDomain[_1D], A]): DifferentiableField[_1D, A] = {
 
     val domain = discreteField.domain
     val ck = determineCoefficients1D(degree, discreteField)
@@ -89,7 +91,7 @@ case class BSplineInterpolator1D[A: Scalar](degree: Int) extends BSplineInterpol
 
 case class BSplineInterpolator2D[A: Scalar](degree: Int) extends BSplineInterpolator[_2D, A] {
 
-  private val scalar = Scalar[A]
+  val scalar = Scalar[A]
 
   override def interpolate(discreteField: DiscreteField[_2D, DiscreteImageDomain[_2D], A]): DifferentiableField[_2D, A] = {
     val domain = discreteField.domain
@@ -163,7 +165,7 @@ case class BSplineInterpolator2D[A: Scalar](degree: Int) extends BSplineInterpol
 
 case class BSplineInterpolator3D[A: Scalar](degree: Int) extends BSplineInterpolator[_3D, A] {
 
-  private val scalar = Scalar[A]
+  override protected val scalar = Scalar[A]
 
   override def interpolate(discreteField: DiscreteField[_3D, DiscreteImageDomain[_3D], A]): DifferentiableField[_3D, A] = {
     val domain = discreteField.domain

@@ -47,7 +47,7 @@ case class DiscreteField[D : NDSpace, +DDomain <: DiscreteDomain[D], A](domain: 
    * @param interpolator Implements an interpolation scheme (e.g. Nearest Neighbor, B-Spline, ...)
    * @return A continuous field of the same type.
    */
-  def interpolate[B](interpolator: FieldInterpolator[D, DDomain, A, B]): Field[D, B] = {
+  def interpolate[B](interpolator: FieldInterpolator[D, DDomain, A]): Field[D, A] = {
     interpolator.interpolate(this)
   }
 
