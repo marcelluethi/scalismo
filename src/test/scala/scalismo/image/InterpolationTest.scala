@@ -102,7 +102,7 @@ class InterpolationTest extends ScalismoTestSuite with PrivateMethodTester {
         val domain = DiscreteImageDomain[_2D]((2.0, 3.0), (1.5, 0.1), (2, 3))
         val discreteImage = DiscreteImage2D[Float](domain, IndexedSeq(1.4f, 2.1f, 7.5f, 9f, 8f, 0f))
 
-        val continuousImg = discreteImage.interpolate(interpolation.BSplineInterpolator2D(3))
+        val continuousImg = discreteImage.interpolate(interpolation.BSplineInterpolator2D(0))
 
         for ((pt, idx) <- discreteImage.domain.points.zipWithIndex) {
           continuousImg(pt) should be(discreteImage(PointId(idx)) +- 0.0001f)
@@ -201,11 +201,11 @@ class InterpolationTest extends ScalismoTestSuite with PrivateMethodTester {
 
       it("Interpolates a real dataset correctly") {
         val path = getClass.getResource("/3dimage.nii").getPath
-        val discreteImage = ImageIO.read3DScalarImage[Short](new File(path)).get
-        val continuousImage = discreteImage.interpolate(BSplineInterpolator3D(3))
+        val discreteImage = ImageIO.read3DScalarImage[Short](new File(path)).get.map(_.toFloat)
+        val continuousImage = discreteImage.interpolate(BSplineInterpolator3D[Float](1))
 
         for ((p, i) <- discreteImage.domain.points.zipWithIndex.filter(p => p._2 % 100 == 0))
-          discreteImage(PointId(i)) should be(continuousImage(p).toShort +- 1.toShort)
+          discreteImage(PointId(i)) should be(continuousImage(p) +- 1f)
       }
     }
   }

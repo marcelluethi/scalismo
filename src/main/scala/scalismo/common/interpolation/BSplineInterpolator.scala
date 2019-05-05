@@ -145,7 +145,7 @@ case class BSplineInterpolator2D[A: Scalar](degree: Int) extends BSplineInterpol
   * as a DenseVector, i.e. the rows are written one after another */
   private def determineCoefficients2D(degree: Int, img: DiscreteField[_2D, DiscreteImageDomain[_2D], A]): Array[Float] = {
     val numeric = implicitly[Scalar[A]]
-    val coeffs = DenseVector.zeros[Float](img.values.size)
+    val coeffs = DenseVector.zeros[Float](img.domain.numberOfPoints)
     var y = 0
     while (y < img.domain.size(1)) {
       val rowValues = (0 until img.domain.size(0)).map(x => img(img.domain.pointId(IntVector(x, y))))
@@ -233,7 +233,7 @@ case class BSplineInterpolator3D[A: Scalar](degree: Int) extends BSplineInterpol
 
   private def determineCoefficients3D(degree: Int, discreteField: DiscreteField[_3D, DiscreteImageDomain[_3D], A]): Array[Float] = {
 
-    val coeffs = DenseVector.zeros[Float](discreteField.values.size)
+    val coeffs = DenseVector.zeros[Float](discreteField.domain.numberOfPoints)
     var z = 0
     var y = 0
     while (z < discreteField.domain.size(2)) {
