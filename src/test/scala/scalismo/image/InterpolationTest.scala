@@ -100,9 +100,9 @@ class InterpolationTest extends ScalismoTestSuite with PrivateMethodTester {
 
       it("Interpolates the values for origin (2,3) and spacing (1.5, 2.3)") {
         val domain = DiscreteImageDomain[_2D]((2.0, 3.0), (1.5, 0.1), (2, 3))
-        val discreteImage = DiscreteImage2D(domain, IndexedSeq(1.4f, 2.1f, 7.5f, 9f, 8f, 0f))
+        val discreteImage = DiscreteImage2D[Float](domain, IndexedSeq(1.4f, 2.1f, 7.5f, 9f, 8f, 0f))
 
-        val continuousImg = discreteImage.interpolate(interpolation.BSplineInterpolator2D(2))
+        val continuousImg = discreteImage.interpolate(interpolation.BSplineInterpolator2D(3))
 
         for ((pt, idx) <- discreteImage.domain.points.zipWithIndex) {
           continuousImg(pt) should be(discreteImage(PointId(idx)) +- 0.0001f)

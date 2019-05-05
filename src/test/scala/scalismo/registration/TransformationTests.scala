@@ -19,13 +19,13 @@ import java.io.File
 
 import breeze.linalg.DenseVector
 import scalismo.ScalismoTestSuite
-import scalismo.common.interpolation.BSplineInterpolator3D
+import scalismo.common.interpolation.{ BSplineInterpolator3D, LinearImageInterpolator3D }
 import scalismo.common.{ DifferentiableImage1D, PointId }
 import scalismo.geometry.IntVector.implicits._
 import scalismo.geometry.Point.implicits._
 import scalismo.geometry.EuclideanVector.implicits._
 import scalismo.geometry._
-import scalismo.image.{ DiscreteImageDomain1D }
+import scalismo.image.DiscreteImageDomain1D
 import scalismo.io.{ ImageIO, MeshIO }
 
 import scala.language.implicitConversions
@@ -143,7 +143,7 @@ class TransformationTests extends ScalismoTestSuite {
 
     val path = getClass.getResource("/3dimage.nii").getPath
     val discreteImage = ImageIO.read3DScalarImage[Short](new File(path)).get
-    val continuousImage = BSplineInterpolator3D[Short](1).interpolate(discreteImage)
+    val continuousImage = BSplineInterpolator3D[Short](3).interpolate(discreteImage)
 
     it("translation forth and back of a real dataset yields the same image") {
 
@@ -152,7 +152,8 @@ class TransformationTests extends ScalismoTestSuite {
       val inverseTransform = TranslationSpace[_3D].transformForParameters(parameterVector).inverse
       val translatedForthBackImg = continuousImage.compose(translation).compose(inverseTransform)
 
-      for (p <- discreteImage.domain.points.filter(translatedForthBackImg.isDefinedAt)) assert(translatedForthBackImg(p) === continuousImage(p))
+      for (p <- discreteImage.domain.points.filter(translatedForthBackImg.isDefinedAt))
+        assert(translatedForthBackImg(p) === continuousImage(p))
     }
 
     it("rotation forth and back of a real dataset yields the same image") {
@@ -166,7 +167,8 @@ class TransformationTests extends ScalismoTestSuite {
 
       val rotatedImage = continuousImage.compose(rotation)
 
-      for (p <- discreteImage.domain.points.filter(rotatedImage.isDefinedAt)) rotatedImage(p) should equal(continuousImage(p))
+      for (p <- discreteImage.domain.points.filter(rotatedImage.isDefinedAt))
+        rotatedImage(p) should equal(continuousImage(p))
     }
 
     val mesh = MeshIO.readMesh(new File(getClass.getResource("/facemesh.stl").getPath)).get

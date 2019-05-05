@@ -82,10 +82,9 @@ case class BSplineInterpolator1D[A: Scalar](degree: Int) extends BSplineInterpol
   private def determineCoefficients1D(degree: Int, img: DiscreteField[_1D, DiscreteImageDomain[_1D], A]): Array[Float] = {
 
     // the c is an input-output argument here
-    val c = img.data.map((v: A) => scalar.toFloat(v))
-    val floats: Array[Float] = c.asInstanceOf[PrimitiveScalarArray[Float]].rawData
-    BSplineCoefficients.getSplineInterpolationCoefficients(degree, floats)
-    floats
+    val coeffs: Array[Float] = img.data.map((v: A) => scalar.toFloat(v)).toArray
+    BSplineCoefficients.getSplineInterpolationCoefficients(degree, coeffs)
+    coeffs
   }
 }
 

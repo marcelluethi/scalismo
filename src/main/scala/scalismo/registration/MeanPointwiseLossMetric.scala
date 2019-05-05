@@ -19,7 +19,7 @@ package scalismo.registration
 import breeze.linalg.DenseVector
 import scalismo.common.Domain
 import scalismo.common.Field.{ DifferentiableImage, Image }
-import scalismo.geometry.{ EuclideanVector, NDSpace, Point }
+import scalismo.geometry.{ NDSpace, Point }
 import scalismo.numerics._
 import scalismo.registration.RegistrationMetric.ValueAndDerivative
 
