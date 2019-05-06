@@ -15,14 +15,14 @@
  */
 package scalismo.kernels
 
-import scalismo.common.{ BoxDomain, Field, RealSpace }
+import scalismo.common._
 import scalismo.geometry.Point.implicits._
-import scalismo.geometry.{ Point, EuclideanVector, _1D, _3D }
-import scalismo.numerics.UniformSampler
+import scalismo.geometry._
+import scalismo.numerics.{ UniformSampler3D }
 import scalismo.registration.Transformation
-import scalismo.statisticalmodel.{ GaussianProcess, LowRankGaussianProcess }
+import scalismo.statisticalmodel.{ GaussianProcess3D, LowRankGaussianProcess }
 import scalismo.utils.Random
-import scalismo.{ ScalismoTestSuite }
+import scalismo.ScalismoTestSuite
 
 class KernelTests extends ScalismoTestSuite {
 
@@ -30,7 +30,7 @@ class KernelTests extends ScalismoTestSuite {
 
   describe("a Kernel") {
     it("yields correct multiple when  multiplied by a scalar") {
-      val gk = GaussianKernel[_1D](3.5)
+      val gk = GaussianKernel1D(3.5)
       val gkMult = gk * 100
       val pt1 = 0.1
       val pt2 = 1.0
@@ -38,7 +38,7 @@ class KernelTests extends ScalismoTestSuite {
     }
 
     it("yields correct result when two kernels are added") {
-      val gk = GaussianKernel[_1D](3.5)
+      val gk = GaussianKernel1D(3.5)
       val gk2 = gk + gk
       val pt1 = 0.1
       val pt2 = 1.0
@@ -47,40 +47,42 @@ class KernelTests extends ScalismoTestSuite {
   }
   describe("A scalar valued Gaussian kernel") {
     it("evaluated with twice the same argument yields 1") {
-      val gk = GaussianKernel[_1D](3.5)
+      val gk = GaussianKernel1D(3.5)
       gk(0.1, 0.1) should be(1.0 +- 1e-8)
     }
 
     it("given two arguments far apart yields almost 0") {
-      val gk = GaussianKernel[_1D](1.0)
-      gk(0.1, 100) should be(0.0 +- 1e-8)
+      val gk = GaussianKernel1D(1.0)
+      gk(0.1, 100.0) should be(0.0 +- 1e-8)
     }
   }
 
   describe("A sample covariance kernel") {
     it("can reproduce the covariance function from random samples") {
 
-      val domain = BoxDomain(Point(-5, 1, 3), Point(100, 90, 25))
+      val domain = BoxDomain3D(Point3D(-5, 1, 3), Point3D(100, 90, 25))
 
-      val samplerForNystromApprox = UniformSampler(domain, 7 * 7 * 7)
+      val samplerForNystromApprox = UniformSampler3D(domain, 7 * 7 * 7)
 
-      val k = DiagonalKernel(GaussianKernel[_3D](100.0), 3)
-      val mu = (pt: Point[_3D]) => EuclideanVector(1, 10, -5)
-      val gp = LowRankGaussianProcess.approximateGPNystrom[_3D, EuclideanVector[_3D]](GaussianProcess(Field(domain, mu), k), samplerForNystromApprox, 500)
+      val k = DiagonalKernel(GaussianKernel3D(100.0), 3)
+      val mu = (pt: Point[_3D]) => EuclideanVector3D(1, 10, -5)
+      val gp = LowRankGaussianProcess.approximateGPNystrom(
+        GaussianProcess3D(Field3D(domain, mu), k),
+        samplerForNystromApprox,
+        500
+      )
 
       val sampleTransformations = for (i <- (0 until 5000)) yield {
         // TODO: gp.sample() should (arguably) accept seed.
         val sample: (Point[_3D] => EuclideanVector[_3D]) = gp.sample()
-        new Transformation[_3D] {
-          override val domain = RealSpace[_3D]
-          override val f = (x: Point[_3D]) => x + sample(x)
-        }
+        Transformation((x: Point[_3D]) => x + sample(x))
+
       }
 
-      val testPtSampler = UniformSampler(domain, 1)
+      val testPtSampler = UniformSampler3D(domain, 1)
       val pts = testPtSampler.sample.map(_._1)
 
-      val sampleCovKernel = SampleCovarianceKernel[_3D](sampleTransformations.toIndexedSeq, pts.size)
+      val sampleCovKernel = SampleCovarianceKernel3D(sampleTransformations.toIndexedSeq, pts.size)
 
       // since mu always returns the same vector, it's enough to calculate it once
       val mux = mu(Point(0, 0, 0))
@@ -104,8 +106,8 @@ class KernelTests extends ScalismoTestSuite {
 
   describe("Two scalar valued kernels") {
     it("can be added and multiplied") {
-      val k1 = GaussianKernel[_1D](1.0)
-      val k2 = GaussianKernel[_1D](1.0)
+      val k1 = GaussianKernel1D(1.0)
+      val k2 = GaussianKernel1D(1.0)
       val ksum = k1 + k2
       val x = Point(0)
       val y = Point(1)
@@ -121,8 +123,8 @@ class KernelTests extends ScalismoTestSuite {
 
   describe("Two matrix valued kernels") {
     it("can be added and multiplied") {
-      val k1 = DiagonalKernel(GaussianKernel[_1D](1.0), 1)
-      val k2 = DiagonalKernel(GaussianKernel[_1D](1.0), 1)
+      val k1 = DiagonalKernel(GaussianKernel1D(1.0), 1)
+      val k2 = DiagonalKernel(GaussianKernel1D(1.0), 1)
       val ksum = k1 + k2
       val x = Point(0.0)
       val y = Point(1.0)

@@ -15,9 +15,11 @@
  */
 package scalismo.image.filter
 
-import scalismo.common.{ Scalar, ScalarArray }
+import scalismo.common.DiscreteField.DiscreteImage
+import scalismo.common.interpolation.LinearImageInterpolator
+import scalismo.common.{ DiscreteField, Scalar, ScalarArray }
 import scalismo.geometry._
-import scalismo.image.DiscreteScalarImage
+import scalismo.numerics.ValueInterpolator
 import scalismo.utils.{ CanConvertToVtk, ImageConversion }
 import vtk.{ vtkImageCast, vtkImageEuclideanDistance, vtkImageGaussianSmooth, vtkObjectBase }
 
@@ -30,11 +32,11 @@ object DiscreteImageFilter {
    * Computes a (signed) distance transform of the image.
    * @note The value that is returned is not the euclidean distance unless the image has unit spacing. Even worse, the distance might depend on the spacing of the image.
    */
-  def distanceTransform[D: NDSpace: CanConvertToVtk: DiscreteScalarImage.Create, A: Scalar: ClassTag: TypeTag](img: DiscreteScalarImage[D, A]): DiscreteScalarImage[D, Float] = {
+  def distanceTransform[D: NDSpace: CanConvertToVtk: LinearImageInterpolator.Create, A: Scalar: ValueInterpolator: ClassTag: TypeTag](img: DiscreteImage[D, A]): DiscreteImage[D, Float] = {
 
     val scalar = implicitly[Scalar[A]]
 
-    def doDistanceTransformVTK(img: DiscreteScalarImage[D, A]) = {
+    def doDistanceTransformVTK(img: DiscreteImage[D, A]) = {
       val imgvtk = ImageConversion.imageToVtkStructuredPoints(img)
 
       val vtkdistTransform = new vtkImageEuclideanDistance()
@@ -64,7 +66,8 @@ object DiscreteImageFilter {
       vtkdistTransform.Delete()
       System.gc() // make sure it deletes the intermediate resuls
 
-      dt.resample(img.domain, 0, 0)
+      val interpolator = implicitly[LinearImageInterpolator.Create[D]].createLinearImageInterpolator[Float]()
+      dt.resample(img.domain, interpolator, 0)
     }
 
     val dt1 = doDistanceTransformVTK(img)
@@ -74,14 +77,14 @@ object DiscreteImageFilter {
 
     val newPixelValues = dt1.values.zip(dt2.values).map { case (p1, p2) => p1 - p2 }.toArray
 
-    DiscreteScalarImage(dt1.domain, ScalarArray(newPixelValues))
+    DiscreteField(dt1.domain, ScalarArray(newPixelValues))
 
   }
 
   /**
    * Smoothing of an image using a Gaussian filter kernel with the given stddev
    */
-  def gaussianSmoothing[D: NDSpace, A: Scalar: ClassTag: TypeTag](img: DiscreteScalarImage[D, A], stddev: Float)(implicit vtkConversion: CanConvertToVtk[D]): DiscreteScalarImage[D, A] = {
+  def gaussianSmoothing[D: NDSpace, A: Scalar: ClassTag: TypeTag](img: DiscreteImage[D, A], stddev: Float)(implicit vtkConversion: CanConvertToVtk[D]): DiscreteImage[D, A] = {
 
     val vtkImg = vtkConversion.toVtk[A](img)
     val dim = img.dimensionality

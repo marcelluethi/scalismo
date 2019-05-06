@@ -261,7 +261,7 @@ object LowRankGaussianProcess {
    gp: GaussianProcess[D, Value],
    relativeTolerance: Double,
    interpolator: FieldInterpolator[D, DDomain, Value])
-  (implicit vectorizer: Vectorizer[Value], rand: Random): LowRankGaussianProcess[D, Value] = {
+  (implicit vectorizer: Vectorizer[Value]): LowRankGaussianProcess[D, Value] = {
 
     val (basis, scale) = PivotedCholesky.computeApproximateEig(
       kernel = gp.cov,

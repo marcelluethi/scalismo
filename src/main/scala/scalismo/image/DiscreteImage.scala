@@ -18,24 +18,40 @@ package scalismo.image
 import scalismo.common.DiscreteField
 import scalismo.geometry._
 
-/**
- * Basic interface for a discrete image of arbitrary Pixel type
- *
- * @tparam D  The dimensionality of the image
- * @tparam A The type of the pixel (usually a scalar or a vector)
- */
-class DiscreteImage[D: NDSpace, A](domain: DiscreteImageDomain[D], values: IndexedSeq[A])
-    extends DiscreteField[D, DiscreteImageDomain[D], A](domain, values) {
+object DiscreteImage1D {
 
-  protected[this] def ndSpace: NDSpace[D] = NDSpace[D]
+  def apply[A](domain: DiscreteImageDomain[_1D], values: IndexedSeq[A]): DiscreteField[_1D, DiscreteImageDomain[_1D], A] = {
+    new DiscreteField(domain, values)
+  }
 
-  val dimensionality = ndSpace.dimensionality
+  def apply[A](domain: DiscreteImageDomain[_1D], f: Point[_1D] => A): DiscreteField[_1D, DiscreteImageDomain[_1D], A] = {
 
-  def apply(idx: IntVector[D]): A = this(domain.pointId(idx))
-
-  def isDefinedAt(idx: IntVector[D]): Boolean = {
-    (0 until dimensionality).foldLeft(true)((res, d) => res && idx(d) >= 0 && idx(d) < domain.size(d))
+    val data = domain.points.map(f).toIndexedSeq
+    new DiscreteField(domain, data)
   }
 
 }
 
+object DiscreteImage2D {
+  def apply[A](domain: DiscreteImageDomain[_2D], values: IndexedSeq[A]): DiscreteField[_2D, DiscreteImageDomain[_2D], A] = {
+    new DiscreteField(domain, values)
+  }
+
+  def apply[A](domain: DiscreteImageDomain[_2D], f: Point[_2D] => A): DiscreteField[_2D, DiscreteImageDomain[_2D], A] = {
+
+    val data = domain.points.map(f).toIndexedSeq
+    new DiscreteField(domain, data)
+  }
+}
+
+object DiscreteImage3D {
+  def apply[A](domain: DiscreteImageDomain[_3D], values: IndexedSeq[A]): DiscreteField[_3D, DiscreteImageDomain[_3D], A] = {
+    new DiscreteField(domain, values)
+  }
+
+  def apply[A](domain: DiscreteImageDomain[_3D], f: Point[_3D] => A): DiscreteField[_3D, DiscreteImageDomain[_3D], A] = {
+
+    val data = domain.points.map(f).toIndexedSeq
+    new DiscreteField(domain, data)
+  }
+}

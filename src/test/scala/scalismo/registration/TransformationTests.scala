@@ -19,12 +19,13 @@ import java.io.File
 
 import breeze.linalg.DenseVector
 import scalismo.ScalismoTestSuite
-import scalismo.common.PointId
+import scalismo.common.interpolation.{ BSplineInterpolator3D, LinearImageInterpolator3D }
+import scalismo.common.{ DifferentiableImage1D, PointId }
 import scalismo.geometry.IntVector.implicits._
 import scalismo.geometry.Point.implicits._
 import scalismo.geometry.EuclideanVector.implicits._
 import scalismo.geometry._
-import scalismo.image.{ DifferentiableScalarImage, DiscreteImageDomain }
+import scalismo.image.DiscreteImageDomain1D
 import scalismo.io.{ ImageIO, MeshIO }
 
 import scala.language.implicitConversions
@@ -128,13 +129,13 @@ class TransformationTests extends ScalismoTestSuite {
     }
 
     it("translates a 1D image") {
-      val domain = DiscreteImageDomain[_1D](-50.0, 1.0, 100)
-      val continuousImage = DifferentiableScalarImage(domain.boundingBox, (x: Point[_1D]) => (x * x), (x: Point[_1D]) => EuclideanVector(2f * x))
+      val domain = DiscreteImageDomain1D(-50.0, 1.0, 100)
+      val continuousImage = DifferentiableImage1D(domain.boundingBox, (x: Point[_1D]) => (x * x), (x: Point[_1D]) => EuclideanVector(2f * x))
 
-      val translation = TranslationSpace[_1D].transformForParameters(DenseVector[Double](10))
+      val translation = TranslationSpace1D.transformForParameters(DenseVector[Double](10))
       val translatedImg = continuousImage.compose(translation)
 
-      translatedImg(-10) should equal(0)
+      translatedImg(Point1D(-10)) should equal(0)
     }
   }
 
@@ -142,7 +143,7 @@ class TransformationTests extends ScalismoTestSuite {
 
     val path = getClass.getResource("/3dimage.nii").getPath
     val discreteImage = ImageIO.read3DScalarImage[Short](new File(path)).get
-    val continuousImage = discreteImage.interpolate(0)
+    val continuousImage = BSplineInterpolator3D[Short](3).interpolate(discreteImage)
 
     it("translation forth and back of a real dataset yields the same image") {
 
@@ -151,7 +152,8 @@ class TransformationTests extends ScalismoTestSuite {
       val inverseTransform = TranslationSpace[_3D].transformForParameters(parameterVector).inverse
       val translatedForthBackImg = continuousImage.compose(translation).compose(inverseTransform)
 
-      for (p <- discreteImage.domain.points.filter(translatedForthBackImg.isDefinedAt)) assert(translatedForthBackImg(p) === continuousImage(p))
+      for (p <- discreteImage.domain.points.filter(translatedForthBackImg.isDefinedAt))
+        assert(translatedForthBackImg(p) === continuousImage(p))
     }
 
     it("rotation forth and back of a real dataset yields the same image") {
@@ -165,7 +167,8 @@ class TransformationTests extends ScalismoTestSuite {
 
       val rotatedImage = continuousImage.compose(rotation)
 
-      for (p <- discreteImage.domain.points.filter(rotatedImage.isDefinedAt)) rotatedImage(p) should equal(continuousImage(p))
+      for (p <- discreteImage.domain.points.filter(rotatedImage.isDefinedAt))
+        rotatedImage(p) should equal(continuousImage(p))
     }
 
     val mesh = MeshIO.readMesh(new File(getClass.getResource("/facemesh.stl").getPath)).get

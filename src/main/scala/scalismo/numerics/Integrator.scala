@@ -16,23 +16,31 @@
 package scalismo.numerics
 
 import breeze.linalg.DenseVector
-import scalismo.common.VectorField
+import scalismo.common.Field.Image
+import scalismo.common.{ Field, Scalar }
 import scalismo.geometry._
-import scalismo.image.ScalarImage
 
-case class Integrator[D: NDSpace](sampler: Sampler[D]) {
+class Integrator[D: NDSpace](sampler: Sampler[D]) {
 
-  def integrateScalar(img: ScalarImage[D]): Float = {
+  def integrateScalar[A: Scalar](img: Image[D, A]): A = {
     integrateScalar(img.liftValues)
   }
 
-  def integrateScalar(f: Function1[Point[D], Option[Float]]): Float = {
+  def integrateScalar[A: Scalar](f: Function1[Point[D], Option[A]]): A = {
     val samples = sampler.sample
-    val sum = samples.par.map { case (pt, p) => f(pt).getOrElse(0f) * (1f / p.toFloat) }.sum
-    sum / samples.size
+    val scalar = Scalar[A]
+    val zero = scalar.fromDouble(0.0)
+
+    // TODO, this might be very inefficient due to conversions.
+    val sum = samples.par.map {
+      case (pt, p) => {
+        scalar.toDouble(f(pt).getOrElse(zero)) * (1.0 / p.toFloat)
+      }
+    }.sum
+    scalar.fromDouble(sum / samples.size)
   }
 
-  def integrateVector[DO: NDSpace](img: VectorField[D, DO]): EuclideanVector[DO] = {
+  def integrateVector[DO: NDSpace](img: Field[D, EuclideanVector[DO]]): EuclideanVector[DO] = {
     integrateVector(img.liftValues)
   }
 
@@ -54,3 +62,20 @@ case class Integrator[D: NDSpace](sampler: Sampler[D]) {
 
 }
 
+object Integrator1D {
+  def apply(sampler: Sampler[_1D]): Integrator[_1D] = {
+    new Integrator[_1D](sampler)
+  }
+}
+
+object Integrato_2D {
+  def apply(sampler: Sampler[_2D]): Integrator[_2D] = {
+    new Integrator[_2D](sampler)
+  }
+}
+
+object Integrato3D {
+  def apply(sampler: Sampler[_3D]): Integrator[_3D] = {
+    new Integrator[_3D](sampler)
+  }
+}

@@ -18,8 +18,8 @@ package scalismo.numerics
 import breeze.linalg.DenseMatrix
 import breeze.linalg.svd.SVD
 import scalismo.ScalismoTestSuite
-import scalismo.geometry.{ Point, _1D }
-import scalismo.kernels.{ DiagonalKernel, GaussianKernel, Kernel }
+import scalismo.geometry.{ Point }
+import scalismo.kernels.{ DiagonalKernel, GaussianKernel1D, Kernel }
 import scalismo.utils.Random
 
 class RandomSVDTest extends ScalismoTestSuite {
@@ -30,7 +30,7 @@ class RandomSVDTest extends ScalismoTestSuite {
 
     it("accurately approximates the first 10 eigenvectors and eigenvalues of a gaussian kernel matrix") {
 
-      val k = DiagonalKernel(GaussianKernel[_1D](100), 1)
+      val k = DiagonalKernel(GaussianKernel1D(100), 1)
       val xs = (0 until 1000).map(x => Point(x))
 
       val K = Kernel.computeKernelMatrix(xs, k)

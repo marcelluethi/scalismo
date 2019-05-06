@@ -16,9 +16,9 @@
 package scalismo.statisticalmodel.asm
 
 import breeze.linalg.{ DenseVector, convert }
+import scalismo.common.DiscreteField.DiscreteImage
 import scalismo.common.{ PointId, UnstructuredPointsDomain, UnstructuredPointsDomain3D }
 import scalismo.geometry.{ Point, _3D }
-import scalismo.image.DiscreteScalarImage
 import scalismo.mesh.TriangleMesh
 import scalismo.numerics.Sampler
 import scalismo.registration.{ LandmarkRegistration, RigidTransformation, RigidTransformationSpace, Transformation }
@@ -29,7 +29,7 @@ import scala.collection.immutable
 import scala.util.{ Failure, Try }
 
 object ActiveShapeModel {
-  type TrainingData = Iterator[(DiscreteScalarImage[_3D, Float], Transformation[_3D])]
+  type TrainingData = Iterator[(DiscreteImage[_3D, Float], Transformation[_3D])]
 
   /**
    * Train an active shape model using an existing PCA model
@@ -128,7 +128,7 @@ case class ActiveShapeModel(statisticalModel: StatisticalMeshModel, profiles: Pr
    * @param startingTransformations initial transformations to apply to the statistical model. If omitted, no transformations are applied (i.e. the fitting starts from the mean shape, with no rigid transformation)
    * @return fitting result after the given number of iterations
    */
-  def fit(targetImage: DiscreteScalarImage[_3D, Float], searchPointSampler: SearchPointSampler, iterations: Int, config: FittingConfiguration = FittingConfiguration.Default, startingTransformations: ModelTransformations = noTransformations): Try[FittingResult] = {
+  def fit(targetImage: DiscreteImage[_3D, Float], searchPointSampler: SearchPointSampler, iterations: Int, config: FittingConfiguration = FittingConfiguration.Default, startingTransformations: ModelTransformations = noTransformations): Try[FittingResult] = {
 
     // we're manually looping the iterator here because we're only interested in the last result -- no need to keep all intermediates.
     val it = fitIterator(targetImage, searchPointSampler, iterations, config, startingTransformations)
@@ -148,7 +148,7 @@ case class ActiveShapeModel(statisticalModel: StatisticalMeshModel, profiles: Pr
    * @see [[fit()]] for a description of the parameters.
    *
    */
-  def fitIterator(targetImage: DiscreteScalarImage[_3D, Float], searchPointSampler: SearchPointSampler, iterations: Int, config: FittingConfiguration = FittingConfiguration.Default, initialTransform: ModelTransformations = noTransformations): Iterator[Try[FittingResult]] = {
+  def fitIterator(targetImage: DiscreteImage[_3D, Float], searchPointSampler: SearchPointSampler, iterations: Int, config: FittingConfiguration = FittingConfiguration.Default, initialTransform: ModelTransformations = noTransformations): Iterator[Try[FittingResult]] = {
     fitIteratorPreprocessed(preprocessor(targetImage), searchPointSampler, iterations, config, initialTransform)
   }
 

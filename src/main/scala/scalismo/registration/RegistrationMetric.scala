@@ -17,8 +17,8 @@
 package scalismo.registration
 
 import breeze.linalg.DenseVector
+import scalismo.common.Field.{ DifferentiableImage, Image }
 import scalismo.geometry._
-import scalismo.image.{ DifferentiableScalarImage, ScalarImage }
 import scalismo.registration.RegistrationMetric.ValueAndDerivative
 
 /**
@@ -61,9 +61,9 @@ object RegistrationMetric {
  */
 trait ImageMetric[D] extends RegistrationMetric[D] {
 
-  def fixedImage: ScalarImage[D]
+  def fixedImage: Image[D, Float]
 
-  def movingImage: DifferentiableScalarImage[D]
+  def movingImage: DifferentiableImage[D, Float]
 
 }
 

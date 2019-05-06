@@ -196,7 +196,7 @@ object DiscreteGaussianProcess {
     // TODO We should think whether we can do it in  a conceptually more clean way.
 
     val domainPoints = discreteGp.domain.points.toIndexedSeq
-    val gp = discreteGp.interpolate(NearestNeighborInterpolator())
+    val gp = discreteGp.interpolate(new NearestNeighborInterpolator())
     val tdForGp = trainingData.map({ case (id, vec, error) => (domainPoints(id), vec, error) })
     val posterior = GaussianProcess.regression(gp, tdForGp)
 

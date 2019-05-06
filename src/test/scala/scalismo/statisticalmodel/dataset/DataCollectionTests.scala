@@ -18,15 +18,15 @@ package scalismo.statisticalmodel.dataset
 import java.io.File
 
 import scalismo.ScalismoTestSuite
-import scalismo.common.{ Field }
+import scalismo.common.Field
 import scalismo.geometry._
 import scalismo.io.MeshIO
-import scalismo.kernels.{ DiagonalKernel, GaussianKernel }
-import scalismo.mesh.{ TriangleMesh, MeshMetrics }
+import scalismo.kernels.{ DiagonalKernel, GaussianKernel3D }
+import scalismo.mesh.{ MeshMetrics, TriangleMesh }
 import scalismo.numerics.UniformMeshSampler3D
 import scalismo.registration.{ LandmarkRegistration, TranslationTransform }
-import scalismo.statisticalmodel.{ LowRankGaussianProcess, GaussianProcess, StatisticalMeshModel }
-import scalismo.utils.{ Random }
+import scalismo.statisticalmodel.{ GaussianProcess, GaussianProcess3D, LowRankGaussianProcess, StatisticalMeshModel }
+import scalismo.utils.Random
 
 class DataCollectionTests extends ScalismoTestSuite {
 
@@ -166,8 +166,8 @@ class DataCollectionTests extends ScalismoTestSuite {
   describe("Generalization") {
 
     val zeroMean = Field(Fixture.dc.reference.boundingBox, (pt: Point[_3D]) => EuclideanVector(0, 0, 0))
-    val matrixValuedGaussian = DiagonalKernel(GaussianKernel[_3D](25) * 20, 3)
-    val bias: GaussianProcess[_3D, EuclideanVector[_3D]] = GaussianProcess(zeroMean, matrixValuedGaussian)
+    val matrixValuedGaussian = DiagonalKernel(GaussianKernel3D(25) * 20, 3)
+    val bias: GaussianProcess[_3D, EuclideanVector[_3D]] = GaussianProcess3D(zeroMean, matrixValuedGaussian)
     val biasLowRank = LowRankGaussianProcess.approximateGPNystrom(bias, UniformMeshSampler3D(Fixture.pcaModel.referenceMesh, 500), Fixture.pcaModel.rank + 5)
     val augmentedModel = StatisticalMeshModel.augmentModel(Fixture.pcaModel, biasLowRank)
 

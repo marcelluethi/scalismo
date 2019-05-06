@@ -18,6 +18,7 @@ package scalismo.image
 import breeze.linalg.{ DenseMatrix, DenseVector, diag }
 import scalismo.common._
 import scalismo.geometry._
+import scalismo.image.CreateDiscreteImageDomain.{ CreateDiscreteImageDomain1D, CreateDiscreteImageDomain2D, CreateDiscreteImageDomain3D }
 import scalismo.registration.{ AnisotropicSimilarityTransformation, AnisotropicSimilarityTransformationSpace, RotationSpace }
 
 import scala.language.implicitConversions
@@ -249,6 +250,19 @@ case class DiscreteImageDomain1D(size: IntVector[_1D], indexToPhysicalCoordinate
 
 }
 
+object DiscreteImageDomain1D {
+
+  /** Create a new discreteImageDomain with given image box (i.e. a box that determines the area where the image is defined) and size */
+  def apply(imageBox: BoxDomain[_1D], size: IntVector[_1D]): DiscreteImageDomain[_1D] = {
+    val spacing = imageBox.extent.mapWithIndex({ case (ithExtent, i) => ithExtent / size(i) })
+    CreateDiscreteImageDomain1D.createImageDomain(imageBox.origin, spacing, size)
+  }
+
+  def apply(origin: Point[_1D], spacing: EuclideanVector[_1D], size: IntVector[_1D]): DiscreteImageDomain[_1D] = {
+    CreateDiscreteImageDomain1D.createImageDomain(origin, spacing, size)
+  }
+}
+
 case class DiscreteImageDomain2D(size: IntVector[_2D], indexToPhysicalCoordinateTransform: AnisotropicSimilarityTransformation[_2D]) extends DiscreteImageDomain[_2D] {
 
   override val origin = {
@@ -293,6 +307,18 @@ case class DiscreteImageDomain2D(size: IntVector[_2D], indexToPhysicalCoordinate
     val chunkSize = size(1) / nbChunks
     val ranges = (0 until nbChunks).map { chunkId => chunkId * chunkSize } :+ size(1)
     ranges.sliding(2).toIndexedSeq.map(minMaxY => generateIterator(minMaxY(0), minMaxY(1), 0, size(0)))
+  }
+
+}
+
+object DiscreteImageDomain2D {
+  def apply(origin: Point[_2D], spacing: EuclideanVector[_2D], size: IntVector[_2D]): DiscreteImageDomain[_2D] = {
+    CreateDiscreteImageDomain2D.createImageDomain(origin, spacing, size)
+  }
+
+  def apply(imageBox: BoxDomain[_2D], size: IntVector[_2D]): DiscreteImageDomain[_2D] = {
+    val spacing = imageBox.extent.mapWithIndex({ case (ithExtent, i) => ithExtent / size(i) })
+    CreateDiscreteImageDomain2D.createImageDomain(imageBox.origin, spacing, size)
   }
 
 }
@@ -373,6 +399,18 @@ case class DiscreteImageDomain3D(size: IntVector[_3D], indexToPhysicalCoordinate
 
   override def transform(t: Point[_3D] => Point[_3D]): UnstructuredPointsDomain[_3D] = {
     new UnstructuredPointsDomain3D(points.map(t).toIndexedSeq)
+  }
+
+}
+
+object DiscreteImageDomain3D {
+  def apply(origin: Point[_3D], spacing: EuclideanVector[_3D], size: IntVector[_3D]): DiscreteImageDomain[_3D] = {
+    CreateDiscreteImageDomain3D.createImageDomain(origin, spacing, size)
+  }
+
+  def apply(imageBox: BoxDomain[_3D], size: IntVector[_3D]): DiscreteImageDomain[_3D] = {
+    val spacing = imageBox.extent.mapWithIndex({ case (ithExtent, i) => ithExtent / size(i) })
+    CreateDiscreteImageDomain3D.createImageDomain(imageBox.origin, spacing, size)
   }
 
 }

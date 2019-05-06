@@ -17,7 +17,7 @@ package scalismo.mesh
 
 import scalismo.common.BoxDomain
 import scalismo.geometry.{ Point, _3D }
-import scalismo.numerics.UniformSampler
+import scalismo.numerics.{ UniformSampler3D }
 import scalismo.registration.LandmarkRegistration
 import scalismo.utils.Random
 
@@ -86,7 +86,7 @@ object MeshMetrics {
     val box2 = m2.pointSet.boundingBox
     val evaluationRegion = BoxDomain(minPoint(box1.origin, box2.origin), maxPoint(box1.oppositeCorner, box2.oppositeCorner))
 
-    val sampler = UniformSampler[_3D](evaluationRegion, 10000)
+    val sampler = UniformSampler3D(evaluationRegion, 10000)
     val samplePts = sampler.sample().map(_._1)
 
     val numSamplesInA = samplePts.map(imgA).sum

@@ -22,7 +22,7 @@ import scalismo.numerics.BSpline
 import scalismo.registration.Transformation
 import scalismo.utils.Memoize
 
-case class GaussianKernel[D](sigma: Double) extends PDKernel[D] {
+class GaussianKernel[D](val sigma: Double) extends PDKernel[D] {
   val sigma2 = sigma * sigma
 
   override def domain = RealSpace[D]
@@ -33,7 +33,25 @@ case class GaussianKernel[D](sigma: Double) extends PDKernel[D] {
   }
 }
 
-case class SampleCovarianceKernel[D: NDSpace](ts: IndexedSeq[Transformation[D]], cacheSizeHint: Int = 100000) extends MatrixValuedPDKernel[D] {
+object GaussianKernel1D {
+  def apply(sigma: Double): GaussianKernel[_1D] = {
+    new GaussianKernel[_1D](sigma)
+  }
+}
+
+object GaussianKernel2D {
+  def apply(sigma: Double): GaussianKernel[_2D] = {
+    new GaussianKernel[_2D](sigma)
+  }
+}
+
+object GaussianKernel3D {
+  def apply(sigma: Double): GaussianKernel[_3D] = {
+    new GaussianKernel[_3D](sigma)
+  }
+}
+
+class SampleCovarianceKernel[D: NDSpace](val ts: IndexedSeq[Transformation[D]], cacheSizeHint: Int = 100000) extends MatrixValuedPDKernel[D] {
 
   override def outputDim = implicitly[NDSpace[D]].dimensionality // TODO check if thats correct
 
@@ -69,7 +87,28 @@ case class SampleCovarianceKernel[D: NDSpace](ts: IndexedSeq[Transformation[D]],
 
 }
 
-abstract case class BSplineKernel[D](order: Int, scale: Int) extends PDKernel[D] {
+object SampleCovarianceKernel1D {
+  def apply(ts: IndexedSeq[Transformation[_1D]], cacheSizeHint: Int = 100000): SampleCovarianceKernel[_1D] = {
+    new SampleCovarianceKernel[_1D](ts, cacheSizeHint)
+  }
+}
+
+object SampleCovarianceKernel2D {
+  def apply(ts: IndexedSeq[Transformation[_2D]], cacheSizeHint: Int = 100000): SampleCovarianceKernel[_2D] = {
+    new SampleCovarianceKernel[_2D](ts, cacheSizeHint)
+  }
+}
+
+object SampleCovarianceKernel3D {
+  def apply(ts: IndexedSeq[Transformation[_3D]], cacheSizeHint: Int = 100000): SampleCovarianceKernel[_3D] = {
+    new SampleCovarianceKernel[_3D](ts, cacheSizeHint)
+  }
+}
+
+trait BSplineKernel[D] extends PDKernel[D] {
+  def order: Int
+  def scale: Int
+
   override def domain = RealSpace[D]
 
 }
@@ -102,7 +141,7 @@ object BSplineKernel {
 
 }
 
-class BSplineKernel3D(order: Int, scale: Int) extends BSplineKernel[_3D](order, scale) {
+case class BSplineKernel3D(val order: Int, val scale: Int) extends BSplineKernel[_3D] {
 
   val spline = BSpline.nthOrderBSpline(order) _
 
@@ -159,7 +198,7 @@ class BSplineKernel3D(order: Int, scale: Int) extends BSplineKernel[_3D](order, 
 
 }
 
-private class BSplineKernel2D(order: Int, scale: Int) extends BSplineKernel[_2D](order, scale) {
+case class BSplineKernel2D(val order: Int, val scale: Int) extends BSplineKernel[_2D] {
 
   private val spline = BSpline.nthOrderBSpline(order) _
   def bspline2D(x1: Double, x2: Double) = {
@@ -207,7 +246,7 @@ private class BSplineKernel2D(order: Int, scale: Int) extends BSplineKernel[_2D]
   }
 }
 
-private class BSplineKernel1D(order: Int, scale: Int) extends BSplineKernel[_1D](order, scale) {
+case class BSplineKernel1D(val order: Int, val scale: Int) extends BSplineKernel[_1D] {
 
   val bspline1D = BSpline.nthOrderBSpline(order) _
 

@@ -38,7 +38,7 @@ trait Sampler[D] {
   def volumeOfSampleRegion: Double
 }
 
-case class GridSampler[D: NDSpace](domain: DiscreteImageDomain[D]) extends Sampler[D] {
+class GridSampler[D: NDSpace](val domain: DiscreteImageDomain[D]) extends Sampler[D] {
   override def volumeOfSampleRegion = domain.boundingBox.volume
   override val numberOfPoints = domain.numberOfPoints
 
@@ -48,7 +48,25 @@ case class GridSampler[D: NDSpace](domain: DiscreteImageDomain[D]) extends Sampl
   }
 }
 
-case class UniformSampler[D: NDSpace](domain: BoxDomain[D], numberOfPoints: Int)(implicit rand: Random) extends Sampler[D] {
+object GridSampler1D {
+  def apply(domain: DiscreteImageDomain[_1D]): GridSampler[_1D] = {
+    new GridSampler[_1D](domain)
+  }
+}
+
+object GridSampler2D {
+  def apply(domain: DiscreteImageDomain[_2D]): GridSampler[_2D] = {
+    new GridSampler[_2D](domain)
+  }
+}
+
+object GridSampler3D {
+  def apply(domain: DiscreteImageDomain[_3D]): GridSampler[_3D] = {
+    new GridSampler[_3D](domain)
+  }
+}
+
+class UniformSampler[D: NDSpace](val domain: BoxDomain[D], val numberOfPoints: Int)(implicit rand: Random) extends Sampler[D] {
 
   def volumeOfSampleRegion = domain.volume
   val p = 1.0 / domain.volume
@@ -61,6 +79,18 @@ case class UniformSampler[D: NDSpace](domain: BoxDomain[D], numberOfPoints: Int)
 
     for (_ <- 0 until numberOfPoints) yield (Point.apply[D](randGens.map(r => r.draw()).toArray), p)
   }
+}
+
+object UniformSampler1D {
+  def apply(domain: BoxDomain[_1D], numberOfPoints: Int)(implicit rand: Random): UniformSampler[_1D] = new UniformSampler(domain, numberOfPoints)
+}
+
+object UniformSampler2D {
+  def apply(domain: BoxDomain[_2D], numberOfPoints: Int)(implicit rand: Random): UniformSampler[_2D] = new UniformSampler(domain, numberOfPoints)
+}
+
+object UniformSampler3D {
+  def apply(domain: BoxDomain[_3D], numberOfPoints: Int)(implicit rand: Random): UniformSampler[_3D] = new UniformSampler(domain, numberOfPoints)
 }
 
 case class RandomMeshSampler3D(mesh: TriangleMesh[_3D], numberOfPoints: Int, seed: Int)(implicit rand: Random) extends Sampler[_3D] {

@@ -18,8 +18,8 @@ package scalismo.registration
 
 import breeze.linalg.DenseVector
 import scalismo.common.Domain
+import scalismo.common.Field.{ DifferentiableImage, Image }
 import scalismo.geometry.{ NDSpace, Point }
-import scalismo.image.{ DifferentiableScalarImage, ScalarImage }
 import scalismo.numerics._
 import scalismo.registration.RegistrationMetric.ValueAndDerivative
 
@@ -29,8 +29,8 @@ import scalismo.registration.RegistrationMetric.ValueAndDerivative
  * the sampler.
  */
 
-abstract class MeanPointwiseLossMetric[D: NDSpace](fixedImage: ScalarImage[D],
-    movingImage: DifferentiableScalarImage[D],
+abstract class MeanPointwiseLossMetric[D: NDSpace](fixedImage: Image[D, Float],
+    movingImage: DifferentiableImage[D, Float],
     transformationSpace: TransformationSpace[D],
     sampler: Sampler[D]) extends ImageMetric[D] {
 

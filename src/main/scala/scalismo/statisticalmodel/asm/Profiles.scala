@@ -17,7 +17,7 @@ package scalismo.statisticalmodel.asm
 
 import breeze.linalg.DenseVector
 import scalismo.common._
-import scalismo.geometry.{NDSpace, Point}
+import scalismo.geometry.{NDSpace}
 import scalismo.statisticalmodel.MultivariateNormalDistribution
 
 import scala.collection.immutable
@@ -50,10 +50,6 @@ class DiscreteFeatureField[D: NDSpace, DDomain <: DiscreteDomain[D]](domain: DDo
   override def isDefinedAt(id: PointId) = id.id < domain.numberOfPoints
 
   override def values = _values.toIterator
-
-  override def interpolateNearestNeighbor(): Field[D, DenseVector[Double]] = {
-    Field(RealSpace[D], (p: Point[D]) => apply(domain.findClosestPoint(p).id))
-  }
 
 }
 

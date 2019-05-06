@@ -18,13 +18,14 @@ package scalismo.registration
 import java.io.File
 
 import breeze.linalg.DenseVector
+import scalismo.common.interpolation.{ BSplineInterpolator2D, BSplineInterpolator3D }
 import scalismo.{ ScalismoTestSuite, numerics }
-import scalismo.common.{ Field, NearestNeighborInterpolator, PointId, RealSpace }
+import scalismo.common._
 import scalismo.geometry._
 import scalismo.io.{ ImageIO, MeshIO }
-import scalismo.kernels.{ DiagonalKernel, GaussianKernel }
-import scalismo.numerics.{ LBFGSOptimizer, UniformSampler }
-import scalismo.statisticalmodel.{ GaussianProcess, LowRankGaussianProcess }
+import scalismo.kernels.{ DiagonalKernel, GaussianKernel2D }
+import scalismo.numerics.{ LBFGSOptimizer, UniformSampler2D, UniformSampler3D }
+import scalismo.statisticalmodel.{ GaussianProcess2D, LowRankGaussianProcess }
 import scalismo.utils.Random
 
 import scala.language.implicitConversions
@@ -174,7 +175,8 @@ class RegistrationTests extends ScalismoTestSuite {
       val testImgUrl = getClass.getResource("/dm128.vtk").getPath
 
       val discreteFixedImage = ImageIO.read2DScalarImage[Float](new File(testImgUrl)).get
-      val fixedImage = discreteFixedImage.interpolate(3)
+
+      val fixedImage = BSplineInterpolator2D[Float](3).interpolate(discreteFixedImage)
       val transformationSpace = TranslationSpace[_2D]
       val translationParams = DenseVector[Double](-10.0, 5.0)
       val translationTransform = transformationSpace.transformForParameters(translationParams)
@@ -182,7 +184,7 @@ class RegistrationTests extends ScalismoTestSuite {
 
       val domain = discreteFixedImage.domain
 
-      val regIt = Registration(MeanSquaresMetric(fixedImage, transformedLena, transformationSpace, UniformSampler(domain.boundingBox, 4000)),
+      val regIt = Registration(MeanSquaresMetric(fixedImage, transformedLena, transformationSpace, UniformSampler2D(domain.boundingBox, 4000)),
         L2Regularizer[_2D](transformationSpace),
         regularizationWeight = 0.0,
         LBFGSOptimizer(maxNumberOfIterations = 300)
@@ -196,7 +198,7 @@ class RegistrationTests extends ScalismoTestSuite {
     it("Recovers the correct parameters for a rotation transform") {
       val testImgUrl = getClass.getResource("/dm128.vtk").getPath
       val discreteFixedImage = ImageIO.read2DScalarImage[Float](new File(testImgUrl)).get
-      val fixedImage = discreteFixedImage.interpolate(3)
+      val fixedImage = BSplineInterpolator2D[Float](3).interpolate(discreteFixedImage)
       val domain = discreteFixedImage.domain
       val center = ((domain.boundingBox.oppositeCorner - domain.origin) * 0.5).toPoint
       val transformationSpace = RotationSpace[_2D](center)
@@ -204,7 +206,7 @@ class RegistrationTests extends ScalismoTestSuite {
       val transform = transformationSpace.transformForParameters(rotationParams)
       val transformedLena = fixedImage compose transform
 
-      val metric = MeanSquaresMetric(transformedLena, fixedImage, transformationSpace, UniformSampler(domain.boundingBox, 4000))
+      val metric = MeanSquaresMetric(transformedLena, fixedImage, transformationSpace, UniformSampler2D(domain.boundingBox, 4000))
 
       val regIter = Registration(metric,
         L2Regularizer(transformationSpace),
@@ -220,11 +222,11 @@ class RegistrationTests extends ScalismoTestSuite {
       val testImgUrl = getClass.getResource("/dm128.vtk").getPath
 
       val discreteFixedImage = ImageIO.read2DScalarImage[Float](new File(testImgUrl)).get
-      val fixedImage = discreteFixedImage.interpolate(3)
+      val fixedImage = BSplineInterpolator2D[Float](3).interpolate(discreteFixedImage)
 
       val domain = discreteFixedImage.domain
-      val gp = GaussianProcess(Field(RealSpace[_2D], (_: Point[_2D]) => EuclideanVector.zeros[_2D]), DiagonalKernel(GaussianKernel[_2D](50.0) * 50.0, 2))
-      val sampler = UniformSampler(domain.boundingBox, numberOfPoints = 200)
+      val gp = GaussianProcess2D(Field(RealSpace2D, (_: Point[_2D]) => EuclideanVector.zeros[_2D]), DiagonalKernel(GaussianKernel2D(50.0) * 50.0, 2))
+      val sampler = UniformSampler2D(domain.boundingBox, numberOfPoints = 200)
       val lowRankGp = LowRankGaussianProcess.approximateGPNystrom(gp, sampler, numBasisFunctions = 3)
       val gpParams = DenseVector.ones[Double](lowRankGp.rank)
       val transformationSpace = GaussianProcessTransformationSpace(lowRankGp)
@@ -233,7 +235,7 @@ class RegistrationTests extends ScalismoTestSuite {
 
       val transformedLena = fixedImage compose groundTruthTransform
 
-      val metric = MeanSquaresMetric(transformedLena, fixedImage, transformationSpace, UniformSampler(domain.boundingBox, 4000))
+      val metric = MeanSquaresMetric(transformedLena, fixedImage, transformationSpace, UniformSampler2D(domain.boundingBox, 4000))
 
       val regIt = Registration(
         metric,
@@ -253,21 +255,21 @@ class RegistrationTests extends ScalismoTestSuite {
       val testImgUrl = getClass.getResource("/dm128.vtk").getPath
 
       val discreteFixedImage = ImageIO.read2DScalarImage[Float](new File(testImgUrl)).get
-      val fixedImage = discreteFixedImage.interpolate(3)
+      val fixedImage = BSplineInterpolator2D[Float](3).interpolate(discreteFixedImage)
 
       val domain = discreteFixedImage.domain
 
-      val gp = GaussianProcess(Field(RealSpace[_2D], (_: Point[_2D]) => EuclideanVector.zeros[_2D]), DiagonalKernel(GaussianKernel[_2D](50.0) * 50.0, 2))
-      val sampler = UniformSampler(domain.boundingBox, numberOfPoints = 200)
+      val gp = GaussianProcess2D(Field(RealSpace[_2D], (_: Point[_2D]) => EuclideanVector.zeros[_2D]), DiagonalKernel(GaussianKernel2D(50.0) * 50.0, 2))
+      val sampler = UniformSampler2D(domain.boundingBox, numberOfPoints = 200)
       val lowRankGp = LowRankGaussianProcess.approximateGPNystrom(gp, sampler, numBasisFunctions = 3)
-      val nnInterpolatedGp = lowRankGp.discretize(domain).interpolate(NearestNeighborInterpolator())
+      val nnInterpolatedGp = lowRankGp.discretize(domain).interpolate(NearestNeighborInterpolator2D())
 
       val transformationSpace = GaussianProcessTransformationSpace(nnInterpolatedGp)
       val gpParams = DenseVector.ones[Double](lowRankGp.rank)
       val groundTruthTransform = transformationSpace.transformForParameters(gpParams)
       val transformedLena = fixedImage compose groundTruthTransform
 
-      val metric = MeanSquaresMetric(transformedLena, fixedImage, transformationSpace, UniformSampler(domain.boundingBox, 4000))
+      val metric = MeanSquaresMetric(transformedLena, fixedImage, transformationSpace, UniformSampler2D(domain.boundingBox, 4000))
 
       val regIt = Registration(
         metric,
@@ -287,7 +289,7 @@ class RegistrationTests extends ScalismoTestSuite {
   describe("A 3D image registration") {
     val testImgUrl = getClass.getResource("/3ddm.nii").getPath
     val discreteFixedImage = ImageIO.read3DScalarImage[Float](new File(testImgUrl)).get
-    val fixedImage = discreteFixedImage.interpolate(3)
+    val fixedImage = BSplineInterpolator3D[Float](3).interpolate(discreteFixedImage)
 
     val transformationSpace = TranslationSpace[_3D]
     val domain = discreteFixedImage.domain
@@ -298,7 +300,7 @@ class RegistrationTests extends ScalismoTestSuite {
       val translationTransform = TranslationSpace[_3D].transformForParameters(translationParams)
       val transformed = fixedImage compose translationTransform
 
-      val metric = MeanSquaresMetric(fixedImage, transformed, transformationSpace, UniformSampler(domain.boundingBox, 20000))
+      val metric = MeanSquaresMetric(fixedImage, transformed, transformationSpace, UniformSampler3D(domain.boundingBox, 20000))
 
       val regIt = Registration(
         metric,

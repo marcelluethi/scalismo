@@ -16,8 +16,8 @@
 
 package scalismo.registration
 
-import scalismo.geometry.NDSpace
-import scalismo.image.{ DifferentiableScalarImage, ScalarImage }
+import scalismo.common.Field.{ DifferentiableImage, Image }
+import scalismo.geometry.{ NDSpace }
 import scalismo.numerics._
 
 /**
@@ -27,8 +27,8 @@ import scalismo.numerics._
  * @see SumOfPointwiseLossMetric.
  *
  */
-case class MeanHuberLossMetric[D: NDSpace](fixedImage: ScalarImage[D],
-  movingImage: DifferentiableScalarImage[D],
+case class MeanHuberLossMetric[D: NDSpace](fixedImage: Image[D, Float],
+  movingImage: DifferentiableImage[D, Float],
   transformationSpace: TransformationSpace[D],
   sampler: Sampler[D],
   delta: Double = 1.345)

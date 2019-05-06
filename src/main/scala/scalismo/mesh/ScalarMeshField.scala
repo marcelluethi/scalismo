@@ -27,17 +27,18 @@ import scala.reflect.ClassTag
  * @constructor Returns a scalar mesh data given a triangle mesh and an array of values.
  * The number of values and mesh points must be equal.
  */
-case class ScalarMeshField[S: Scalar: ClassTag](mesh: TriangleMesh[_3D], override val data: ScalarArray[S])
-    extends DiscreteScalarField[_3D, UnstructuredPointsDomain[_3D], S](mesh.pointSet, data) {
+case class ScalarMeshField[S: Scalar: ClassTag](mesh: TriangleMesh[_3D], data: ScalarArray[S]) {
   require(mesh.pointSet.numberOfPoints == data.size)
 
-  override def values = data.iterator
-  override val domain = mesh.pointSet
+  val discreteField = DiscreteField[_3D, UnstructuredPointsDomain[_3D], S](mesh.pointSet, data)
 
-  override def apply(ptId: PointId) = data(ptId.id)
-  override def isDefinedAt(ptId: PointId) = data.isDefinedAt(ptId.id)
+  def values = discreteField.values
+  val domain = discreteField.domain
 
-  override def map[S2: Scalar: ClassTag](f: S => S2): ScalarMeshField[S2] = {
+  def apply(ptId: PointId) = discreteField(ptId)
+  def isDefinedAt(ptId: PointId) = discreteField.isDefinedAt(ptId)
+
+  def map[S2: Scalar: ClassTag](f: S => S2): ScalarMeshField[S2] = {
     ScalarMeshField(mesh, data.map(f))
   }
 }
