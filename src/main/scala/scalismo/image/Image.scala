@@ -101,11 +101,17 @@ class ScalarImage[D: NDSpace] protected (override val domain: Domain[D], overrid
     ScalarImage(domain, f)
   }
 
+  @deprecated("please use the method discretize instead", "v0.18.0")
+  def sample[Pixel: Scalar: ClassTag](domain: DiscreteImageDomain[D], outsideValue: Float)(implicit ev: DiscreteScalarImage.Create[D]): DiscreteScalarImage[D, Pixel] = {
+    discretize(domain, outsideValue)
+  }
+
+
   /**
    * Returns a discrete scalar image with the given domain, whose values are obtained by sampling the scalarImage at the domain points.
    * If the image is not defined at a domain point, the outside value is used.
    */
-  def sample[Pixel: Scalar: ClassTag](domain: DiscreteImageDomain[D], outsideValue: Float)(implicit ev: DiscreteScalarImage.Create[D]): DiscreteScalarImage[D, Pixel] = {
+  def discretize[Pixel: Scalar: ClassTag](domain: DiscreteImageDomain[D], outsideValue: Float)(implicit ev: DiscreteScalarImage.Create[D]): DiscreteScalarImage[D, Pixel] = {
     val numeric = implicitly[Scalar[Pixel]]
     val convertedOutsideValue = numeric.fromFloat(outsideValue)
 

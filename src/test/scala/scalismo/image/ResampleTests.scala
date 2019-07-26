@@ -33,7 +33,7 @@ class ResampleTests extends ScalismoTestSuite {
     val continuousImage = discreteImage.interpolate(1)
 
     it("yields the original discrete image") {
-      val resampledImage = continuousImage.sample[Short](discreteImage.domain, 0)
+      val resampledImage = continuousImage.discretize[Short](discreteImage.domain, 0)
       discreteImage.values.size should equal(resampledImage.values.size)
       for (i <- 0 until discreteImage.values.size) {
         discreteImage(PointId(i)) should be(resampledImage(PointId(i)))
@@ -47,7 +47,7 @@ class ResampleTests extends ScalismoTestSuite {
     val continuousImage = discreteImage.interpolate(0)
 
     it("yields the original discrete image") {
-      val resampledImage = continuousImage.sample[Short](discreteImage.domain, 0)
+      val resampledImage = continuousImage.discretize[Short](discreteImage.domain, 0)
       for (i <- 0 until discreteImage.values.size by 100) {
         discreteImage(PointId(i)) should be(resampledImage(PointId(i)))
       }

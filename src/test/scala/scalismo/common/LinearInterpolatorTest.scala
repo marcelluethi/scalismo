@@ -82,7 +82,7 @@ class LinearInterpolatorTest extends ScalismoTestSuite {
       }
 
       try {
-        interpolatedImg.sample[Double](fineDomain, 0)
+        interpolatedImg.discretize[Double](fineDomain, 0)
       } catch {
         case ex: Exception => fail("Should not throw Exception", ex)
       }

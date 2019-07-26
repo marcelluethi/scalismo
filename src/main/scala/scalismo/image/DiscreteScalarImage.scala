@@ -71,7 +71,7 @@ abstract class DiscreteScalarImage[D: NDSpace: Create, A: Scalar: ClassTag] prot
   def resample(newDomain: DiscreteImageDomain[D], interpolationDegree: Int, outsideValue: Float): DiscreteScalarImage[D, A] = {
 
     val contImg = interpolate(interpolationDegree)
-    contImg.sample(newDomain, outsideValue)
+    contImg.discretize(newDomain, outsideValue)
   }
 
 }

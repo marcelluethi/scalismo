@@ -42,6 +42,7 @@ object Field {
       }
   }
 
+
 }
 
 /**
@@ -58,6 +59,12 @@ trait Field[D, A] extends Function1[Point[D], A] { self =>
 
   /** True if the image is defined at the given point */
   def isDefinedAt(pt: Point[D]): Boolean = domain.isDefinedAt(pt)
+
+  /** Discretizes a field on the given domain */
+  def discretize[DDomain <: DiscreteDomain[D]](domain : DDomain) : DiscreteField[D, DDomain, A] = {
+    val values = domain.points.map(p => f(p))
+    DiscreteField(domain, values.toIndexedSeq)
+  }
 
   /**
    * The value of the image at a given point.
