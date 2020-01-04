@@ -440,9 +440,11 @@ object StatismoIO {
    * @return Success of failure
    */
   def writeStatismoImageModel[D: NDSpace, A: Vectorizer](
-    gp: DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A],
+    gp: DiscreteLowRankGaussianProcess[D, A],
     file: File,
     modelPath: String): Try[Unit] = {
+
+    val referenceDomain = gp.domain.asInstanceOf[DiscreteImageDomain[D]]
 
     val discretizedMean = gp.meanVector.map(_.toFloat)
     val variance = gp.variance.map(_.toFloat)
@@ -459,7 +461,7 @@ object StatismoIO {
       group <- h5file.createGroup(s"$modelPath/representer")
       _ <- {
         for {
-          _ <- writeImageRepresenter(h5file, group, gp, modelPath)
+          _ <- writeImageRepresenter(h5file, group, referenceDomain, gp, modelPath)
           _ <- h5file.writeInt("/version/majorVersion", 0)
           _ <- h5file.writeInt("/version/minorVersion", 9)
         } yield Success(())
@@ -479,12 +481,11 @@ object StatismoIO {
   private def writeImageRepresenter[D: NDSpace, A: Vectorizer](
     h5file: HDF5File,
     group: Group,
-    gp: DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A],
+    domain: DiscreteImageDomain[D],
+    gp: DiscreteLowRankGaussianProcess[D, A],
     modelPath: String): Try[Unit] = {
 
     val dim = NDSpace[D].dimensionality
-
-    val domain = gp.domain
 
     // we create a dummy array with 0 vectors. This needs to be there to satisfy the
     // statismo file format, even though it is useless in this context
@@ -525,7 +526,7 @@ object StatismoIO {
    *
    * @return The gaussian process (wrapped in a Success) or Failure.
    */
-  def readStatismoImageModel[D: NDSpace: CreateDiscreteImageDomain, A: Vectorizer](file: java.io.File, modelPath: String = "/"): Try[DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A]] = {
+  def readStatismoImageModel[D: NDSpace: CreateDiscreteImageDomain, A: Vectorizer](file: java.io.File, modelPath: String = "/"): Try[DiscreteLowRankGaussianProcess[D, A]] = {
 
     val modelOrFailure = for {
       h5file <- HDF5Utils.openFileForReading(file)
@@ -570,7 +571,7 @@ object StatismoIO {
       }
     } yield {
 
-      val gp = new DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A](
+      val gp = new DiscreteLowRankGaussianProcess[D, A](
         image,
         meanVector.map(_.toDouble),
         pcaVarianceVector.map(_.toDouble),

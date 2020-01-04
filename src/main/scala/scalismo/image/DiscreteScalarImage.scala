@@ -47,7 +47,7 @@ class DiscreteScalarImage[D: NDSpace, A: Scalar: ClassTag](override val domain: 
    *
    * @param interpolator The interpolator used to interpolate the image
    */
-  override def interpolate(interpolator: FieldInterpolator[D, DiscreteImageDomain[D], A]): ScalarImage[D, A] = {
+  override def interpolate(interpolator: FieldInterpolator[D, A]): ScalarImage[D, A] = {
     val f = interpolator.interpolate(this)
     ScalarImage(f.domain, f.f)
   }
@@ -58,7 +58,7 @@ class DiscreteScalarImage[D: NDSpace, A: Scalar: ClassTag](override val domain: 
    *
    * @param interpolator The interpolator used to interpolate the image
    */
-  def interpolate(interpolator: DifferentiableFieldInterpolator[D, DiscreteImageDomain[D], A, EuclideanVector[D]]): DifferentiableScalarImage[D, A] = {
+  def interpolate(interpolator: DifferentiableFieldInterpolator[D, A, EuclideanVector[D]]): DifferentiableScalarImage[D, A] = {
     val f = interpolator.interpolate(this)
     DifferentiableScalarImage(f.domain, f.f, f.df)
   }
@@ -77,7 +77,7 @@ class DiscreteScalarImage[D: NDSpace, A: Scalar: ClassTag](override val domain: 
   }
 
   /** Returns a new ContinuousScalarImage by interpolating the given DiscreteScalarImage using b-spline interpolation of given order */
-  def resample(newDomain: DiscreteImageDomain[D], interpolator: FieldInterpolator[D, DiscreteImageDomain[D], A], outsideValue: A): DiscreteScalarImage[D, A] = {
+  def resample(newDomain: DiscreteImageDomain[D], interpolator: FieldInterpolator[D, A], outsideValue: A): DiscreteScalarImage[D, A] = {
 
     val contImg = interpolate(interpolator)
     contImg.sample(newDomain, outsideValue)

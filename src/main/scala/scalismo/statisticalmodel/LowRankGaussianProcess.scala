@@ -77,11 +77,11 @@ class LowRankGaussianProcess[D: NDSpace, Value](mean: Field[D, Value],
   /**
    * A random sample evaluated at the given points
    */
-  override def sampleAtPoints[DDomain <: DiscreteDomain[D]](domain: DDomain)(implicit rand: Random): DiscreteField[D, DDomain, Value] = {
+  override def sampleAtPoints(domain: DiscreteDomain[D])(implicit rand: Random): DiscreteField[D, Value] = {
     // TODO check that points are part of the domain
     val aSample = sample()
     val values = domain.points.map(pt => aSample(pt))
-    DiscreteField[D, DDomain, Value](domain, values.toIndexedSeq)
+    DiscreteField[D, Value](domain, values.toIndexedSeq)
   }
 
   /**
@@ -170,8 +170,8 @@ class LowRankGaussianProcess[D: NDSpace, Value](mean: Field[D, Value],
   /**
    * Discretize the gaussian process on the given points.
    */
-  def discretize[DDomain <: DiscreteDomain[D]](domain: DDomain): DiscreteLowRankGaussianProcess[D, DDomain, Value] = {
-    DiscreteLowRankGaussianProcess[D, DDomain, Value](domain, this)
+  def discretize(domain: DiscreteDomain[D]): DiscreteLowRankGaussianProcess[D, Value] = {
+    DiscreteLowRankGaussianProcess[D, Value](domain, this)
   }
 
 }
@@ -260,7 +260,7 @@ object LowRankGaussianProcess {
   (domain: DDomain,
    gp: GaussianProcess[D, Value],
    relativeTolerance: Double,
-   interpolator: FieldInterpolator[D, DDomain, Value])
+   interpolator: FieldInterpolator[D, Value])
   (implicit vectorizer: Vectorizer[Value], rand: Random): LowRankGaussianProcess[D, Value] = {
 
     val (basis, scale) = PivotedCholesky.computeApproximateEig(
@@ -274,14 +274,14 @@ object LowRankGaussianProcess {
     // to interpolate it.
     val nBasisFunctions = basis.cols
 
-    val klBasis: DiscreteLowRankGaussianProcess.KLBasis[D, DDomain, Value] = for (i <- 0 until nBasisFunctions) yield {
-      val discreteEV = DiscreteField.createFromDenseVector[D, DDomain, Value](domain, basis(::, i))
+    val klBasis: DiscreteLowRankGaussianProcess.KLBasis[D, Value] = for (i <- 0 until nBasisFunctions) yield {
+      val discreteEV = DiscreteField.createFromDenseVector[D, Value](domain, basis(::, i))
       DiscreteLowRankGaussianProcess.Eigenpair(scale(i), discreteEV)
     }
 
-    val mean = DiscreteField[D, DDomain, Value](domain, domain.points.toIndexedSeq.map(p => gp.mean(p)))
+    val mean = DiscreteField[D, Value](domain, domain.points.toIndexedSeq.map(p => gp.mean(p)))
 
-    val dgp = DiscreteLowRankGaussianProcess[D, DDomain, Value](mean, klBasis)
+    val dgp = DiscreteLowRankGaussianProcess[D, Value](mean, klBasis)
 
     // interpolate to get a continuous GP
     dgp.interpolate(interpolator)

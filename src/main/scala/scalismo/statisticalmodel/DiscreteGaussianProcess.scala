@@ -16,11 +16,11 @@
 
 package scalismo.statisticalmodel
 
-import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.linalg.{ DenseMatrix, DenseVector }
 import scalismo.common._
 import scalismo.common.interpolation.FieldInterpolator
 import scalismo.geometry._
-import scalismo.kernels.{DiscreteMatrixValuedPDKernel, MatrixValuedPDKernel}
+import scalismo.kernels.{ DiscreteMatrixValuedPDKernel, MatrixValuedPDKernel }
 import scalismo.numerics.PivotedCholesky
 import scalismo.numerics.PivotedCholesky.RelativeTolerance
 import scalismo.utils.Random
@@ -30,7 +30,7 @@ import scalismo.utils.Random
  * While this is technically similar to a MultivariateNormalDistribution, we highlight with this
  * class that we represent (discrete) functions, defined on the given domain.
  */
-class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] private[scalismo] (val mean: DiscreteField[D, DDomain, Value],
+class DiscreteGaussianProcess[D: NDSpace, Value] private[scalismo] (val mean: DiscreteField[D, Value],
     val cov: DiscreteMatrixValuedPDKernel[D])(implicit val vectorizer: Vectorizer[Value]) {
   self =>
 
@@ -40,7 +40,7 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
 
   val outputDim = vectorizer.dim
 
-  def sample()(implicit rand: Random): DiscreteField[D, DDomain, Value] = {
+  def sample()(implicit rand: Random): DiscreteField[D, Value] = {
     // define the mean and kernel matrix for the given points and construct the
     // corresponding MV Normal distribution, from which we then sample
 
@@ -52,7 +52,7 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
     val sampleVec = mvNormal.sample
 
     // The sample is a vector. We convert it back to a discreteVectorField.
-    DiscreteField.createFromDenseVector[D, DDomain, Value](domain, sampleVec)
+    DiscreteField.createFromDenseVector[D, Value](domain, sampleVec)
   }
 
   /**
@@ -66,13 +66,13 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
    * The marginal distribution for the points specified by the given point ids.
    * Note that this is again a DiscreteGaussianProcess.
    */
-  def marginal(pointIds: Seq[PointId])(implicit domainCreator: UnstructuredPointsDomain.Create[D]): DiscreteGaussianProcess[D, UnstructuredPointsDomain[D], Value] = {
+  def marginal(pointIds: Seq[PointId])(implicit domainCreator: UnstructuredPointsDomain.Create[D]): DiscreteGaussianProcess[D, Value] = {
     val domainPts = domain.points.toIndexedSeq
 
     val newPts = pointIds.map(pointId => domainPts(pointId.id)).toIndexedSeq
     val newDomain = domainCreator.create(newPts)
 
-    val newMean = DiscreteField[D, UnstructuredPointsDomain[D], Value](newDomain, pointIds.toIndexedSeq.map(id => mean(id)))
+    val newMean = DiscreteField[D, Value](newDomain, pointIds.toIndexedSeq.map(id => mean(id)))
     val newCov = (i: PointId, j: PointId) => {
       cov(pointIds(i.id), pointIds(j.id))
     }
@@ -112,7 +112,7 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
 
   }
 
-  def interpolate(interpolator : FieldInterpolator[D, DDomain, Value]) : GaussianProcess[D, Value] = {
+  def interpolate(interpolator: FieldInterpolator[D, Value]): GaussianProcess[D, Value] = {
 
     // We know how to interpolate DiscreteLowRankGaussianProcesses, but
     // not this more generic type of DiscreteGP. Since we are sure that our
@@ -127,21 +127,20 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
 
     val nBasisFunctions = basis.cols
 
-    val klBasis: DiscreteLowRankGaussianProcess.KLBasis[D, DDomain, Value] = for (i <- 0 until nBasisFunctions) yield {
-      val discreteEV = DiscreteField.createFromDenseVector[D, DDomain, Value](domain, basis(::, i))
+    val klBasis: DiscreteLowRankGaussianProcess.KLBasis[D, Value] = for (i <- 0 until nBasisFunctions) yield {
+      val discreteEV = DiscreteField.createFromDenseVector[D, Value](domain, basis(::, i))
       DiscreteLowRankGaussianProcess.Eigenpair(scale(i), discreteEV)
     }
 
-    val dgp = DiscreteLowRankGaussianProcess[D, DDomain, Value](mean, klBasis)
+    val dgp = DiscreteLowRankGaussianProcess[D, Value](mean, klBasis)
     dgp.interpolate(interpolator)
   }
-
 
   /**
    * Discrete version of [[LowRankGaussianProcess.project(IndexedSeq[(Point[D], Vector[DO])], Double)]]
    */
 
-  def project(s: DiscreteField[D, DiscreteDomain[D], Value]): DiscreteField[D, DDomain, Value] = {
+  def project(s: DiscreteField[D, Value]): DiscreteField[D, Value] = {
 
     val sigma2 = 1e-5 // regularization weight to avoid numerical problems
     val noiseDist = MultivariateNormalDistribution(DenseVector.zeros[Double](outputDim), DenseMatrix.eye[Double](outputDim) * sigma2)
@@ -153,7 +152,7 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
   /**
    * Returns the probability density of the given instance
    */
-  def pdf(instance: DiscreteField[D, DiscreteDomain[D], Value]): Double = {
+  def pdf(instance: DiscreteField[D, Value]): Double = {
     val mvnormal = MultivariateNormalDistribution(DiscreteField.vectorize[D, Value](mean.data), cov.asBreezeMatrix)
     val instvec = DiscreteField.vectorize[D, Value](instance.data)
     mvnormal.pdf(instvec)
@@ -164,7 +163,7 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
    *
    * If you are interested in ordinal comparisons of PDFs, use this as it is numerically more stable
    */
-  def logpdf(instance: DiscreteField[D, DiscreteDomain[D], Value]): Double = {
+  def logpdf(instance: DiscreteField[D, Value]): Double = {
     val mvnormal = MultivariateNormalDistribution(DiscreteField.vectorize[D, Value](mean.data), cov.asBreezeMatrix)
     val instvec = DiscreteField.vectorize[D, Value](instance.data)
     mvnormal.logpdf(instvec)
@@ -174,22 +173,22 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
 
 object DiscreteGaussianProcess {
 
-  def apply[D: NDSpace, DDomain <: DiscreteDomain[D], Value](mean: DiscreteField[D, DDomain, Value], cov: DiscreteMatrixValuedPDKernel[D])(implicit vectorizer: Vectorizer[Value]): DiscreteGaussianProcess[D, DDomain, Value] = {
-    new DiscreteGaussianProcess[D, DDomain, Value](mean, cov)
+  def apply[D: NDSpace, Value](mean: DiscreteField[D, Value], cov: DiscreteMatrixValuedPDKernel[D])(implicit vectorizer: Vectorizer[Value]): DiscreteGaussianProcess[D, Value] = {
+    new DiscreteGaussianProcess[D, Value](mean, cov)
   }
 
-  def apply[D: NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DDomain, gp: GaussianProcess[D, Value])(implicit vectorizer: Vectorizer[Value]): DiscreteGaussianProcess[D, DDomain, Value] = {
+  def apply[D: NDSpace, Value](domain: DiscreteDomain[D], gp: GaussianProcess[D, Value])(implicit vectorizer: Vectorizer[Value]): DiscreteGaussianProcess[D, Value] = {
     val domainPoints = domain.points.toIndexedSeq
 
-    val discreteMean = DiscreteField[D, DDomain, Value](domain, domainPoints.map(pt => gp.mean(pt)))
+    val discreteMean = DiscreteField[D, Value](domain, domainPoints.map(pt => gp.mean(pt)))
 
     val k = (i: PointId, j: PointId) => gp.cov(domainPoints(i.id), domainPoints(j.id))
     val discreteCov = DiscreteMatrixValuedPDKernel(domain, k, gp.outputDim)
 
-    new DiscreteGaussianProcess[D, DDomain, Value](discreteMean, discreteCov)
+    new DiscreteGaussianProcess[D, Value](discreteMean, discreteCov)
   }
 
-  def regression[D: NDSpace, DDomain <: DiscreteDomain[D], Value](discreteGp: DiscreteGaussianProcess[D, DDomain, Value], trainingData: IndexedSeq[(Int, Value, MultivariateNormalDistribution)])(implicit vectorizer: Vectorizer[Value]): DiscreteGaussianProcess[D, DDomain, Value] = {
+  def regression[D: NDSpace, Value](discreteGp: DiscreteGaussianProcess[D, Value], trainingData: IndexedSeq[(Int, Value, MultivariateNormalDistribution)])(implicit vectorizer: Vectorizer[Value]): DiscreteGaussianProcess[D, Value] = {
 
     // TODO, this is somehow a hack to reuse the code written for the general GP regression. We should think if that has disadvantages
     // TODO We should think whether we can do it in  a conceptually more clean way.

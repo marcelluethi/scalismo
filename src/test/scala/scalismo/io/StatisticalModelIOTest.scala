@@ -188,10 +188,12 @@ class StatisticalModelIOTest extends ScalismoTestSuite {
 
       val discreteGPReread = StatisticalModelIO.readDeformationModel3D(tmpFile).get
 
+      val domainOrig = discreteGP.domain.asInstanceOf[DiscreteImageDomain[_3D]]
+      val domainReread = discreteGPReread.domain.asInstanceOf[DiscreteImageDomain[_3D]]
       // origin and spacing are saved as float. Hence we expect small inaccuracies.
-      (discreteGP.domain.origin - discreteGPReread.domain.origin).norm should be < 1e-5
-      (discreteGP.domain.spacing - discreteGPReread.domain.spacing).norm should be < 1e-5
-      discreteGP.domain.size should equal(discreteGPReread.domain.size)
+      (domainOrig.origin - domainReread.origin).norm should be < 1e-5
+      (domainOrig.spacing - domainReread.spacing).norm should be < 1e-5
+      domainOrig.size should equal(domainReread.size)
 
       // also here, due to conversion in float, smaller errors are expected
       breeze.linalg.norm(discreteGP.meanVector - discreteGPReread.meanVector) should be < 1e-2
@@ -220,10 +222,13 @@ class StatisticalModelIOTest extends ScalismoTestSuite {
 
       val discreteGPReread = StatisticalModelIO.readDeformationModel2D(tmpFile).get
 
+      val domainOrig = discreteGP.domain.asInstanceOf[DiscreteImageDomain[_3D]]
+      val domainReread = discreteGPReread.domain.asInstanceOf[DiscreteImageDomain[_3D]]
+
       // origin and spacing are saved as float. Hence we expect small inaccuracies.
-      (discreteGP.domain.origin - discreteGPReread.domain.origin).norm should be < 1e-5
-      (discreteGP.domain.spacing - discreteGPReread.domain.spacing).norm should be < 1e-5
-      discreteGP.domain.size should equal(discreteGPReread.domain.size)
+      (domainOrig.origin - domainReread.origin).norm should be < 1e-5
+      (domainOrig.spacing - domainReread.spacing).norm should be < 1e-5
+      domainOrig.size should equal(domainReread.size)
 
       // also here, due to conversion in float, smaller errors are expected
       breeze.linalg.norm(discreteGP.meanVector - discreteGPReread.meanVector) should be < 1e-2

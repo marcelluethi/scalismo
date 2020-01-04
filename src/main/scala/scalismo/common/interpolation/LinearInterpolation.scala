@@ -21,7 +21,7 @@ import scalismo.geometry._
 import scalismo.image.DiscreteImageDomain
 import scalismo.numerics.ValueInterpolator
 
-trait LinearImageInterpolator[D, A] extends FieldInterpolator[D, DiscreteImageDomain[D], A] {
+trait LinearImageInterpolator[D, A] extends FieldInterpolator[D, A] {
 
   protected implicit def ndSpace: NDSpace[D]
 
@@ -58,9 +58,9 @@ case class LinearImageInterpolator1D[A: ValueInterpolator]() extends LinearImage
 
   override protected val valueInterpolator = ValueInterpolator[A]
 
-  override def interpolate(df: DiscreteField[_1D, DiscreteImageDomain[_1D], A]): Field[_1D, A] = {
+  override def interpolate(df: DiscreteField[_1D, A]): Field[_1D, A] = {
 
-    val domain = df.domain
+    val domain = df.domain.asInstanceOf[DiscreteImageDomain[_1D]]
 
     def valueAtIdx(idx: IntVector[_1D]): A = {
       val id = domain.pointId(idx)
@@ -89,9 +89,9 @@ case class LinearImageInterpolator2D[A: ValueInterpolator]() extends LinearImage
 
   override protected val valueInterpolator = ValueInterpolator[A]
 
-  override def interpolate(df: DiscreteField[_2D, DiscreteImageDomain[_2D], A]): Field[_2D, A] = {
+  override def interpolate(df: DiscreteField[_2D, A]): Field[_2D, A] = {
 
-    val domain = df.domain
+    val domain = df.domain.asInstanceOf[DiscreteImageDomain[_2D]]
 
     def valueAtIdx(idx: IntVector[_2D]): A = {
       val id = domain.pointId(idx)
@@ -121,7 +121,7 @@ case class LinearImageInterpolator2D[A: ValueInterpolator]() extends LinearImage
       )
     }
 
-    Field(df.domain.imageBoundingBox, interpolatePoint)
+    Field(domain.imageBoundingBox, interpolatePoint)
   }
 }
 
@@ -131,9 +131,9 @@ case class LinearImageInterpolator3D[A: ValueInterpolator]() extends LinearImage
 
   override protected val valueInterpolator = ValueInterpolator[A]
 
-  override def interpolate(df: DiscreteField[_3D, DiscreteImageDomain[_3D], A]): Field[_3D, A] = {
+  override def interpolate(df: DiscreteField[_3D, A]): Field[_3D, A] = {
 
-    val domain = df.domain
+    val domain = df.domain.asInstanceOf[DiscreteImageDomain[_3D]]
 
     def valueAtIdx(idx: IntVector[_3D]): A = {
       val id = domain.pointId(idx)

@@ -22,9 +22,9 @@ import scalismo.geometry.{ Point, _1D, _2D, _3D }
  * Nearest neighbor interpolation of a discrete field. This implementation is generic and
  * works for any discrete field.
  */
-case class NearestNeighborInterpolator[D, A]() extends FieldInterpolator[D, DiscreteDomain[D], A] {
+case class NearestNeighborInterpolator[D, A]() extends FieldInterpolator[D, A] {
 
-  override def interpolate(df: DiscreteField[D, DiscreteDomain[D], A]): Field[D, A] = {
+  override def interpolate(df: DiscreteField[D, A]): Field[D, A] = {
 
     def valueAtClosestPoint(p: Point[D]): A = {
       val closestPointId = df.domain.findClosestPoint(p).id
