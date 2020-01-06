@@ -5,9 +5,9 @@ import java.util.Calendar
 
 import breeze.linalg.{DenseMatrix, DenseVector}
 import ncsa.hdf.`object`.Group
-import scalismo.common.{PointId, UnstructuredPointsDomain, Vectorizer}
+import scalismo.common.{PointId, UnstructuredPoints, Vectorizer}
 import scalismo.geometry.{_3D, EuclideanVector, IntVector, NDSpace, Point}
-import scalismo.image.{CreateDiscreteImageDomain, DiscreteImageDomain}
+import scalismo.image.{CreateDiscreteImageDomain, StructuredPoints}
 import scalismo.io.StatismoIO.StatismoModelType.StatismoModelType
 import scalismo.mesh.{
   TetrahedralCell,
@@ -426,7 +426,7 @@ object StatismoIO {
       cells = for (i <- 0 until cellMat.cols)
         yield TriangleCell(PointId(cellMat(0, i)), PointId(cellMat(1, i)), PointId(cellMat(2, i)))
       cellArray <- h5file.readNDArray[Int](s"$modelPath/representer/cells")
-    } yield TriangleMesh3D(UnstructuredPointsDomain(points), TriangleList(cells))
+    } yield TriangleMesh3D(UnstructuredPoints(points), TriangleList(cells))
   }
 
   private def readStandardVolumeMeshFromRepresenterGroup(h5file: HDF5File,
@@ -457,7 +457,7 @@ object StatismoIO {
                               PointId(cellMat(2, i)),
                               PointId(cellMat(3, i)))
       cellArray <- h5file.readNDArray[Int](s"$modelPath/representer/cells")
-    } yield TetrahedralMesh3D(UnstructuredPointsDomain(points), TetrahedralList(cells))
+    } yield TetrahedralMesh3D(UnstructuredPoints(points), TetrahedralList(cells))
   }
 
   /*
@@ -509,9 +509,9 @@ object StatismoIO {
    * @return Success of failure
    */
   def writeStatismoImageModel[D: NDSpace, A: Vectorizer](
-    gp: DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A],
-    file: File,
-    modelPath: String
+                                                          gp: DiscreteLowRankGaussianProcess[D, StructuredPoints[D], A],
+                                                          file: File,
+                                                          modelPath: String
   ): Try[Unit] = {
 
     val discretizedMean = gp.meanVector.map(_.toFloat)
@@ -551,10 +551,10 @@ object StatismoIO {
   }
 
   private def writeImageRepresenter[D: NDSpace, A: Vectorizer](
-    h5file: HDF5File,
-    group: Group,
-    gp: DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A],
-    modelPath: String
+                                                                h5file: HDF5File,
+                                                                group: Group,
+                                                                gp: DiscreteLowRankGaussianProcess[D, StructuredPoints[D], A],
+                                                                modelPath: String
   ): Try[Unit] = {
 
     val dim = NDSpace[D].dimensionality
@@ -606,7 +606,7 @@ object StatismoIO {
   def readStatismoImageModel[D: NDSpace: CreateDiscreteImageDomain, A: Vectorizer](
     file: java.io.File,
     modelPath: String = "/"
-  ): Try[DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A]] = {
+  ): Try[DiscreteLowRankGaussianProcess[D, StructuredPoints[D], A]] = {
 
     val modelOrFailure = for {
       h5file <- HDF5Utils.openFileForReading(file)
@@ -653,7 +653,7 @@ object StatismoIO {
       }
     } yield {
 
-      val gp = new DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A](image,
+      val gp = new DiscreteLowRankGaussianProcess[D, StructuredPoints[D], A](image,
                                                                                 meanVector.map(_.toDouble),
                                                                                 pcaVarianceVector.map(_.toDouble),
                                                                                 pcaBasisMatrix.map(_.toDouble))
@@ -668,7 +668,7 @@ object StatismoIO {
   private def readImageRepresenter[D: NDSpace: CreateDiscreteImageDomain](
     h5file: HDF5File,
     modelPath: String
-  ): Try[DiscreteImageDomain[D]] = {
+  ): Try[StructuredPoints[D]] = {
 
     val dim = NDSpace[D].dimensionality
 
@@ -705,7 +705,7 @@ object StatismoIO {
 
     } yield {
 
-      DiscreteImageDomain[D](originScalismo, spacingScalismo, sizeScalismo)
+      StructuredPoints[D](originScalismo, spacingScalismo, sizeScalismo)
 
     }
 

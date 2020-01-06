@@ -69,15 +69,15 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
    * Note that this is again a DiscreteGaussianProcess.
    */
   def marginal(pointIds: Seq[PointId])(
-    implicit domainCreator: UnstructuredPointsDomain.Create[D]
-  ): DiscreteGaussianProcess[D, UnstructuredPointsDomain[D], Value] = {
+    implicit domainCreator: UnstructuredPoints.Create[D]
+  ): DiscreteGaussianProcess[D, UnstructuredPoints[D], Value] = {
     val domainPts = domain.points.toIndexedSeq
 
     val newPts = pointIds.map(pointId => domainPts(pointId.id)).toIndexedSeq
     val newDomain = domainCreator.create(newPts)
 
     val newMean =
-      DiscreteField[D, UnstructuredPointsDomain[D], Value](newDomain, pointIds.toIndexedSeq.map(id => mean(id)))
+      DiscreteField[D, UnstructuredPoints[D], Value](newDomain, pointIds.toIndexedSeq.map(id => mean(id)))
     val newCov = (i: PointId, j: PointId) => {
       cov(pointIds(i.id), pointIds(j.id))
     }

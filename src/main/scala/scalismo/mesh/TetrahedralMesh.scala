@@ -57,7 +57,7 @@ trait TetrahedralMesh[D] {
    * points used in a tetrahedral. Points not used in any
    * tetrahedral are allowed.
    */
-  def pointSet: UnstructuredPointsDomain[D]
+  def pointSet: UnstructuredPoints[D]
 
   /** Applies the point transformation to the point set only and returns the transformed mesh. */
   def transform(transform: Point[D] => Point[D]): TetrahedralMesh[D]
@@ -68,21 +68,21 @@ object TetrahedralMesh {
 
   def apply[D: NDSpace](pointList: IndexedSeq[Point[D]],
                         topology: TetrahedralList)(implicit creator: Create[D]): TetrahedralMesh[D] = {
-    creator.createTetrahedraleMesh(UnstructuredPointsDomain(pointList.toIndexedSeq), topology)
+    creator.createTetrahedraleMesh(UnstructuredPoints(pointList.toIndexedSeq), topology)
   }
 
-  def apply[D: NDSpace](pointSet: UnstructuredPointsDomain[D],
+  def apply[D: NDSpace](pointSet: UnstructuredPoints[D],
                         topology: TetrahedralList)(implicit creator: Create[D]): TetrahedralMesh[D] = {
     creator.createTetrahedraleMesh(pointSet, topology)
   }
 
   /** Typeclass for creating domains of arbitrary dimensionality */
-  trait Create[D] extends UnstructuredPointsDomain.Create[D] {
-    def createTetrahedraleMesh(pointSet: UnstructuredPointsDomain[D], topology: TetrahedralList): TetrahedralMesh[D]
+  trait Create[D] extends UnstructuredPoints.Create[D] {
+    def createTetrahedraleMesh(pointSet: UnstructuredPoints[D], topology: TetrahedralList): TetrahedralMesh[D]
   }
 
   trait Create3D extends Create[_3D] {
-    override def createTetrahedraleMesh(pointSet: UnstructuredPointsDomain[_3D],
+    override def createTetrahedraleMesh(pointSet: UnstructuredPoints[_3D],
                                         topology: TetrahedralList): TetrahedralMesh3D = {
       TetrahedralMesh3D(pointSet, topology)
     }
@@ -94,7 +94,7 @@ object TetrahedralMesh {
 
 }
 
-case class TetrahedralMesh3D(pointSet: UnstructuredPointsDomain[_3D], tetrahedralization: TetrahedralList)
+case class TetrahedralMesh3D(pointSet: UnstructuredPoints[_3D], tetrahedralization: TetrahedralList)
     extends TetrahedralMesh[_3D] {
 
   // val position = SurfacePointProperty(triangulation, pointSet.points.toIndexedSeq)
@@ -216,6 +216,6 @@ case class TetrahedralMesh3D(pointSet: UnstructuredPointsDomain[_3D], tetrahedra
 
 object TetrahedralMesh3D {
   def apply(points: IndexedSeq[Point[_3D]], topology: TetrahedralList): TetrahedralMesh3D = {
-    TetrahedralMesh3D(UnstructuredPointsDomain(points.toIndexedSeq), topology)
+    TetrahedralMesh3D(UnstructuredPoints(points.toIndexedSeq), topology)
   }
 }

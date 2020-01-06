@@ -1,6 +1,6 @@
 package scalismo.common.interpolation
 
-import scalismo.common.{DiscreteField, Field, RealSpace, UnstructuredPointsDomain}
+import scalismo.common.{DiscreteField, Field, RealSpace, UnstructuredPoints}
 import scalismo.geometry.{_3D, Point}
 import scalismo.mesh.{SurfacePointProperty, TriangleMesh}
 import scalismo.mesh.boundingSpheres.{ClosestPointInTriangle, ClosestPointIsVertex, ClosestPointOnLine}
@@ -14,9 +14,9 @@ import scalismo.numerics.ValueInterpolator
  * @param mesh The mesh on which the interpolation is performed.
  */
 case class TriangleMeshInterpolator[A: ValueInterpolator](mesh: TriangleMesh[_3D])
-    extends FieldInterpolator[_3D, UnstructuredPointsDomain[_3D], A] {
+    extends FieldInterpolator[_3D, UnstructuredPoints[_3D], A] {
 
-  override def interpolate(field: DiscreteField[_3D, UnstructuredPointsDomain[_3D], A]): Field[_3D, A] = {
+  override def interpolate(field: DiscreteField[_3D, UnstructuredPoints[_3D], A]): Field[_3D, A] = {
 
     // for this method to make sense, the field needs to be defined
     // on the mesh. There is no good way to check this rigorously.

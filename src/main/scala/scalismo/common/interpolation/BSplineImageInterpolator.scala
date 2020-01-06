@@ -3,11 +3,11 @@ package scalismo.common.interpolation
 import breeze.linalg.DenseVector
 import scalismo.common._
 import scalismo.geometry._
-import scalismo.image.DiscreteImageDomain
+import scalismo.image.StructuredPoints
 import scalismo.numerics.{BSpline}
 
 trait BSplineImageInterpolator[D, A]
-    extends DifferentiableFieldInterpolator[D, DiscreteImageDomain[D], A, EuclideanVector[D]] {
+    extends DifferentiableFieldInterpolator[D, StructuredPoints[D], A, EuclideanVector[D]] {
   implicit protected val scalar: Scalar[A]
 
   private[scalismo] def applyMirrorBoundaryCondition(k: Int, numCoefficients: Int) = {
@@ -49,7 +49,7 @@ case class BSplineImageInterpolator1D[A: Scalar](degree: Int) extends BSplineIma
   override protected val scalar: Scalar[A] = Scalar[A]
 
   override def interpolate(
-    discreteField: DiscreteField[_1D, DiscreteImageDomain[_1D], A]
+    discreteField: DiscreteField[_1D, StructuredPoints[_1D], A]
   ): DifferentiableField[_1D, A, EuclideanVector[_1D]] = {
 
     val domain = discreteField.domain
@@ -93,7 +93,7 @@ case class BSplineImageInterpolator1D[A: Scalar](degree: Int) extends BSplineIma
 
   /* determine the b-spline coefficients for a 1D image */
   private def determineCoefficients1D(degree: Int,
-                                      img: DiscreteField[_1D, DiscreteImageDomain[_1D], A]): Array[Float] = {
+                                      img: DiscreteField[_1D, StructuredPoints[_1D], A]): Array[Float] = {
 
     // floats is an input-output argument here
     val floats = new Array[Float](img.data.size)
@@ -109,7 +109,7 @@ case class BSplineImageInterpolator2D[A: Scalar](degree: Int) extends BSplineIma
   override protected val scalar = Scalar[A]
 
   override def interpolate(
-    discreteField: DiscreteField[_2D, DiscreteImageDomain[_2D], A]
+    discreteField: DiscreteField[_2D, StructuredPoints[_2D], A]
   ): DifferentiableField[_2D, A, EuclideanVector[_2D]] = {
     val domain = discreteField.domain
 
@@ -164,7 +164,7 @@ case class BSplineImageInterpolator2D[A: Scalar](degree: Int) extends BSplineIma
   /* determine the b-spline coefficients for a 2D image. The coefficients are returned
    * as a DenseVector, i.e. the rows are written one after another */
   private def determineCoefficients2D(degree: Int,
-                                      img: DiscreteField[_2D, DiscreteImageDomain[_2D], A]): Array[Float] = {
+                                      img: DiscreteField[_2D, StructuredPoints[_2D], A]): Array[Float] = {
     val numeric = implicitly[Scalar[A]]
     val coeffs = DenseVector.zeros[Float](img.values.size)
     var y = 0
@@ -188,7 +188,7 @@ case class BSplineImageInterpolator3D[A: Scalar](degree: Int) extends BSplineIma
   override protected val scalar = Scalar[A]
 
   override def interpolate(
-    discreteField: DiscreteField[_3D, DiscreteImageDomain[_3D], A]
+    discreteField: DiscreteField[_3D, StructuredPoints[_3D], A]
   ): DifferentiableField[_3D, A, EuclideanVector[_3D]] = {
     val domain = discreteField.domain
 
@@ -259,7 +259,7 @@ case class BSplineImageInterpolator3D[A: Scalar](degree: Int) extends BSplineIma
   }
 
   private def determineCoefficients3D(degree: Int,
-                                      discreteField: DiscreteField[_3D, DiscreteImageDomain[_3D], A]): Array[Float] = {
+                                      discreteField: DiscreteField[_3D, StructuredPoints[_3D], A]): Array[Float] = {
 
     val coeffs = DenseVector.zeros[Float](discreteField.values.size)
     var z = 0

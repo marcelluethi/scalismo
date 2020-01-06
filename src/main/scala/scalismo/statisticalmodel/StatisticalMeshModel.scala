@@ -40,7 +40,7 @@ import scala.util.{Failure, Success, Try}
  */
 case class StatisticalMeshModel private (
   referenceMesh: TriangleMesh[_3D],
-  gp: DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]]
+  gp: DiscreteLowRankGaussianProcess[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]]
 ) {
 
   /** @see [[scalismo.statisticalmodel.DiscreteLowRankGaussianProcess.rank]] */
@@ -102,7 +102,7 @@ case class StatisticalMeshModel private (
       clippedReference.pointSet.points.map(p => referenceMesh.pointSet.findClosestPoint(p).id).toIndexedSeq
     if (remainingPtIds.isEmpty) {
       val newRef = TriangleMesh3D(
-        UnstructuredPointsDomain(ptIds.map(id => referenceMesh.pointSet.point(id)).toIndexedSeq),
+        UnstructuredPoints(ptIds.map(id => referenceMesh.pointSet.point(id)).toIndexedSeq),
         TriangleList(IndexedSeq[TriangleCell]())
       )
       val marginalGP = gp.marginal(ptIds.toIndexedSeq)
@@ -129,7 +129,7 @@ case class StatisticalMeshModel private (
     val displacements =
       referenceMesh.pointSet.points.zip(mesh.pointSet.points).map({ case (refPt, tgtPt) => tgtPt - refPt }).toIndexedSeq
     val dvf =
-      DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](referenceMesh.pointSet, displacements)
+      DiscreteField[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]](referenceMesh.pointSet, displacements)
     warpReference(gp.project(dvf))
   }
 
@@ -140,7 +140,7 @@ case class StatisticalMeshModel private (
     val displacements =
       referenceMesh.pointSet.points.zip(mesh.pointSet.points).map({ case (refPt, tgtPt) => tgtPt - refPt }).toIndexedSeq
     val dvf =
-      DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](referenceMesh.pointSet, displacements)
+      DiscreteField[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]](referenceMesh.pointSet, displacements)
     gp.coefficients(dvf)
   }
 
@@ -192,7 +192,7 @@ case class StatisticalMeshModel private (
       val data = newIthBasis.map(_.toArray).flatten.toArray
       newBasisMat(::, i) := DenseVector(data)
     }
-    val newGp = new DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](
+    val newGp = new DiscreteLowRankGaussianProcess[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]](
       gp.domain.transform(rigidTransform),
       newMean,
       gp.variance,
@@ -211,7 +211,7 @@ case class StatisticalMeshModel private (
     val newRef = referenceMesh.pointSet.transform(t)
     val newMean = gp.mean.pointsWithValues.map { case (refPt, meanVec) => (refPt - t(refPt)) + meanVec }
     val newMeanVec = DenseVector(newMean.map(_.toArray).flatten.toArray)
-    val newGp = new DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](
+    val newGp = new DiscreteLowRankGaussianProcess[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]](
       newRef,
       newMeanVec,
       gp.variance,
@@ -235,10 +235,10 @@ case class StatisticalMeshModel private (
   }
 
   private def warpReference(
-    vectorPointData: DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]]
+    vectorPointData: DiscreteField[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]]
   ) = {
     val newPoints = vectorPointData.pointsWithValues.map { case (pt, v) => pt + v }
-    TriangleMesh3D(UnstructuredPointsDomain(newPoints.toIndexedSeq), referenceMesh.triangulation)
+    TriangleMesh3D(UnstructuredPoints(newPoints.toIndexedSeq), referenceMesh.triangulation)
   }
 
 }
@@ -263,7 +263,7 @@ object StatisticalMeshModel {
                               meanVector: DenseVector[Double],
                               variance: DenseVector[Double],
                               basisMatrix: DenseMatrix[Double]) = {
-    val gp = new DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](
+    val gp = new DiscreteLowRankGaussianProcess[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]](
       referenceMesh.pointSet,
       meanVector,
       variance,
@@ -316,7 +316,7 @@ object StatisticalMeshModel {
       U(::, i) := U(::, i) * (1.0 / d(i))
     }
 
-    val r = model.gp.copy[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](
+    val r = model.gp.copy[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]](
       meanVector = model.gp.meanVector + discretizedBiasModel.meanVector,
       variance = breeze.numerics.pow(d, 2),
       basisMatrix = U
@@ -361,7 +361,7 @@ object StatisticalMeshModel {
                      fields: Seq[Field[_3D, EuclideanVector[_3D]]],
                      stoppingCriterion: PivotedCholesky.StoppingCriterion): StatisticalMeshModel = {
 
-    val dgp: DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]] =
+    val dgp: DiscreteLowRankGaussianProcess[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]] =
       DiscreteLowRankGaussianProcess.createUsingPCA(referenceMesh.pointSet, fields, stoppingCriterion)
     new StatisticalMeshModel(referenceMesh, dgp)
   }

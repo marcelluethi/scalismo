@@ -30,7 +30,7 @@ import scala.reflect.ClassTag
  * @tparam D  The dimensionality of the image
  * @tparam A The type of the pixel (needs to implement Scalar).
  */
-class DiscreteScalarImage[D: NDSpace, A: Scalar: ClassTag](override val domain: DiscreteImageDomain[D],
+class DiscreteScalarImage[D: NDSpace, A: Scalar: ClassTag](override val domain: StructuredPoints[D],
                                                            override val data: ScalarArray[A])
     extends DiscreteImage[D, A](domain, data) {
 
@@ -48,7 +48,7 @@ class DiscreteScalarImage[D: NDSpace, A: Scalar: ClassTag](override val domain: 
    *
    * @param interpolator The interpolator used to interpolate the image
    */
-  override def interpolate(interpolator: FieldInterpolator[D, DiscreteImageDomain[D], A]): ScalarImage[D, A] = {
+  override def interpolate(interpolator: FieldInterpolator[D, StructuredPoints[D], A]): ScalarImage[D, A] = {
     val f = interpolator.interpolate(this)
     ScalarImage(f.domain, f.f)
   }
@@ -60,7 +60,7 @@ class DiscreteScalarImage[D: NDSpace, A: Scalar: ClassTag](override val domain: 
    * @param interpolator The interpolator used to interpolate the image
    */
   def interpolate(
-    interpolator: DifferentiableFieldInterpolator[D, DiscreteImageDomain[D], A, EuclideanVector[D]]
+    interpolator: DifferentiableFieldInterpolator[D, StructuredPoints[D], A, EuclideanVector[D]]
   ): DifferentiableScalarImage[D, A] = {
     val f = interpolator.interpolate(this)
     DifferentiableScalarImage(f.domain, f.f, f.df)
@@ -75,7 +75,7 @@ class DiscreteScalarImage[D: NDSpace, A: Scalar: ClassTag](override val domain: 
   }
 
   @deprecated("please use resample with an explicit interpolator instead", "v0.18")
-  def resample(newDomain: DiscreteImageDomain[D], interpolationDegree: Int, outsideValue: A)(
+  def resample(newDomain: StructuredPoints[D], interpolationDegree: Int, outsideValue: A)(
     implicit bsplineCreator: BSplineImageInterpolator.Create[D]
   ): DiscreteScalarImage[D, A] = {
 
@@ -84,8 +84,8 @@ class DiscreteScalarImage[D: NDSpace, A: Scalar: ClassTag](override val domain: 
   }
 
   /** Returns a new ContinuousScalarImage by interpolating the given DiscreteScalarImage using b-spline interpolation of given order */
-  def resample(newDomain: DiscreteImageDomain[D],
-               interpolator: FieldInterpolator[D, DiscreteImageDomain[D], A],
+  def resample(newDomain: StructuredPoints[D],
+               interpolator: FieldInterpolator[D, StructuredPoints[D], A],
                outsideValue: A): DiscreteScalarImage[D, A] = {
 
     val contImg = interpolate(interpolator)
@@ -94,25 +94,25 @@ class DiscreteScalarImage[D: NDSpace, A: Scalar: ClassTag](override val domain: 
 }
 
 object DiscreteScalarImage {
-  def apply[D: NDSpace, A: Scalar: ClassTag](domain: DiscreteImageDomain[D],
+  def apply[D: NDSpace, A: Scalar: ClassTag](domain: StructuredPoints[D],
                                              data: ScalarArray[A]): DiscreteScalarImage[D, A] = {
     new DiscreteScalarImage(domain, data)
   }
 
   /** create a new DiscreteScalarImage, with all pixel values set to the given value */
-  def apply[D: NDSpace, A: Scalar: ClassTag](domain: DiscreteImageDomain[D], v: => A): DiscreteScalarImage[D, A] = {
+  def apply[D: NDSpace, A: Scalar: ClassTag](domain: StructuredPoints[D], v: => A): DiscreteScalarImage[D, A] = {
     DiscreteScalarImage(domain, ScalarArray(Array.fill(domain.numberOfPoints)(v)))
   }
 
   /** create a new DiscreteScalarImage, with all pixel values set to the given value */
-  def apply[D: NDSpace, A: Scalar: ClassTag](domain: DiscreteImageDomain[D],
+  def apply[D: NDSpace, A: Scalar: ClassTag](domain: StructuredPoints[D],
                                              f: Point[D] => A): DiscreteScalarImage[D, A] = {
     val data = domain.points.map(f)
     DiscreteScalarImage(domain, ScalarArray(data.toArray))
   }
 
   /** create a new DiscreteScalarImage with given domain and values */
-  def apply[D: NDSpace, A: Scalar: ClassTag](domain: DiscreteImageDomain[D],
+  def apply[D: NDSpace, A: Scalar: ClassTag](domain: StructuredPoints[D],
                                              values: Traversable[A]): DiscreteScalarImage[D, A] = {
     DiscreteScalarImage(domain, ScalarArray(values.toArray))
   }
@@ -120,20 +120,20 @@ object DiscreteScalarImage {
 }
 
 object DiscreteScalarImage1D {
-  def apply[A: Scalar: ClassTag](domain: DiscreteImageDomain[_1D],
+  def apply[A: Scalar: ClassTag](domain: StructuredPoints[_1D],
                                  data: ScalarArray[A]): DiscreteScalarImage[_1D, A] = {
     new DiscreteScalarImage[_1D, A](domain, data)
   }
 
-  def apply[A: Scalar: ClassTag](domain: DiscreteImageDomain[_1D], v: => A): DiscreteScalarImage[_1D, A] = {
+  def apply[A: Scalar: ClassTag](domain: StructuredPoints[_1D], v: => A): DiscreteScalarImage[_1D, A] = {
     DiscreteScalarImage(domain, v)
   }
 
-  def apply[A: Scalar: ClassTag](domain: DiscreteImageDomain[_1D], f: Point[_1D] => A): DiscreteScalarImage[_1D, A] = {
+  def apply[A: Scalar: ClassTag](domain: StructuredPoints[_1D], f: Point[_1D] => A): DiscreteScalarImage[_1D, A] = {
     DiscreteScalarImage(domain, f)
   }
 
-  def apply[A: Scalar: ClassTag](domain: DiscreteImageDomain[_1D],
+  def apply[A: Scalar: ClassTag](domain: StructuredPoints[_1D],
                                  values: Traversable[A]): DiscreteScalarImage[_1D, A] = {
     DiscreteScalarImage(domain, values)
   }
@@ -141,40 +141,40 @@ object DiscreteScalarImage1D {
 }
 
 object DiscreteScalarImage2D {
-  def apply[A: Scalar: ClassTag](domain: DiscreteImageDomain[_2D],
+  def apply[A: Scalar: ClassTag](domain: StructuredPoints[_2D],
                                  data: ScalarArray[A]): DiscreteScalarImage[_2D, A] = {
     new DiscreteScalarImage[_2D, A](domain, data)
   }
 
-  def apply[A: Scalar: ClassTag](domain: DiscreteImageDomain[_2D], v: => A): DiscreteScalarImage[_2D, A] = {
+  def apply[A: Scalar: ClassTag](domain: StructuredPoints[_2D], v: => A): DiscreteScalarImage[_2D, A] = {
     DiscreteScalarImage(domain, v)
   }
 
-  def apply[A: Scalar: ClassTag](domain: DiscreteImageDomain[_2D], f: Point[_2D] => A): DiscreteScalarImage[_2D, A] = {
+  def apply[A: Scalar: ClassTag](domain: StructuredPoints[_2D], f: Point[_2D] => A): DiscreteScalarImage[_2D, A] = {
     DiscreteScalarImage(domain, f)
   }
 
-  def apply[A: Scalar: ClassTag](domain: DiscreteImageDomain[_2D],
+  def apply[A: Scalar: ClassTag](domain: StructuredPoints[_2D],
                                  values: Traversable[A]): DiscreteScalarImage[_2D, A] = {
     DiscreteScalarImage(domain, values)
   }
 }
 
 object DiscreteScalarImage3D {
-  def apply[A: Scalar: ClassTag](domain: DiscreteImageDomain[_3D],
+  def apply[A: Scalar: ClassTag](domain: StructuredPoints[_3D],
                                  data: ScalarArray[A]): DiscreteScalarImage[_3D, A] = {
     new DiscreteScalarImage[_3D, A](domain, data)
   }
 
-  def apply[A: Scalar: ClassTag](domain: DiscreteImageDomain[_3D], v: => A): DiscreteScalarImage[_3D, A] = {
+  def apply[A: Scalar: ClassTag](domain: StructuredPoints[_3D], v: => A): DiscreteScalarImage[_3D, A] = {
     DiscreteScalarImage(domain, v)
   }
 
-  def apply[A: Scalar: ClassTag](domain: DiscreteImageDomain[_3D], f: Point[_3D] => A): DiscreteScalarImage[_3D, A] = {
+  def apply[A: Scalar: ClassTag](domain: StructuredPoints[_3D], f: Point[_3D] => A): DiscreteScalarImage[_3D, A] = {
     DiscreteScalarImage(domain, f)
   }
 
-  def apply[A: Scalar: ClassTag](domain: DiscreteImageDomain[_3D],
+  def apply[A: Scalar: ClassTag](domain: StructuredPoints[_3D],
                                  values: Traversable[A]): DiscreteScalarImage[_3D, A] = {
     DiscreteScalarImage(domain, values)
   }

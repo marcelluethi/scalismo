@@ -17,7 +17,7 @@ package scalismo.utils
 
 import scalismo.common._
 import scalismo.geometry._
-import scalismo.image.{DiscreteImageDomain, DiscreteScalarImage}
+import scalismo.image.{StructuredPoints, DiscreteScalarImage}
 import scalismo.io.ImageIO
 import scalismo.mesh._
 import scalismo.mesh.{TetrahedralCell, TetrahedralList, TetrahedralMesh, TetrahedralMesh3D}
@@ -186,7 +186,7 @@ object TetrahedralMeshConversion {
     val cellsPointsOrFailure = extractPointsAndCells(ug)
     cellsPointsOrFailure.map {
       case (points, cells) =>
-        TetrahedralMesh3D(UnstructuredPointsDomain(points.toIndexedSeq), TetrahedralList(cells))
+        TetrahedralMesh3D(UnstructuredPoints(points.toIndexedSeq), TetrahedralList(cells))
     }
   }
 
@@ -288,7 +288,7 @@ object MeshConversion {
     val cellsPointsOrFailure = vtkPolyDataToTriangleMeshCommon(pd)
     cellsPointsOrFailure.map {
       case (points, cells) =>
-        TriangleMesh3D(UnstructuredPointsDomain(points.toIndexedSeq), TriangleList(cells))
+        TriangleMesh3D(UnstructuredPoints(points.toIndexedSeq), TriangleList(cells))
     }
   }
 
@@ -302,7 +302,7 @@ object MeshConversion {
         val newCells = cells.map(c => TriangleCell(oldId2newId(c.ptId1), oldId2newId(c.ptId2), oldId2newId(c.ptId3)))
         val oldPoints = points.toIndexedSeq
         val newPoints = cellPointIds.map(id => oldPoints(id.id))
-        TriangleMesh3D(UnstructuredPointsDomain(newPoints), TriangleList(newCells))
+        TriangleMesh3D(UnstructuredPoints(newPoints), TriangleList(newCells))
     }
   }
 
@@ -358,7 +358,7 @@ object MeshConversion {
     }
   }
 
-  def vtkPolyDataToLineMesh[D: NDSpace: LineMesh.Create: UnstructuredPointsDomain.Create](
+  def vtkPolyDataToLineMesh[D: NDSpace: LineMesh.Create: UnstructuredPoints.Create](
     pd: vtkPolyData
   ): Try[LineMesh[D]] = {
     val lines = pd.GetLines()
@@ -377,7 +377,7 @@ object MeshConversion {
     }
     idList.Delete()
 
-    cellsOrFailure.map(cells => LineMesh(UnstructuredPointsDomain[D](points.toIndexedSeq), LineList(cells)))
+    cellsOrFailure.map(cells => LineMesh(UnstructuredPoints[D](points.toIndexedSeq), LineList(cells)))
   }
 
   def lineMeshToVTKPolyData[D: NDSpace](mesh: LineMesh[D], template: Option[vtkPolyData] = None): vtkPolyData = {
@@ -460,7 +460,7 @@ trait CanConvertToVtk[D] {
     orientedSP
   }
 
-  def setDomainInfo(domain: DiscreteImageDomain[D], sp: vtkStructuredPoints): vtkStructuredPoints
+  def setDomainInfo(domain: StructuredPoints[D], sp: vtkStructuredPoints): vtkStructuredPoints
 
   def fromVtk[Pixel: Scalar: TypeTag: ClassTag](sp: vtkImageData): Try[DiscreteScalarImage[D, Pixel]]
 
@@ -484,7 +484,7 @@ object CanConvertToVtk {
 
   implicit object _2DCanConvertToVtk$ extends CanConvertToVtk[_2D] {
 
-    override def setDomainInfo(domain: DiscreteImageDomain[_2D], sp: vtkStructuredPoints): vtkStructuredPoints = {
+    override def setDomainInfo(domain: StructuredPoints[_2D], sp: vtkStructuredPoints): vtkStructuredPoints = {
       sp.SetDimensions(domain.size(0), domain.size(1), 1)
       sp.SetOrigin(domain.origin(0), domain.origin(1), 0)
       sp.SetSpacing(domain.spacing(0), domain.spacing(1), 0)
@@ -513,7 +513,7 @@ object CanConvertToVtk {
       val spacing = EuclideanVector(sp.GetSpacing()(0).toFloat, sp.GetSpacing()(1).toFloat)
       val size = IntVector(sp.GetDimensions()(0), sp.GetDimensions()(1))
 
-      val domain = DiscreteImageDomain[_2D](origin, spacing, size)
+      val domain = StructuredPoints[_2D](origin, spacing, size)
       val scalars = sp.GetPointData().GetScalars()
 
       val pixelArrayOrFailure = VtkHelpers.vtkDataArrayToScalarArray[Pixel](sp.GetScalarType(), scalars)
@@ -523,7 +523,7 @@ object CanConvertToVtk {
   }
 
   implicit object _3DCanConvertToVtk$ extends CanConvertToVtk[_3D] {
-    override def setDomainInfo(domain: DiscreteImageDomain[_3D], sp: vtkStructuredPoints): vtkStructuredPoints = {
+    override def setDomainInfo(domain: StructuredPoints[_3D], sp: vtkStructuredPoints): vtkStructuredPoints = {
 
       // Here depending on the image directions (if read from Nifti, can be anything RAS, ASL, LAS, ..),
       // we need to reslice the image in vtk's voxel ordering that is RAI (which in our LPS world coordinates system
@@ -605,7 +605,7 @@ object CanConvertToVtk {
       val spacing = EuclideanVector(sp.GetSpacing()(0).toFloat, sp.GetSpacing()(1).toFloat, sp.GetSpacing()(2).toFloat)
       val size = IntVector(sp.GetDimensions()(0), sp.GetDimensions()(1), sp.GetDimensions()(2))
 
-      val domain = DiscreteImageDomain[_3D](origin, spacing, size)
+      val domain = StructuredPoints[_3D](origin, spacing, size)
       val scalars = sp.GetPointData().GetScalars()
       val pixelArrayOrFailure = VtkHelpers.vtkDataArrayToScalarArray[Pixel](sp.GetScalarType(), scalars)
       pixelArrayOrFailure.map(pixelArray => DiscreteScalarImage(domain, pixelArray))

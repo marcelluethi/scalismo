@@ -36,34 +36,34 @@ case class TriangleCell(ptId1: PointId, ptId2: PointId, ptId3: PointId) extends 
 
 trait TriangleMesh[D] {
   def triangulation: TriangleList
-  def pointSet: UnstructuredPointsDomain[D]
+  def pointSet: UnstructuredPoints[D]
   def transform(transform: Point[D] => Point[D]): TriangleMesh[D]
 
 }
 
 object TriangleMesh {
 
-  def apply[D: NDSpace](pointSet: UnstructuredPointsDomain[D], topology: TriangleList)(implicit creator: Create[D]) = {
+  def apply[D: NDSpace](pointSet: UnstructuredPoints[D], topology: TriangleList)(implicit creator: Create[D]) = {
     creator.createTriangleMesh(pointSet, topology)
   }
 
   def apply[D: NDSpace](points: IndexedSeq[Point[D]], topology: TriangleList)(implicit creator: Create[D]) = {
-    creator.createTriangleMesh(UnstructuredPointsDomain(points.toIndexedSeq), topology)
+    creator.createTriangleMesh(UnstructuredPoints(points.toIndexedSeq), topology)
   }
 
   /** Typeclass for creating domains of arbitrary dimensionality */
-  trait Create[D] extends UnstructuredPointsDomain.Create[D] {
-    def createTriangleMesh(pointSet: UnstructuredPointsDomain[D], topology: TriangleList): TriangleMesh[D]
+  trait Create[D] extends UnstructuredPoints.Create[D] {
+    def createTriangleMesh(pointSet: UnstructuredPoints[D], topology: TriangleList): TriangleMesh[D]
   }
 
   trait Create2D extends Create[_2D] {
-    override def createTriangleMesh(pointSet: UnstructuredPointsDomain[_2D], topology: TriangleList) = {
+    override def createTriangleMesh(pointSet: UnstructuredPoints[_2D], topology: TriangleList) = {
       TriangleMesh2D(pointSet, topology)
     }
   }
 
   trait Create3D extends Create[_3D] {
-    override def createTriangleMesh(pointSet: UnstructuredPointsDomain[_3D], topology: TriangleList) = {
+    override def createTriangleMesh(pointSet: UnstructuredPoints[_3D], topology: TriangleList) = {
       TriangleMesh3D(pointSet, topology)
     }
   }
@@ -79,7 +79,7 @@ object TriangleMesh {
 }
 
 /** Standard 3D Gravis mesh, geometry only */
-case class TriangleMesh3D(pointSet: UnstructuredPointsDomain[_3D], triangulation: TriangleList)
+case class TriangleMesh3D(pointSet: UnstructuredPoints[_3D], triangulation: TriangleList)
     extends TriangleMesh[_3D] {
 
   val position = SurfacePointProperty(triangulation, pointSet.points.toIndexedSeq)
@@ -196,15 +196,15 @@ case class TriangleMesh3D(pointSet: UnstructuredPointsDomain[_3D], triangulation
 
 object TriangleMesh3D {
   def apply(points: IndexedSeq[Point[_3D]], topology: TriangleList): TriangleMesh3D = {
-    TriangleMesh3D(UnstructuredPointsDomain(points.toIndexedSeq), topology)
+    TriangleMesh3D(UnstructuredPoints(points.toIndexedSeq), topology)
   }
 }
 
-case class TriangleMesh2D(pointSet: UnstructuredPointsDomain[_2D], triangulation: TriangleList)
+case class TriangleMesh2D(pointSet: UnstructuredPoints[_2D], triangulation: TriangleList)
     extends TriangleMesh[_2D] {
   val position = SurfacePointProperty(triangulation, pointSet.points.toIndexedSeq)
 
   override def transform(transform: Point[_2D] => Point[_2D]): TriangleMesh2D = {
-    TriangleMesh2D(UnstructuredPointsDomain(pointSet.points.map(transform).toIndexedSeq), triangulation)
+    TriangleMesh2D(UnstructuredPoints(pointSet.points.map(transform).toIndexedSeq), triangulation)
   }
 }

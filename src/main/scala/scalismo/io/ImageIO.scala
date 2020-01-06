@@ -21,7 +21,7 @@ import breeze.linalg.{DenseMatrix, DenseVector}
 import niftijio.{NiftiHeader, NiftiVolume}
 import scalismo.common.{RealSpace, Scalar}
 import scalismo.geometry._
-import scalismo.image.{DiscreteImageDomain, DiscreteScalarImage}
+import scalismo.image.{StructuredPoints, DiscreteScalarImage}
 import scalismo.registration._
 import scalismo.utils.{CanConvertToVtk, ImageConversion, VtkHelpers}
 import spire.math.{UByte, UInt, UShort}
@@ -422,7 +422,7 @@ object ImageIO {
       if (approxErrors.max > 0.01f)
         throw new Exception("Unable to approximate Nifti affine transform with anisotropic similarity transform")
       else {
-        val newDomain = DiscreteImageDomain[_3D](IntVector(nx, ny, nz), transform)
+        val newDomain = StructuredPoints[_3D](IntVector(nx, ny, nz), transform)
         val im = DiscreteScalarImage(newDomain, volume.dataAsScalarArray)
 
         // if the domain is rotated, we resample the image to RAI voxel ordering
@@ -523,7 +523,7 @@ object ImageIO {
         volume.data.set(i, j, k, d, scalarConv.toDouble(img(IntVector(i, j, k))))
       }
 
-      val innerAffineMatrix = DiscreteImageDomain.computeInnerAffineMatrix(img.domain)
+      val innerAffineMatrix = StructuredPoints.computeInnerAffineMatrix(img.domain)
       val M = DenseMatrix.zeros[Double](4, 4)
 
       M(0, 0) = innerAffineMatrix(0, 0) * -1f

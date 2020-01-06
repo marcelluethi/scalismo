@@ -20,7 +20,7 @@ import java.util
 import breeze.stats.distributions.Uniform
 import scalismo.common.BoxDomain
 import scalismo.geometry._
-import scalismo.image.DiscreteImageDomain
+import scalismo.image.StructuredPoints
 import scalismo.mesh.TriangleMesh
 import scalismo.statisticalmodel.GaussianProcess
 import scalismo.utils.Random
@@ -39,7 +39,7 @@ trait Sampler[D] {
   def volumeOfSampleRegion: Double
 }
 
-case class GridSampler[D: NDSpace](domain: DiscreteImageDomain[D]) extends Sampler[D] {
+case class GridSampler[D: NDSpace](domain: StructuredPoints[D]) extends Sampler[D] {
   override def volumeOfSampleRegion = domain.boundingBox.volume
   override val numberOfPoints = domain.numberOfPoints
 

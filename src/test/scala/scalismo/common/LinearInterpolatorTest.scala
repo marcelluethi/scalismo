@@ -18,7 +18,7 @@ package scalismo.common
 
 import scalismo.ScalismoTestSuite
 import scalismo.geometry._
-import scalismo.image.{DiscreteImageDomain, DiscreteScalarImage}
+import scalismo.image.{StructuredPoints, DiscreteScalarImage}
 import scalismo.common.interpolation.{LinearImageInterpolator, LinearImageInterpolator3D}
 
 class LinearInterpolatorTest extends ScalismoTestSuite {
@@ -27,7 +27,7 @@ class LinearInterpolatorTest extends ScalismoTestSuite {
 
     it("returns correct value at grid points.") {
 
-      val dom = DiscreteImageDomain(Point(0, 0, 0), EuclideanVector(1, 1, 1), IntVector(2, 2, 2))
+      val dom = StructuredPoints(Point(0, 0, 0), EuclideanVector(1, 1, 1), IntVector(2, 2, 2))
       val img = DiscreteScalarImage(dom, (p: Point[_3D]) => p.x)
       val img_interpolated = img.interpolate(LinearImageInterpolator[_3D, Double])
       val id = img.domain.pointId(IntVector(1, 1, 1))
@@ -39,7 +39,7 @@ class LinearInterpolatorTest extends ScalismoTestSuite {
 
     it("correctly interpolates in 3D") {
 
-      val dom = DiscreteImageDomain(Point(0, 0, 0), EuclideanVector(1, 1, 1), IntVector(2, 2, 2))
+      val dom = StructuredPoints(Point(0, 0, 0), EuclideanVector(1, 1, 1), IntVector(2, 2, 2))
       val img = DiscreteScalarImage(dom, (p: Point[_3D]) => p.x)
       val img_interpolated = img.interpolate(LinearImageInterpolator[_3D, Double])
       val point = Point(0.5, 0.5, 0.5)
@@ -50,7 +50,7 @@ class LinearInterpolatorTest extends ScalismoTestSuite {
 
     it("correctly interpolates in 2D") {
 
-      val dom = DiscreteImageDomain(Point(0, 0), EuclideanVector(1, 1), IntVector(2, 2))
+      val dom = StructuredPoints(Point(0, 0), EuclideanVector(1, 1), IntVector(2, 2))
       val img = DiscreteScalarImage(dom, (p: Point[_2D]) => p.x)
       val img_interpolated = img.interpolate(LinearImageInterpolator[_2D, Double])
       val point = Point(0.5, 0.5)
@@ -61,7 +61,7 @@ class LinearInterpolatorTest extends ScalismoTestSuite {
 
     it("correctly interpolates in 1D") {
 
-      val dom = DiscreteImageDomain(Point(0), EuclideanVector(1), IntVector(2))
+      val dom = StructuredPoints(Point(0), EuclideanVector(1), IntVector(2))
       val img = DiscreteScalarImage(dom, (p: Point[_1D]) => p.x)
       val img_interpolated = img.interpolate(LinearImageInterpolator[_1D, Double])
       val point = Point(0.5)
@@ -71,9 +71,9 @@ class LinearInterpolatorTest extends ScalismoTestSuite {
     }
 
     it("can be evaluated everywhere where the original image is defined") {
-      val originalDomain = DiscreteImageDomain(Point(0, 0, 0), EuclideanVector(0.1, 0.1, 0.1), IntVector(10, 10, 10))
+      val originalDomain = StructuredPoints(Point(0, 0, 0), EuclideanVector(0.1, 0.1, 0.1), IntVector(10, 10, 10))
       val img = DiscreteScalarImage(originalDomain, (p: Point[_3D]) => p.x)
-      val fineDomain = DiscreteImageDomain(originalDomain.imageBoundingBox, IntVector(100, 100, 100))
+      val fineDomain = StructuredPoints(originalDomain.imageBoundingBox, IntVector(100, 100, 100))
 
       val interpolatedImg = img.interpolate(LinearImageInterpolator3D[Double]())
       for (pt <- fineDomain.points) {

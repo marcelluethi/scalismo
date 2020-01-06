@@ -19,7 +19,7 @@ import java.io.File
 import java.net.URLDecoder
 
 import scalismo.ScalismoTestSuite
-import scalismo.common.{PointId, Scalar, ScalarArray, UnstructuredPointsDomain}
+import scalismo.common.{PointId, Scalar, ScalarArray, UnstructuredPoints}
 import scalismo.geometry.{_3D, Point}
 import scalismo.mesh._
 import scalismo.utils.Random
@@ -267,7 +267,7 @@ class MeshIOTests extends ScalismoTestSuite {
             rng.scalaRandom.nextGaussian() * 1000,
             rng.scalaRandom.nextGaussian() * 1000000)
     )
-    val domain = UnstructuredPointsDomain(points)
+    val domain = UnstructuredPoints(points)
 
     // cells covering the complete cube
     implicit def intToPointId(i: Int): PointId = PointId(i)

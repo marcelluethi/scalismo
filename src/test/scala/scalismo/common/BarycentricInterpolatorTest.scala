@@ -20,7 +20,7 @@ class BarycentricInterpolatorTest extends ScalismoTestSuite {
                             Point(1, 0, 1),
                             Point(1, 1, 1),
                             Point(0, 1, 1))
-    val domain = UnstructuredPointsDomain(points)
+    val domain = UnstructuredPoints(points)
 
     // cells covering the complete cube
     implicit def intToPointId(i: Int): PointId = PointId(i)

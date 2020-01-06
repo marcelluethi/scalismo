@@ -21,7 +21,7 @@ import breeze.stats.distributions.Gaussian
 import scalismo.common._
 import scalismo.common.interpolation.FieldInterpolator
 import scalismo.geometry._
-import scalismo.image.DiscreteImageDomain
+import scalismo.image.StructuredPoints
 import scalismo.kernels.{DiscreteMatrixValuedPDKernel, MatrixValuedPDKernel}
 import scalismo.numerics.{PivotedCholesky, Sampler}
 import scalismo.statisticalmodel.DiscreteLowRankGaussianProcess.{Eigenpair => DiscreteEigenpair, _}
@@ -182,23 +182,23 @@ case class DiscreteLowRankGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain
   }
 
   override def marginal(pointIds: Seq[PointId])(
-    implicit domainCreator: UnstructuredPointsDomain.Create[D]
-  ): DiscreteLowRankGaussianProcess[D, UnstructuredPointsDomain[D], Value] = {
+    implicit domainCreator: UnstructuredPoints.Create[D]
+  ): DiscreteLowRankGaussianProcess[D, UnstructuredPoints[D], Value] = {
     val domainPts = domain.points.toIndexedSeq
 
     val newPts = pointIds.map(pointId => domainPts(pointId.id)).toIndexedSeq
     val newDomain = domainCreator.create(newPts)
 
     val newMean =
-      DiscreteField[D, UnstructuredPointsDomain[D], Value](newDomain, pointIds.toIndexedSeq.map(id => mean(id)))
+      DiscreteField[D, UnstructuredPoints[D], Value](newDomain, pointIds.toIndexedSeq.map(id => mean(id)))
 
     val newKLBasis = for (DiscreteEigenpair(lambda, phi) <- klBasis) yield {
       val newValues = pointIds.map(i => phi(i)).toIndexedSeq
-      DiscreteEigenpair[D, UnstructuredPointsDomain[D], Value](lambda, DiscreteField(newDomain, newValues))
+      DiscreteEigenpair[D, UnstructuredPoints[D], Value](lambda, DiscreteField(newDomain, newValues))
 
     }
 
-    DiscreteLowRankGaussianProcess[D, UnstructuredPointsDomain[D], Value](newMean, newKLBasis)
+    DiscreteLowRankGaussianProcess[D, UnstructuredPoints[D], Value](newMean, newKLBasis)
   }
 
   /**
