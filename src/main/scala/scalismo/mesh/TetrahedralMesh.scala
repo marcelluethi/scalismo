@@ -45,7 +45,7 @@ case class TetrahedralCell(ptId1: PointId, ptId2: PointId, ptId3: PointId, ptId4
 }
 
 /** Represents a tetrahedral mesh. */
-trait TetrahedralMesh[D] extends DiscreteDomain[D] {
+trait TetrahedralMesh[D] extends DeformableDomain[D, TetrahedralMesh[D]] {
 
   /** Ordered list of tetrahedrals forming the tetrahedral mesh. */
   def tetrahedralization: TetrahedralList
@@ -58,9 +58,6 @@ trait TetrahedralMesh[D] extends DiscreteDomain[D] {
    * tetrahedral are allowed.
    */
   def pointSet: UnstructuredPoints[D]
-
-  /** Applies the point transformation to the point set only and returns the transformed mesh. */
-  def transform(transform: Point[D] => Point[D]): TetrahedralMesh[D]
 
   def topology: Topology[D] = ???
 }
@@ -212,6 +209,11 @@ case class TetrahedralMesh3D(pointSet: UnstructuredPoints[_3D], tetrahedralizati
       s *: pointSet.point(tc.ptId2).toVector +
       t *: pointSet.point(tc.ptId3).toVector +
       u *: pointSet.point(tc.ptId4).toVector).toPoint
+  }
+
+  override def warp(warpField: DiscreteField[_3D, DiscreteDomain[_3D], EuclideanVector[_3D]]): TetrahedralMesh[_3D] = {
+    val newPoints = warpField.pointsWithValues.map { case (pt, v) => pt + v }
+    TetrahedralMesh3D(UnstructuredPoints(newPoints.toIndexedSeq), tetrahedralization)
   }
 }
 
