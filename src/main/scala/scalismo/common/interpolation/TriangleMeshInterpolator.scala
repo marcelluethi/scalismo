@@ -10,13 +10,11 @@ import scalismo.numerics.ValueInterpolator
  * Interpolates a given discrete field defined on the vertices
  * of a triangle mesh (i.e. a MeshField) by means of a surface interpolation
  * on the surface defined by the mesh.
- *
- * @param mesh The mesh on which the interpolation is performed.
  */
-case class TriangleMeshInterpolator[A: ValueInterpolator](mesh: TriangleMesh[_3D])
-    extends FieldInterpolator[_3D, TriangleMesh[_3D], A] {
+case class TriangleMeshInterpolator[A: ValueInterpolator]() extends FieldInterpolator[_3D, TriangleMesh[_3D], A] {
 
   override def interpolate(field: DiscreteField[_3D, TriangleMesh[_3D], A]): Field[_3D, A] = {
+    val mesh = field.domain
 
     // for this method to make sense, the field needs to be defined
     // on the mesh. There is no good way to check this rigorously.

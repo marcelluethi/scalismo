@@ -210,7 +210,7 @@ case class StatisticalMeshModel private (
   def decimate(targetNumberOfVertices: Int): StatisticalMeshModel = {
 
     val newReference = referenceMesh.operations.decimate(targetNumberOfVertices)
-    val interpolator = TriangleMeshInterpolator[EuclideanVector[_3D]](referenceMesh)
+    val interpolator = TriangleMeshInterpolator[EuclideanVector[_3D]]()
     val newGp = gp.interpolate(interpolator)
 
     StatisticalMeshModel(newReference, newGp)

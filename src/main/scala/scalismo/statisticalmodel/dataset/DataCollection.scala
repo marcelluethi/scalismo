@@ -117,8 +117,9 @@ case class DataCollection(reference: TriangleMesh[_3D], dataItems: Seq[DataItem[
  * @param dataItems Sequence of data items containing the required transformations to apply to the reference mesh in order to obtain
  * other elements of the dataset.
  */
-case class DataCollectionOfVolumeMesh(reference: TetrahedralMesh[_3D], dataItems: Seq[DataItem[_3D]])(implicit
-                                                                                                      random: Random) {
+case class DataCollectionOfVolumeMesh(reference: TetrahedralMesh[_3D], dataItems: Seq[DataItem[_3D]])(
+  implicit random: Random
+) {
 
   val size: Int = dataItems.size
 
@@ -223,8 +224,9 @@ object DataCollection {
    *
    * The reference mesh is unchanged, only the transformations in the collection are adapted
    */
-  def gpa(dc: DataCollection, maxIteration: Int = 3, haltDistance: Double = 1e-5)(implicit
-                                                                                  rng: Random): DataCollection = {
+  def gpa(dc: DataCollection, maxIteration: Int = 3, haltDistance: Double = 1e-5)(
+    implicit rng: Random
+  ): DataCollection = {
     gpaComputation(dc, dc.meanSurface, maxIteration, haltDistance)
   }
 

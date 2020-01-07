@@ -41,7 +41,7 @@ class BarycentricInterpolatorTest extends ScalismoTestSuite {
       val tetrahedralMesh = createTetrahedronsInUnitCube()
       val scalars = IndexedSeq[Double](0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0)
       val scalarVolumeMeshField = ScalarVolumeMeshField(tetrahedralMesh, scalars)
-      val interpolatedVolumeMeshField = scalarVolumeMeshField.interpolate(BarycentricInterpolator(tetrahedralMesh))
+      val interpolatedVolumeMeshField = scalarVolumeMeshField.interpolate(BarycentricInterpolator())
 
       val vertexValues = tetrahedralMesh.pointSet.points.map(interpolatedVolumeMeshField(_))
       vertexValues.toIndexedSeq
@@ -65,7 +65,7 @@ class BarycentricInterpolatorTest extends ScalismoTestSuite {
       val tetrahedralMesh = createTetrahedronsInUnitCube()
       val scalars = IndexedSeq[Double](0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0)
       val scalarVolumeMeshField = ScalarVolumeMeshField(tetrahedralMesh, scalars)
-      val interpolatedVolumeMeshField = scalarVolumeMeshField.interpolate(BarycentricInterpolator(tetrahedralMesh))
+      val interpolatedVolumeMeshField = scalarVolumeMeshField.interpolate(BarycentricInterpolator())
 
       val point = Point3D(0.0080570729074948, 0.4107871517927135, 0.6832234717598454)
       val cell = getTetrahedralMeshCell(tetrahedralMesh, point)

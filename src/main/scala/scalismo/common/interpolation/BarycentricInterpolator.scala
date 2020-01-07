@@ -13,30 +13,25 @@ trait BarycentricInterpolator[D, A] extends FieldInterpolator[D, TetrahedralMesh
 object BarycentricInterpolator {
 
   trait Create[D] {
-    def createBarycentricInterpolator[A: ValueInterpolator](m: TetrahedralMesh[D]): BarycentricInterpolator[D, A]
+    def createBarycentricInterpolator[A: ValueInterpolator](): BarycentricInterpolator[D, A]
   }
 
   implicit object create3D extends Create[_3D] {
-    override def createBarycentricInterpolator[A: ValueInterpolator](
-      m: TetrahedralMesh[_3D]
-    ): BarycentricInterpolator[_3D, A] = new BarycentricInterpolator3D[A](m)
+    override def createBarycentricInterpolator[A: ValueInterpolator](): BarycentricInterpolator[_3D, A] =
+      new BarycentricInterpolator3D[A]()
   }
 
-  def apply[D: NDSpace, A: ValueInterpolator](
-    m: TetrahedralMesh[D]
-  )(implicit creator: Create[D]): BarycentricInterpolator[D, A] = {
-    creator.createBarycentricInterpolator(m)
+  def apply[D: NDSpace, A: ValueInterpolator]()(implicit creator: Create[D]): BarycentricInterpolator[D, A] = {
+    creator.createBarycentricInterpolator()
   }
-
 }
 
-case class BarycentricInterpolator3D[A: ValueInterpolator](mesh: TetrahedralMesh[_3D])
-    extends BarycentricInterpolator[_3D, A] {
+case class BarycentricInterpolator3D[A: ValueInterpolator]() extends BarycentricInterpolator[_3D, A] {
 
   override protected val valueInterpolator: ValueInterpolator[A] = ValueInterpolator[A]
 
   // TODO: Temporary solution, replace for Milestone M2!
-  private def getTetrahedralMeshCell(p: Point[_3D]): Option[TetrahedralCell] = {
+  private def getTetrahedralMeshCell(mesh: TetrahedralMesh[_3D], p: Point[_3D]): Option[TetrahedralCell] = {
 
     val numberOfTetrahedrons = mesh.tetrahedralization.tetrahedrons.length
 
@@ -64,8 +59,10 @@ case class BarycentricInterpolator3D[A: ValueInterpolator](mesh: TetrahedralMesh
 
   override def interpolate(df: DiscreteField[_3D, TetrahedralMesh[_3D], A]): Field[_3D, A] = {
 
+    val mesh = df.domain
+
     def interpolateBarycentric(p: Point[_3D]): A = {
-      getTetrahedralMeshCell(p) match {
+      getTetrahedralMeshCell(mesh, p) match {
         case Some(cell) =>
           val vertexValues = cell.pointIds.map(df(_))
           val barycentricCoordinates = mesh.getBarycentricCoordinates(p, cell)

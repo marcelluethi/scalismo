@@ -30,8 +30,9 @@ case class BarycentricCoordinates(a: Double, b: Double, c: Double) {
   }
 
   /** perform bcc interpolation: interpolate vertex values within triangle, needs Interpolation[T] */
-  def interpolateProperty[@specialized(Float, Double) A](v1: A, v2: A, v3: A)(implicit
-                                                                              blender: ValueInterpolator[A]): A = {
+  def interpolateProperty[@specialized(Float, Double) A](v1: A, v2: A, v3: A)(
+    implicit blender: ValueInterpolator[A]
+  ): A = {
     blender.barycentricInterpolation(v1, a, v2, b, v3, c)
   }
 }
