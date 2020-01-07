@@ -22,9 +22,19 @@ import scalismo.mesh.kdtree.{KDTreeMap, RegionBuilder}
 
 import scala.language.implicitConversions
 
-sealed abstract class UnstructuredPoints[D: NDSpace: Create] private[scalismo](
+case class UnstructuredPointsDomain[D](pointSet: UnstructuredPoints[D]) extends DiscreteDomain[D] {
+  override def topology: Topology[D] = ???
+}
+
+object UnstructuredPointsDomain {
+  def apply[D: NDSpace: Create](points: IndexedSeq[Point[D]]): UnstructuredPointsDomain[D] = {
+    UnstructuredPointsDomain(UnstructuredPoints(points))
+  }
+}
+
+sealed abstract class UnstructuredPoints[D: NDSpace: Create] private[scalismo] (
   private[scalismo] val pointSequence: IndexedSeq[Point[D]]
-) extends DiscreteDomain[D] {
+) extends PointSet[D] {
 
   override def points: Iterator[Point[D]] = pointSequence.toIterator
   override def numberOfPoints = pointSequence.size
@@ -79,21 +89,15 @@ sealed abstract class UnstructuredPoints[D: NDSpace: Create] private[scalismo](
 
 object UnstructuredPoints {
 
-  implicit def parametricToConcreteType1D(
-    unstructuredPointsDomain: UnstructuredPoints[_1D]
-  ): UnstructuredPoints1D = {
+  implicit def parametricToConcreteType1D(unstructuredPointsDomain: UnstructuredPoints[_1D]): UnstructuredPoints1D = {
     unstructuredPointsDomain.asInstanceOf[UnstructuredPoints1D]
   }
 
-  implicit def parametricToConcreteType2D(
-    unstructuredPointsDomain: UnstructuredPoints[_2D]
-  ): UnstructuredPoints2D = {
+  implicit def parametricToConcreteType2D(unstructuredPointsDomain: UnstructuredPoints[_2D]): UnstructuredPoints2D = {
     unstructuredPointsDomain.asInstanceOf[UnstructuredPoints2D]
   }
 
-  implicit def parametricToConcreteType3D(
-    unstructuredPointsDomain: UnstructuredPoints[_3D]
-  ): UnstructuredPoints3D = {
+  implicit def parametricToConcreteType3D(unstructuredPointsDomain: UnstructuredPoints[_3D]): UnstructuredPoints3D = {
     unstructuredPointsDomain.asInstanceOf[UnstructuredPoints3D]
   }
 
@@ -125,7 +129,7 @@ object UnstructuredPoints {
 
 }
 
-class UnstructuredPoints1D private[scalismo](pointSequence: IndexedSeq[Point[_1D]])
+class UnstructuredPoints1D private[scalismo] (pointSequence: IndexedSeq[Point[_1D]])
     extends UnstructuredPoints[_1D](pointSequence) {
 
   override def boundingBox: BoxDomain[_1D] = {
@@ -140,7 +144,7 @@ class UnstructuredPoints1D private[scalismo](pointSequence: IndexedSeq[Point[_1D
 
 }
 
-class UnstructuredPoints2D private[scalismo](pointSequence: IndexedSeq[Point[_2D]])
+class UnstructuredPoints2D private[scalismo] (pointSequence: IndexedSeq[Point[_2D]])
     extends UnstructuredPoints[_2D](pointSequence) {
 
   override def boundingBox: BoxDomain[_2D] = {
@@ -157,7 +161,7 @@ class UnstructuredPoints2D private[scalismo](pointSequence: IndexedSeq[Point[_2D
 
 }
 
-class UnstructuredPoints3D private[scalismo](pointSequence: IndexedSeq[Point[_3D]])
+class UnstructuredPoints3D private[scalismo] (pointSequence: IndexedSeq[Point[_3D]])
     extends UnstructuredPoints[_3D](pointSequence) {
 
   override def boundingBox: BoxDomain[_3D] = {

@@ -20,7 +20,7 @@ import breeze.linalg.DenseVector
 import breeze.numerics._
 import scalismo.common.Scalar
 import scalismo.geometry._
-import scalismo.image.{DifferentiableScalarImage, StructuredPoints, ScalarImage}
+import scalismo.image.{DifferentiableScalarImage, DiscreteImageDomain, ScalarImage, StructuredPoints}
 import scalismo.numerics._
 import scalismo.registration.RegistrationMetric.ValueAndDerivative
 import scalismo.utils.{Memoize, Random}
@@ -41,7 +41,7 @@ import scalismo.utils.{Memoize, Random}
  * @param numberOfBins The number of bins used for the intensity histograms (which approximates the joint distribution)
  */
 case class MutualInformationMetric[D: NDSpace, A: Scalar](fixedImage: ScalarImage[D, A],
-                                                          fixedImageDomain: StructuredPoints[D],
+                                                          fixedImageDomain: DiscreteImageDomain[D],
                                                           movingImage: DifferentiableScalarImage[D, A],
                                                           transformationSpace: TransformationSpace[D],
                                                           sampler: Sampler[D],

@@ -39,7 +39,7 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
   require(mean.domain == cov.domain)
 
   val domain = mean.domain
-
+  private val pointSet = mean.domain.pointSet
   val outputDim = vectorizer.dim
 
   def sample()(implicit rand: Random): DiscreteField[D, DDomain, Value] = {
@@ -69,15 +69,16 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
    * Note that this is again a DiscreteGaussianProcess.
    */
   def marginal(pointIds: Seq[PointId])(
-    implicit domainCreator: UnstructuredPoints.Create[D]
-  ): DiscreteGaussianProcess[D, UnstructuredPoints[D], Value] = {
-    val domainPts = domain.points.toIndexedSeq
+    implicit
+    domainCreator: UnstructuredPoints.Create[D]
+  ): DiscreteGaussianProcess[D, UnstructuredPointsDomain[D], Value] = {
+    val domainPts = pointSet.points.toIndexedSeq
 
     val newPts = pointIds.map(pointId => domainPts(pointId.id)).toIndexedSeq
-    val newDomain = domainCreator.create(newPts)
+    val newDomain = UnstructuredPointsDomain(domainCreator.create(newPts))
 
     val newMean =
-      DiscreteField[D, UnstructuredPoints[D], Value](newDomain, pointIds.toIndexedSeq.map(id => mean(id)))
+      DiscreteField[D, UnstructuredPointsDomain[D], Value](newDomain, pointIds.toIndexedSeq.map(id => mean(id)))
     val newCov = (i: PointId, j: PointId) => {
       cov(pointIds(i.id), pointIds(j.id))
     }
@@ -97,7 +98,7 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
 
     val newDomain = RealSpace[D]
     def meanFun(pt: Point[D]): Value = {
-      val closestPtId = domain.findClosestPoint(pt).id
+      val closestPtId = pointSet.findClosestPoint(pt).id
       meanDiscreteGp(closestPtId)
     }
 
@@ -105,8 +106,8 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
       override val domain = newDomain
 
       override def k(pt1: Point[D], pt2: Point[D]): DenseMatrix[Double] = {
-        val closestPtId1 = self.domain.findClosestPoint(pt1).id
-        val closestPtId2 = self.domain.findClosestPoint(pt2).id
+        val closestPtId1 = self.pointSet.findClosestPoint(pt1).id
+        val closestPtId2 = self.pointSet.findClosestPoint(pt2).id
         cov(closestPtId1, closestPtId2)
       }
 
@@ -183,9 +184,10 @@ object DiscreteGaussianProcess {
   }
 
   def apply[D: NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DDomain, gp: GaussianProcess[D, Value])(
-    implicit vectorizer: Vectorizer[Value]
+    implicit
+    vectorizer: Vectorizer[Value]
   ): DiscreteGaussianProcess[D, DDomain, Value] = {
-    val domainPoints = domain.points.toIndexedSeq
+    val domainPoints = domain.pointSet.points.toIndexedSeq
 
     val discreteMean = DiscreteField[D, DDomain, Value](domain, domainPoints.map(pt => gp.mean(pt)))
 
@@ -203,7 +205,7 @@ object DiscreteGaussianProcess {
     // TODO, this is somehow a hack to reuse the code written for the general GP regression. We should think if that has disadvantages
     // TODO We should think whether we can do it in  a conceptually more clean way.
 
-    val domainPoints = discreteGp.domain.points.toIndexedSeq
+    val domainPoints = discreteGp.domain.pointSet.points.toIndexedSeq
     val gp = discreteGp.interpolate(NearestNeighborInterpolator())
     val tdForGp = trainingData.map({ case (id, vec, error) => (domainPoints(id), vec, error) })
     val posterior = GaussianProcess.regression(gp, tdForGp)

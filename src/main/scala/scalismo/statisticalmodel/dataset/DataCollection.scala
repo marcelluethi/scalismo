@@ -117,9 +117,8 @@ case class DataCollection(reference: TriangleMesh[_3D], dataItems: Seq[DataItem[
  * @param dataItems Sequence of data items containing the required transformations to apply to the reference mesh in order to obtain
  * other elements of the dataset.
  */
-case class DataCollectionOfVolumeMesh(reference: TetrahedralMesh[_3D], dataItems: Seq[DataItem[_3D]])(
-  implicit random: Random
-) {
+case class DataCollectionOfVolumeMesh(reference: TetrahedralMesh[_3D], dataItems: Seq[DataItem[_3D]])(implicit
+                                                                                                      random: Random) {
 
   val size: Int = dataItems.size
 
@@ -189,7 +188,8 @@ object DataCollection {
    * Returns a data collection containing the valid elements as well as the list of errors for invalid items.
    */
   def fromMeshSequence(referenceMesh: TriangleMesh[_3D], registeredMeshes: Seq[TriangleMesh[_3D]])(
-    implicit rng: Random
+    implicit
+    rng: Random
   ): (Option[DataCollection], Seq[Throwable]) = {
     val (transformations, errors) =
       DataUtils.partitionSuccAndFailedTries(registeredMeshes.map(DataUtils.meshToTransformation(referenceMesh, _)))
@@ -223,15 +223,15 @@ object DataCollection {
    *
    * The reference mesh is unchanged, only the transformations in the collection are adapted
    */
-  def gpa(dc: DataCollection, maxIteration: Int = 3, haltDistance: Double = 1e-5)(
-    implicit rng: Random
-  ): DataCollection = {
+  def gpa(dc: DataCollection, maxIteration: Int = 3, haltDistance: Double = 1e-5)(implicit
+                                                                                  rng: Random): DataCollection = {
     gpaComputation(dc, dc.meanSurface, maxIteration, haltDistance)
   }
 
   @tailrec
   private def gpaComputation(dc: DataCollection, meanShape: TriangleMesh[_3D], maxIteration: Int, haltDistance: Double)(
-    implicit rng: Random
+    implicit
+    rng: Random
   ): DataCollection = {
 
     if (maxIteration == 0) return dc
@@ -272,7 +272,8 @@ object DataCollectionOfVolumeMesh {
    * Returns a data collection containing the valid elements as well as the list of errors for invalid items.
    */
   def fromMeshSequence(referenceMesh: TetrahedralMesh[_3D], registeredMeshes: Seq[TetrahedralMesh[_3D]])(
-    implicit rng: Random
+    implicit
+    rng: Random
   ): (Option[DataCollectionOfVolumeMesh], Seq[Throwable]) = {
     val (transformations, errors) = DataUtils.partitionSuccAndFailedTries(
       registeredMeshes.map(DataUtils.volumeMeshToTransformation(referenceMesh, _))
@@ -288,7 +289,8 @@ object DataCollectionOfVolumeMesh {
    * @return a data collection containing the valid elements as well as the list of errors for invalid items.
    */
   def fromMeshDirectory(referenceMesh: TetrahedralMesh[_3D], meshDirectory: File)(
-    implicit rng: Random
+    implicit
+    rng: Random
   ): (Option[DataCollectionOfVolumeMesh], Seq[Throwable]) = {
     val meshFileNames = meshDirectory
       .listFiles()

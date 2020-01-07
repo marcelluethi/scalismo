@@ -17,7 +17,7 @@ package scalismo.utils
 
 import scalismo.common._
 import scalismo.geometry._
-import scalismo.image.{StructuredPoints, DiscreteScalarImage}
+import scalismo.image.{DiscreteImageDomain, DiscreteScalarImage, StructuredPoints}
 import scalismo.io.ImageIO
 import scalismo.mesh._
 import scalismo.mesh.{TetrahedralCell, TetrahedralList, TetrahedralMesh, TetrahedralMesh3D}
@@ -451,7 +451,7 @@ trait CanConvertToVtk[D] {
     sp.GetPointData().SetScalars(dataArray)
 
     // In the case of 3D, this might create a new vtkStructuredPoints data due to image orientation
-    val orientedSP = setDomainInfo(img.domain, sp)
+    val orientedSP = setDomainInfo(img.domain.pointSet, sp)
 
     if (typeOf[Pixel] =:= typeOf[Byte]) {
       recastDataToSignedChar(orientedSP)
@@ -513,7 +513,7 @@ object CanConvertToVtk {
       val spacing = EuclideanVector(sp.GetSpacing()(0).toFloat, sp.GetSpacing()(1).toFloat)
       val size = IntVector(sp.GetDimensions()(0), sp.GetDimensions()(1))
 
-      val domain = StructuredPoints[_2D](origin, spacing, size)
+      val domain = DiscreteImageDomain(StructuredPoints[_2D](origin, spacing, size))
       val scalars = sp.GetPointData().GetScalars()
 
       val pixelArrayOrFailure = VtkHelpers.vtkDataArrayToScalarArray[Pixel](sp.GetScalarType(), scalars)
@@ -605,7 +605,7 @@ object CanConvertToVtk {
       val spacing = EuclideanVector(sp.GetSpacing()(0).toFloat, sp.GetSpacing()(1).toFloat, sp.GetSpacing()(2).toFloat)
       val size = IntVector(sp.GetDimensions()(0), sp.GetDimensions()(1), sp.GetDimensions()(2))
 
-      val domain = StructuredPoints[_3D](origin, spacing, size)
+      val domain = DiscreteImageDomain(StructuredPoints[_3D](origin, spacing, size))
       val scalars = sp.GetPointData().GetScalars()
       val pixelArrayOrFailure = VtkHelpers.vtkDataArrayToScalarArray[Pixel](sp.GetScalarType(), scalars)
       pixelArrayOrFailure.map(pixelArray => DiscreteScalarImage(domain, pixelArray))

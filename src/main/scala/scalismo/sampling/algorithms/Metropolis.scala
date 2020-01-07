@@ -61,7 +61,8 @@ object Metropolis {
 
   /** create a Metropolis MCMC chain, needs a symmetric proposal distribution, with logger attached */
   def apply[A](generator: ProposalGenerator[A] with SymmetricTransitionRatio[A], evaluator: DistributionEvaluator[A])(
-    implicit random: Random
+    implicit
+    random: Random
   ) = new Metropolis[A](generator, evaluator)
 }
 
@@ -103,6 +104,7 @@ class MetropolisHastings[A] protected (val generator: ProposalGenerator[A] with 
 
 object MetropolisHastings {
   def apply[A](generator: ProposalGenerator[A] with TransitionRatio[A], evaluator: DistributionEvaluator[A])(
-    implicit random: Random
+    implicit
+    random: Random
   ) = new MetropolisHastings[A](generator, evaluator)
 }

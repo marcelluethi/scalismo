@@ -15,13 +15,14 @@
  */
 package scalismo.common.interpolation
 
-import scalismo.common.{DifferentiableField, DiscreteDomain, DiscreteField, Field}
+import scalismo.common.{DifferentiableField, DiscreteDomain, DiscreteField, Field, PointSet}
 
 /**
  * Base trait for all interpolators that can be used to interpolate a [[DiscreteField]]
- * @tparam D Dimensionality
- * @tparam DDomain Type of the [[DiscreteDomain]] that the interpolator can interpolate
- * @tparam A The value type
+ *
+ * @tparam D       Dimensionality
+ * @tparam DDomain Type of the [[PointSet]] that the interpolator can interpolate
+ * @tparam A       The value type
  */
 trait FieldInterpolator[D, -DDomain <: DiscreteDomain[D], A] {
 

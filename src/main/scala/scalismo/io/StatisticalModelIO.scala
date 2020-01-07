@@ -18,7 +18,7 @@ package scalismo.io
 import java.io._
 
 import scalismo.geometry.{_2D, _3D, EuclideanVector}
-import scalismo.image.StructuredPoints
+import scalismo.image.{DiscreteImageDomain, StructuredPoints}
 import scalismo.statisticalmodel.{DiscreteLowRankGaussianProcess, StatisticalMeshModel, StatisticalVolumeMeshModel}
 
 import scala.util.Try
@@ -85,7 +85,7 @@ object StatisticalModelIO {
    */
   def readDeformationModel2D(
     file: java.io.File
-  ): Try[DiscreteLowRankGaussianProcess[_2D, StructuredPoints[_2D], EuclideanVector[_2D]]] = {
+  ): Try[DiscreteLowRankGaussianProcess[_2D, DiscreteImageDomain[_2D], EuclideanVector[_2D]]] = {
     StatismoIO.readStatismoImageModel[_2D, EuclideanVector[_2D]](file, "/")
   }
 
@@ -96,7 +96,7 @@ object StatisticalModelIO {
    */
   def readDeformationModel3D(
     file: java.io.File
-  ): Try[DiscreteLowRankGaussianProcess[_3D, StructuredPoints[_3D], EuclideanVector[_3D]]] = {
+  ): Try[DiscreteLowRankGaussianProcess[_3D, DiscreteImageDomain[_3D], EuclideanVector[_3D]]] = {
     StatismoIO.readStatismoImageModel[_3D, EuclideanVector[_3D]](file, "/")
   }
 
@@ -107,7 +107,7 @@ object StatisticalModelIO {
    * @param file the file to which the model is written
    * @return Success if model could be read, Failure otherwise
    */
-  def writeDeformationModel2D(gp: DiscreteLowRankGaussianProcess[_2D, StructuredPoints[_2D], EuclideanVector[_2D]],
+  def writeDeformationModel2D(gp: DiscreteLowRankGaussianProcess[_2D, DiscreteImageDomain[_2D], EuclideanVector[_2D]],
                               file: File): Try[Unit] = {
     StatismoIO.writeStatismoImageModel[_2D, EuclideanVector[_2D]](gp, file, "/")
   }
@@ -119,7 +119,7 @@ object StatisticalModelIO {
    * @param file the file to which the model is written
    * @return Success if model could be read, Failure otherwise
    */
-  def writeDeformationModel3D(gp: DiscreteLowRankGaussianProcess[_3D, StructuredPoints[_3D], EuclideanVector[_3D]],
+  def writeDeformationModel3D(gp: DiscreteLowRankGaussianProcess[_3D, DiscreteImageDomain[_3D], EuclideanVector[_3D]],
                               file: File): Try[Unit] = {
     StatismoIO.writeStatismoImageModel[_3D, EuclideanVector[_3D]](gp, file, "/")
   }

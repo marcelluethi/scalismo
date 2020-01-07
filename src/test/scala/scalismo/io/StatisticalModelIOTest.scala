@@ -21,7 +21,7 @@ import java.net.URLDecoder
 import scalismo.ScalismoTestSuite
 import scalismo.common.NearestNeighborInterpolator
 import scalismo.geometry._
-import scalismo.image.StructuredPoints
+import scalismo.image.{DiscreteImageDomain, StructuredPoints}
 import scalismo.kernels.{DiagonalKernel, GaussianKernel}
 import scalismo.statisticalmodel.{
   GaussianProcess,
@@ -170,7 +170,7 @@ class StatisticalModelIOTest extends ScalismoTestSuite {
     it("can be created, saved and reread in 3D") {
       val gk = DiagonalKernel(GaussianKernel[_3D](10.0), 3)
       val gp = GaussianProcess[_3D, EuclideanVector[_3D]](gk)
-      val domain = StructuredPoints(origin = Point3D(1.0, 3.1, 7.5),
+      val domain = DiscreteImageDomain(origin = Point3D(1.0, 3.1, 7.5),
                                        spacing = EuclideanVector3D(0.8, 0.7, 0.6),
                                        size = IntVector3D(10, 12, 9))
 
@@ -198,7 +198,7 @@ class StatisticalModelIOTest extends ScalismoTestSuite {
     it("can be created, saved and reread in 2D") {
       val gk = DiagonalKernel(GaussianKernel[_2D](10.0), 2)
       val gp = GaussianProcess[_2D, EuclideanVector[_2D]](gk)
-      val domain = StructuredPoints(origin = Point2D(1.0, 3.1),
+      val domain = DiscreteImageDomain(origin = Point2D(1.0, 3.1),
                                        spacing = EuclideanVector2D(0.8, 0.7),
                                        size = IntVector2D(10, 12))
 

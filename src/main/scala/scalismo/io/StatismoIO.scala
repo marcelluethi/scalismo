@@ -7,7 +7,7 @@ import breeze.linalg.{DenseMatrix, DenseVector}
 import ncsa.hdf.`object`.Group
 import scalismo.common.{PointId, UnstructuredPoints, Vectorizer}
 import scalismo.geometry.{_3D, EuclideanVector, IntVector, NDSpace, Point}
-import scalismo.image.{CreateDiscreteImageDomain, StructuredPoints}
+import scalismo.image.{CreateDiscreteImageDomain, DiscreteImageDomain, StructuredPoints}
 import scalismo.io.StatismoIO.StatismoModelType.StatismoModelType
 import scalismo.mesh.{
   TetrahedralCell,
@@ -388,7 +388,8 @@ object StatismoIO {
     } yield Success(())
   }
 
-  private def ndFloatArrayToDoubleMatrix(array: NDArray[Float])(implicit dummy: DummyImplicit,
+  private def ndFloatArrayToDoubleMatrix(array: NDArray[Float])(implicit
+                                                                dummy: DummyImplicit,
                                                                 dummy2: DummyImplicit): DenseMatrix[Double] = {
     // the data in ndarray is stored row-major, but DenseMatrix stores it column major. We therefore
     // do switch dimensions and transpose
@@ -509,9 +510,9 @@ object StatismoIO {
    * @return Success of failure
    */
   def writeStatismoImageModel[D: NDSpace, A: Vectorizer](
-                                                          gp: DiscreteLowRankGaussianProcess[D, StructuredPoints[D], A],
-                                                          file: File,
-                                                          modelPath: String
+    gp: DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A],
+    file: File,
+    modelPath: String
   ): Try[Unit] = {
 
     val discretizedMean = gp.meanVector.map(_.toFloat)
@@ -551,24 +552,25 @@ object StatismoIO {
   }
 
   private def writeImageRepresenter[D: NDSpace, A: Vectorizer](
-                                                                h5file: HDF5File,
-                                                                group: Group,
-                                                                gp: DiscreteLowRankGaussianProcess[D, StructuredPoints[D], A],
-                                                                modelPath: String
+    h5file: HDF5File,
+    group: Group,
+    gp: DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A],
+    modelPath: String
   ): Try[Unit] = {
 
     val dim = NDSpace[D].dimensionality
 
     val domain = gp.domain
+    val pointSet = domain.pointSet
 
     // we create a dummy array with 0 vectors. This needs to be there to satisfy the
     // statismo file format, even though it is useless in this context
     val vectorizer = implicitly[Vectorizer[A]]
-    val pixelValues = DenseVector.zeros[Float](domain.numberOfPoints * vectorizer.dim)
+    val pixelValues = DenseVector.zeros[Float](pointSet.numberOfPoints * vectorizer.dim)
 
     val direction =
-      NDArray(IndexedSeq(dim, dim), domain.directions.toBreezeMatrix.flatten(false).toArray.map(_.toFloat))
-    val imageDimension: Int = domain.dimensionality
+      NDArray(IndexedSeq(dim, dim), pointSet.directions.toBreezeMatrix.flatten(false).toArray.map(_.toFloat))
+    val imageDimension: Int = pointSet.dimensionality
     val origin: Array[Float] = domain.origin.toBreezeVector.toArray.map(_.toFloat)
     val spacing: Array[Float] = domain.spacing.toBreezeVector.toArray.map(_.toFloat)
     val size: Array[Int] = domain.size.toBreezeVector.toArray
@@ -585,8 +587,8 @@ object StatismoIO {
       _ <- h5file.writeNDArray[Float](s"$modelPath/representer/origin", NDArray(IndexedSeq(dim, 1), origin))
       _ <- h5file.writeNDArray[Float](s"$modelPath/representer/spacing", NDArray(IndexedSeq(dim, 1), spacing))
       _ <- h5file.writeNDArray[Float](s"$modelPath/representer/pointData/pixelValues",
-                                      NDArray(IndexedSeq(dim, domain.numberOfPoints), pixelValues.toArray))
-      _ <- h5file.writeInt(s"$modelPath/representer/pointData/pixelDimension", domain.dimensionality)
+                                      NDArray(IndexedSeq(dim, pointSet.numberOfPoints), pixelValues.toArray))
+      _ <- h5file.writeInt(s"$modelPath/representer/pointData/pixelDimension", pointSet.dimensionality)
       _ <- h5file.writeIntAttribute(s"$modelPath/representer/pointData/pixelValues", "datatype", 10)
 
     } yield Success(())
@@ -606,7 +608,7 @@ object StatismoIO {
   def readStatismoImageModel[D: NDSpace: CreateDiscreteImageDomain, A: Vectorizer](
     file: java.io.File,
     modelPath: String = "/"
-  ): Try[DiscreteLowRankGaussianProcess[D, StructuredPoints[D], A]] = {
+  ): Try[DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A]] = {
 
     val modelOrFailure = for {
       h5file <- HDF5Utils.openFileForReading(file)
@@ -653,7 +655,7 @@ object StatismoIO {
       }
     } yield {
 
-      val gp = new DiscreteLowRankGaussianProcess[D, StructuredPoints[D], A](image,
+      val gp = new DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A](image,
                                                                                 meanVector.map(_.toDouble),
                                                                                 pcaVarianceVector.map(_.toDouble),
                                                                                 pcaBasisMatrix.map(_.toDouble))
@@ -668,7 +670,7 @@ object StatismoIO {
   private def readImageRepresenter[D: NDSpace: CreateDiscreteImageDomain](
     h5file: HDF5File,
     modelPath: String
-  ): Try[StructuredPoints[D]] = {
+  ): Try[DiscreteImageDomain[D]] = {
 
     val dim = NDSpace[D].dimensionality
 
@@ -705,7 +707,7 @@ object StatismoIO {
 
     } yield {
 
-      StructuredPoints[D](originScalismo, spacingScalismo, sizeScalismo)
+      DiscreteImageDomain(StructuredPoints[D](originScalismo, spacingScalismo, sizeScalismo))
 
     }
 

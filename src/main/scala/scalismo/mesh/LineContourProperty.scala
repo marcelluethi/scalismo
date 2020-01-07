@@ -29,9 +29,9 @@ case class MappedContourProperty[A, B](values: LineContourProperty[A], f: A => B
   override def onContour(lineId: LineId, bcc: LineCoordinates): B = f(values.onContour(lineId, bcc))
 }
 
-case class ContourPointProperty[A](topology: LineList, pointData: IndexedSeq[A])(
-  implicit val interpolator: ValueInterpolator[A]
-) extends LineContourProperty[A] {
+case class ContourPointProperty[A](topology: LineList, pointData: IndexedSeq[A])(implicit
+                                                                                 val interpolator: ValueInterpolator[A])
+    extends LineContourProperty[A] {
 
   require(topology.pointIds.forall(id => pointData.isDefinedAt(id.id)), "Line topology is not compatible with data")
 
@@ -55,7 +55,8 @@ case class ContourPointProperty[A](topology: LineList, pointData: IndexedSeq[A])
 object ContourPointProperty {
 
   def averagedPointProperty[A](linetopology: LineList, property: LineContourProperty[A])(
-    implicit ops: ValueInterpolator[A]
+    implicit
+    ops: ValueInterpolator[A]
   ): ContourPointProperty[A] = {
     def averager(data: IndexedSeq[A]): A = {
       data.size match {
@@ -68,7 +69,8 @@ object ContourPointProperty {
   }
 
   def sampleContourProperty[A](lineTopology: LineList, property: LineContourProperty[A], reducer: IndexedSeq[A] => A)(
-    implicit ops: ValueInterpolator[A]
+    implicit
+    ops: ValueInterpolator[A]
   ): ContourPointProperty[A] = {
 
     // get all data for a single vertex:

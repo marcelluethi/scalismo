@@ -670,9 +670,7 @@ object MeshIO {
   private def cellSeqToNDArray[T](cells: IndexedSeq[TriangleCell]): NDArray[Int] =
     NDArray(IndexedSeq(cells.size, 3), cells.flatten(cell => cell.pointIds.map(_.id)).toArray)
 
-  private def readLineMeshVTK[D: NDSpace: LineMesh.Create: UnstructuredPoints.Create](
-    file: File
-  ): Try[LineMesh[D]] = {
+  private def readLineMeshVTK[D: NDSpace: LineMesh.Create: UnstructuredPoints.Create](file: File): Try[LineMesh[D]] = {
     val vtkReader = new vtkPolyDataReader()
     vtkReader.SetFileName(file.getAbsolutePath)
     vtkReader.Update()

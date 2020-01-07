@@ -26,8 +26,10 @@ case class NearestNeighborInterpolator[D, A]() extends FieldInterpolator[D, Disc
 
   override def interpolate(df: DiscreteField[D, DiscreteDomain[D], A]): Field[D, A] = {
 
+    val pointSet = df.domain.pointSet
+
     def valueAtClosestPoint(p: Point[D]): A = {
-      val closestPointId = df.domain.findClosestPoint(p).id
+      val closestPointId = pointSet.findClosestPoint(p).id
       df(closestPointId)
     }
 

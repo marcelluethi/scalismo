@@ -26,6 +26,38 @@ import scalismo.registration.{
 
 import scala.language.implicitConversions
 
+case class DiscreteImageDomain[D: NDSpace](structuredPoints: StructuredPoints[D]) extends DiscreteDomain[D] {
+  override def topology: Topology[D] = ???
+
+  override def pointSet: StructuredPoints[D] = structuredPoints
+
+  def origin = pointSet.origin
+  def spacing = pointSet.spacing
+  def size = pointSet.size
+
+  def boundingBox: BoxDomain[D] = {
+
+    // The image bounding box is 1*spacing larger than the bounding box of the point of the domain, as
+    // every point of the domain represents one voxel.
+    val bb = structuredPoints.boundingBox
+    BoxDomain(bb.origin, bb.oppositeCorner + spacing)
+  }
+
+}
+
+object DiscreteImageDomain {
+  def apply[D: NDSpace: CreateDiscreteImageDomain](origin: Point[D],
+                                                   spacing: EuclideanVector[D],
+                                                   size: IntVector[D]): DiscreteImageDomain[D] = {
+    new DiscreteImageDomain[D](StructuredPoints(origin, spacing, size))
+  }
+
+  def apply[D: NDSpace: CreateDiscreteImageDomain](boundingBox: BoxDomain[D],
+                                                   size: IntVector[D]): DiscreteImageDomain[D] = {
+    new DiscreteImageDomain[D](StructuredPoints(boundingBox, size))
+  }
+}
+
 /**
  * Defines points in D dimension which are aligned on a regular grid.
  *
@@ -36,7 +68,7 @@ import scala.language.implicitConversions
  *
  * @tparam D The dimensionality of the domain
  */
-abstract class StructuredPoints[D: NDSpace] extends DiscreteDomain[D] with Equals {
+abstract class StructuredPoints[D: NDSpace] extends PointSet[D] with Equals {
 
   /** the first point (lower-left corner in 2D) of the grid */
   def origin: Point[D]
@@ -83,16 +115,6 @@ abstract class StructuredPoints[D: NDSpace] extends DiscreteDomain[D] with Equal
    * @see imageBoundingBox
    */
   override def boundingBox: BoxDomain[D]
-
-  /**
-   * a rectangular region over which the image is defined.
-   */
-  def imageBoundingBox: BoxDomain[D] = {
-    // The image bounding box is 1*spacing larger than the bounding box of the point of the domain, as
-    // every point of the domain represents one voxel.
-    val bb = boundingBox
-    BoxDomain(bb.origin, bb.oppositeCorner + spacing)
-  }
 
   /** true if the point is part of the grid points */
   override def isDefinedAt(pt: Point[D]): Boolean = {
@@ -176,7 +198,8 @@ object StructuredPoints {
 
   /** Create a new discreteImageDomain with given origin, spacing and size*/
   def apply[D](origin: Point[D], spacing: EuclideanVector[D], size: IntVector[D])(
-    implicit evCreate: CreateDiscreteImageDomain[D]
+    implicit
+    evCreate: CreateDiscreteImageDomain[D]
   ) = {
     evCreate.createImageDomain(origin, spacing, size)
   }
@@ -190,7 +213,8 @@ object StructuredPoints {
 
   /** Create a new discreteImageDomain with given image box (i.e. a box that determines the area where the image is defined) and size */
   def apply[D: NDSpace](imageBox: BoxDomain[D], spacing: EuclideanVector[D])(
-    implicit evCreate: CreateDiscreteImageDomain[D]
+    implicit
+    evCreate: CreateDiscreteImageDomain[D]
   ): StructuredPoints[D] = {
     val sizeFractional = imageBox.extent.mapWithIndex({ case (ithExtent, i) => ithExtent / spacing(i) })
     val size = IntVector.apply[D](sizeFractional.toArray.map(s => Math.ceil(s).toInt))
@@ -202,7 +226,8 @@ object StructuredPoints {
    * This makes it possible to define image regions which are not aligned to the coordinate axis.
    */
   private[scalismo] def apply[D](size: IntVector[D], transform: AnisotropicSimilarityTransformation[D])(
-    implicit evCreateRot: CreateDiscreteImageDomain[D]
+    implicit
+    evCreateRot: CreateDiscreteImageDomain[D]
   ) = {
     evCreateRot.createWithTransform(size, transform)
   }

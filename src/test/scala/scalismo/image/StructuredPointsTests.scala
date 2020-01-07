@@ -168,21 +168,23 @@ class StructuredPointsTests extends ScalismoTestSuite {
 
       val img = Fixture.img
 
-      val trans = img.domain.indexToPhysicalCoordinateTransform
+      val trans = img.domain.pointSet.indexToPhysicalCoordinateTransform
       val inverseTrans = trans.inverse
 
       assert((trans(Point(0, 0, 0)) - img.domain.origin).norm < 0.1)
       assert(inverseTrans(img.domain.origin).toVector.norm < 0.1)
 
-      (trans(Point(img.domain.size(0) - 1, img.domain.size(1) - 1, img.domain.size(2) - 1)) - img.domain.boundingBox.oppositeCorner).norm should be < 0.1
-      (inverseTrans(img.domain.boundingBox.oppositeCorner) - Point(img.domain.size(0) - 1,
-                                                                   img.domain.size(1) - 1,
-                                                                   img.domain.size(2) - 1)).norm should be < 0.1
+      (trans(Point(img.domain.size(0) - 1, img.domain.size(1) - 1, img.domain.size(2) - 1)) - img.domain.pointSet.boundingBox.oppositeCorner).norm should be < 0.1
+      (inverseTrans(img.domain.pointSet.boundingBox.oppositeCorner) - Point(
+        img.domain.size(0) - 1,
+        img.domain.size(1) - 1,
+        img.domain.size(2) - 1
+      )).norm should be < 0.1
     }
 
     it("Domain points in chunks returns the correct list of points") {
-      val points = Fixture.img.domain.points
-      val chunkedPoints = Fixture.img.domain.pointsInChunks(24)
+      val points = Fixture.img.domain.pointSet.points
+      val chunkedPoints = Fixture.img.domain.pointSet.pointsInChunks(24)
       val concatenated = chunkedPoints.reduce(_ ++ _)
       points zip concatenated foreach { case (p1, p2) => assert(p1 == p2) }
     }

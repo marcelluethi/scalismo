@@ -9,12 +9,7 @@ import scalismo.mesh.TriangleMesh
 import scalismo.numerics.{FixedPointsUniformMeshSampler3D, PivotedCholesky}
 import scalismo.registration.RigidTransformation
 import scalismo.statisticalmodel.DiscreteLowRankGaussianProcess.Eigenpair
-import scalismo.statisticalmodel.{
-  DiscreteLowRankGaussianProcess,
-  GaussianProcess,
-  LowRankGaussianProcess,
-  StatisticalMeshModel
-}
+
 import scalismo.mesh.{TetrahedralCell, TetrahedralList, TetrahedralMesh, TetrahedralMesh3D}
 import scalismo.statisticalmodel.dataset.DataCollectionOfVolumeMesh
 import scalismo.utils.Random
@@ -23,7 +18,7 @@ import scala.util.{Failure, Success, Try}
 
 case class StatisticalVolumeMeshModel private (
   referenceVolumeMesh: TetrahedralMesh[_3D],
-  gp: DiscreteLowRankGaussianProcess[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]]
+  gp: DiscreteLowRankGaussianProcess[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]]
 ) {
 
   /** @see [[scalismo.statisticalmodel.DiscreteLowRankGaussianProcess.rank]] */
@@ -79,25 +74,9 @@ case class StatisticalVolumeMeshModel private (
   def marginal(
     ptIds: IndexedSeq[PointId],
     referenceMeshVolume: TetrahedralMesh[_3D],
-    gp: DiscreteLowRankGaussianProcess[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]]
+    gp: DiscreteLowRankGaussianProcess[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]]
   ): StatisticalVolumeMeshModel = {
-    val clippedReference = referenceMeshVolume.operations.clip(p => {
-      !ptIds.contains(referenceMeshVolume.pointSet.findClosestPoint(p).id)
-    })
-    // not all of the ptIds remain in the reference after clipping, since their cells might disappear
-    val remainingPtIds =
-      clippedReference.pointSet.points.map(p => referenceMeshVolume.pointSet.findClosestPoint(p).id).toIndexedSeq
-    if (remainingPtIds.isEmpty) {
-      val newRef = TetrahedralMesh3D(
-        UnstructuredPoints(ptIds.map(id => referenceMeshVolume.pointSet.point(id)).toIndexedSeq),
-        TetrahedralList(IndexedSeq[TetrahedralCell]())
-      )
-      val marginalGP = gp.marginal(ptIds.toIndexedSeq)
-      StatisticalVolumeMeshModel(newRef, marginalGP)
-    } else {
-      val marginalGP = gp.marginal(remainingPtIds)
-      StatisticalVolumeMeshModel(clippedReference, marginalGP)
-    }
+    ???
   }
 
   /**
@@ -157,7 +136,7 @@ case class StatisticalVolumeMeshModel private (
       val data = newIthBasis.map(_.toArray).flatten.toArray
       newBasisMat(::, i) := DenseVector(data)
     }
-    val newGp = new DiscreteLowRankGaussianProcess[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]](
+    val newGp = new DiscreteLowRankGaussianProcess[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]](
       gp.domain.transform(rigidTransform),
       newMean,
       gp.variance,
@@ -173,16 +152,14 @@ case class StatisticalVolumeMeshModel private (
    */
   def changeReference(t: Point[_3D] => Point[_3D]): StatisticalVolumeMeshModel = {
 
-    val newRef = referenceVolumeMesh.pointSet.transform(t)
+    val newRef = referenceVolumeMesh.transform(t)
     val newMean = gp.mean.pointsWithValues.map { case (refPt, meanVec) => (refPt - t(refPt)) + meanVec }
     val newMeanVec = DenseVector(newMean.map(_.toArray).flatten.toArray)
-    val newGp = new DiscreteLowRankGaussianProcess[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]](
-      newRef,
-      newMeanVec,
-      gp.variance,
-      gp.basisMatrix
-    )
-    new StatisticalVolumeMeshModel(TetrahedralMesh3D(newRef, referenceVolumeMesh.tetrahedralization), newGp)
+    val newGp = new DiscreteLowRankGaussianProcess[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]](newRef,
+                                                                                                    newMeanVec,
+                                                                                                    gp.variance,
+                                                                                                    gp.basisMatrix)
+    new StatisticalVolumeMeshModel(newRef, newGp)
   }
 
   /**
@@ -193,8 +170,7 @@ case class StatisticalVolumeMeshModel private (
       .zip(mesh.pointSet.points)
       .map({ case (refPt, tgtPt) => tgtPt - refPt })
       .toIndexedSeq
-    val dvf = DiscreteField[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]](referenceVolumeMesh.pointSet,
-                                                                                      displacements)
+    val dvf = DiscreteField[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]](referenceVolumeMesh, displacements)
     warpReference(gp.project(dvf))
   }
 
@@ -206,14 +182,11 @@ case class StatisticalVolumeMeshModel private (
       .zip(mesh.pointSet.points)
       .map({ case (refPt, tgtPt) => tgtPt - refPt })
       .toIndexedSeq
-    val dvf = DiscreteField[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]](referenceVolumeMesh.pointSet,
-                                                                                      displacements)
+    val dvf = DiscreteField[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]](referenceVolumeMesh, displacements)
     gp.coefficients(dvf)
   }
 
-  private def warpReference(
-    vectorPointData: DiscreteField[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]]
-  ) = {
+  private def warpReference(vectorPointData: DiscreteField[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]]) = {
     val newPoints = vectorPointData.pointsWithValues.map { case (pt, v) => pt + v }
     TetrahedralMesh3D(UnstructuredPoints(newPoints.toIndexedSeq), referenceVolumeMesh.tetrahedralization)
   }
@@ -226,7 +199,7 @@ object StatisticalVolumeMeshModel {
    */
   def apply(referenceMesh: TetrahedralMesh[_3D],
             gp: LowRankGaussianProcess[_3D, EuclideanVector[_3D]]): StatisticalVolumeMeshModel = {
-    val discreteGp = DiscreteLowRankGaussianProcess(referenceMesh.pointSet, gp)
+    val discreteGp = DiscreteLowRankGaussianProcess(referenceMesh, gp)
     new StatisticalVolumeMeshModel(referenceMesh, discreteGp)
   }
 
@@ -239,12 +212,10 @@ object StatisticalVolumeMeshModel {
                               meanVector: DenseVector[Double],
                               variance: DenseVector[Double],
                               basisMatrix: DenseMatrix[Double]) = {
-    val gp = new DiscreteLowRankGaussianProcess[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]](
-      referenceMesh.pointSet,
-      meanVector,
-      variance,
-      basisMatrix
-    )
+    val gp = new DiscreteLowRankGaussianProcess[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]](referenceMesh,
+                                                                                                 meanVector,
+                                                                                                 variance,
+                                                                                                 basisMatrix)
     new StatisticalVolumeMeshModel(referenceMesh, gp)
   }
 
@@ -254,10 +225,8 @@ object StatisticalVolumeMeshModel {
    */
   def createUsingPCA(referenceMesh: TetrahedralMesh[_3D],
                      fields: Seq[Field[_3D, EuclideanVector[_3D]]]): StatisticalVolumeMeshModel = {
-    val dgp: DiscreteLowRankGaussianProcess[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]] =
-      DiscreteLowRankGaussianProcess.createUsingPCA(referenceMesh.pointSet,
-                                                    fields,
-                                                    PivotedCholesky.AbsoluteTolerance(1e-15))
+    val dgp: DiscreteLowRankGaussianProcess[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]] =
+      DiscreteLowRankGaussianProcess.createUsingPCA(referenceMesh, fields, PivotedCholesky.AbsoluteTolerance(1e-15))
     new StatisticalVolumeMeshModel(referenceMesh, dgp)
   }
 
@@ -266,7 +235,7 @@ object StatisticalVolumeMeshModel {
    */
   def augmentModel(model: StatisticalVolumeMeshModel, biasModel: LowRankGaussianProcess[_3D, EuclideanVector[_3D]]) = {
 
-    val discretizedBiasModel = biasModel.discretize(model.referenceVolumeMesh.pointSet)
+    val discretizedBiasModel = biasModel.discretize(model.referenceVolumeMesh)
     val eigenvalues = DenseVector.vertcat(model.gp.variance, discretizedBiasModel.variance).map(sqrt(_))
     val eigenvectors = DenseMatrix.horzcat(model.gp.basisMatrix, discretizedBiasModel.basisMatrix)
 
@@ -283,7 +252,7 @@ object StatisticalVolumeMeshModel {
       U(::, i) := U(::, i) * (1.0 / d(i))
     }
 
-    val r = model.gp.copy[_3D, UnstructuredPoints[_3D], EuclideanVector[_3D]](
+    val r = model.gp.copy[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]](
       meanVector = model.gp.meanVector + discretizedBiasModel.meanVector,
       variance = breeze.numerics.pow(d, 2),
       basisMatrix = U

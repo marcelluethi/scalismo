@@ -19,7 +19,7 @@ import scalismo.ScalismoTestSuite
 import scalismo.common.BoxDomain
 import scalismo.geometry.Point.implicits._
 import scalismo.geometry._
-import scalismo.image.{DifferentiableScalarImage, StructuredPoints, ScalarImage}
+import scalismo.image.{DifferentiableScalarImage, DiscreteImageDomain, ScalarImage, StructuredPoints}
 import scalismo.utils.Random
 
 import scala.language.implicitConversions
@@ -37,7 +37,7 @@ class IntegrationTest extends ScalismoTestSuite {
       val img =
         DifferentiableScalarImage(domain, (x: Point[_1D]) => x * x, (x: Point[_1D]) => EuclideanVector(2f) * x(0))
 
-      val grid = StructuredPoints(domain.origin, domain.extent * (1.0 / 255.0), IntVector(255))
+      val grid = DiscreteImageDomain(domain.origin, domain.extent * (1.0 / 255.0), IntVector(255))
       val integrator = Integrator[_1D](GridSampler(grid))
 
       val res = integrator.integrateScalar(img)
@@ -53,7 +53,7 @@ class IntegrationTest extends ScalismoTestSuite {
       )
 
       val numPoints = 1000
-      val grid = StructuredPoints(Point(-math.Pi.toFloat),
+      val grid = DiscreteImageDomain(Point(-math.Pi.toFloat),
                                      EuclideanVector(2 * math.Pi.toFloat / numPoints),
                                      IntVector(numPoints))
       val integrator = Integrator(GridSampler(grid))
@@ -68,8 +68,8 @@ class IntegrationTest extends ScalismoTestSuite {
       val img = ScalarImage(BoxDomain(-1.0f, 1.0f), (x: Point[_1D]) => 1.0)
 
       val numPoints = 200
-      val grid1 = StructuredPoints(Point(-1.0), EuclideanVector(2.0 / numPoints), IntVector(numPoints))
-      val grid2 = StructuredPoints(Point(-8.0), EuclideanVector(16.0 / numPoints), IntVector(numPoints))
+      val grid1 = DiscreteImageDomain(Point(-1.0), EuclideanVector(2.0 / numPoints), IntVector(numPoints))
+      val grid2 = DiscreteImageDomain(Point(-8.0), EuclideanVector(16.0 / numPoints), IntVector(numPoints))
       val integrator1 = Integrator(GridSampler(grid1))
       val integrator2 = Integrator(GridSampler(grid2))
       val res1 = integrator1.integrateScalar(img)

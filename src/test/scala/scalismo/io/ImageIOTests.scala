@@ -23,7 +23,7 @@ import niftijio.NiftiVolume
 import scalismo.ScalismoTestSuite
 import scalismo.common.{PointId, Scalar, ScalarArray}
 import scalismo.geometry._
-import scalismo.image.{StructuredPoints, DiscreteScalarImage}
+import scalismo.image.{DiscreteImageDomain, DiscreteScalarImage, StructuredPoints}
 import scalismo.utils.CanConvertToVtk
 import spire.math.{UByte, UInt, UShort}
 
@@ -154,7 +154,7 @@ class ImageIOTests extends ScalismoTestSuite {
     }
 
     it("can be stored to VTK and re-read in right precision") {
-      val domain = StructuredPoints[_3D](Point(-72.85742f, -72.85742f, -273.0f),
+      val domain = DiscreteImageDomain[_3D](Point(-72.85742f, -72.85742f, -273.0f),
                                             EuclideanVector(0.85546875f, 0.85546875f, 1.5f),
                                             IntVector(15, 15, 15))
       val values = DenseVector.zeros[Short](15 * 15 * 15).data
@@ -267,9 +267,9 @@ class ImageIOTests extends ScalismoTestSuite {
       }
 
       val data = (1 to 8).toArray
-      val dom2 = StructuredPoints(Point(0, 0), EuclideanVector(1, 1), IntVector(2, 2))
+      val dom2 = DiscreteImageDomain(Point(0, 0), EuclideanVector(1, 1), IntVector(2, 2))
       val img2 = DiscreteScalarImage(dom2, ScalarArray(data.take(4)))
-      val dom3 = StructuredPoints(Point(0, 0, 0), EuclideanVector(1, 1, 1), IntVector(2, 2, 2))
+      val dom3 = DiscreteImageDomain(Point(0, 0, 0), EuclideanVector(1, 1, 1), IntVector(2, 2, 2))
       val img3 = DiscreteScalarImage(dom3, ScalarArray(data))
 
       def imageSeq[D: NDSpace: CanConvertToVtk](img: DiscreteScalarImage[D, Int]) =

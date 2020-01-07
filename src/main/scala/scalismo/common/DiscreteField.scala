@@ -27,13 +27,15 @@ import scala.reflect.ClassTag
 class DiscreteField[D, +DDomain <: DiscreteDomain[D], A](val domain: DDomain, val data: IndexedSeq[A])
     extends PartialFunction[PointId, A] { self =>
 
+  private val pointSet = domain.pointSet
+
   def values: Iterator[A] = data.iterator
   override def apply(ptId: PointId) = data(ptId.id)
   override def isDefinedAt(ptId: PointId) = data.isDefinedAt(ptId.id)
 
-  def valuesWithIds = values zip domain.pointIds
-  def pointsWithValues = domain.points zip values
-  def pointsWithIds = domain.points.zipWithIndex
+  def valuesWithIds = values zip pointSet.pointIds
+  def pointsWithValues = pointSet.points zip values
+  def pointsWithIds = pointSet.points.zipWithIndex
 
   def foreach(f: A => Unit): Unit = values.foreach(f)
 
@@ -43,7 +45,7 @@ class DiscreteField[D, +DDomain <: DiscreteDomain[D], A](val domain: DDomain, va
    */
   @deprecated("please use the [[interpolate]] method with a [[NearestNeighborInterpolator]] instead", "0.16")
   def interpolateNearestNeighbor(): Field[D, A] =
-    Field(RealSpace[D], (p: Point[D]) => apply(domain.findClosestPoint(p).id))
+    Field(RealSpace[D], (p: Point[D]) => apply(pointSet.findClosestPoint(p).id))
 
   /**
    * Interpolates the discrete field using the given interpolator.
@@ -121,7 +123,7 @@ object DiscreteField {
 class DiscreteScalarField[D: NDSpace, +DDomain <: DiscreteDomain[D], A: Scalar: ClassTag](domain: DDomain,
                                                                                           data: ScalarArray[A])
     extends DiscreteField[D, DDomain, A](domain, data) {
-  //class DiscreteScalarField[D: NDSpace, A: Scalar: ClassTag](val domain: DiscreteDomain[D], private[scalismo] val data: ScalarArray[A]) extends DiscreteField[D, A] {
+  //class DiscreteScalarField[D: NDSpace, A: Scalar: ClassTag](val domain: PointSet[D], private[scalismo] val data: ScalarArray[A]) extends DiscreteField[D, A] {
 
   /** map the function f over the values, but ensures that the result is scalar valued as well */
   def map[B: Scalar: ClassTag](f: A => B): DiscreteScalarField[D, DDomain, B] = {
@@ -148,7 +150,8 @@ class DiscreteScalarField[D: NDSpace, +DDomain <: DiscreteDomain[D], A: Scalar: 
 
   @deprecated("please use the [interpolate] method with a [NearestNeighborInterpolator] instead", "0.16")
   override def interpolateNearestNeighbor(): ScalarField[D, A] = {
-    ScalarField(RealSpace[D], (p: Point[D]) => apply(domain.findClosestPoint(p).id))
+    val pointSet = domain.pointSet
+    ScalarField(RealSpace[D], (p: Point[D]) => apply(pointSet.findClosestPoint(p).id))
   }
   override lazy val hashCode: Int = data.hashCode() + domain.hashCode()
 
@@ -178,12 +181,15 @@ class DiscreteVectorField[D: NDSpace, DDomain <: DiscreteDomain[D], DO: NDSpace]
                                                                                  data: IndexedSeq[EuclideanVector[DO]])
     extends DiscreteField[D, DDomain, EuclideanVector[DO]](domain, data) {
 
+  val pointSet = domain.pointSet
+
   override def values = data.iterator
   override def apply(ptId: PointId) = data(ptId.id)
   override def isDefinedAt(ptId: PointId) = data.isDefinedAt(ptId.id)
 
   override def interpolateNearestNeighbor(): VectorField[D, DO] = {
-    VectorField(RealSpace[D], (p: Point[D]) => apply(domain.findClosestPoint(p).id))
+
+    VectorField(RealSpace[D], (p: Point[D]) => apply(pointSet.findClosestPoint(p).id))
   }
 
   /** map the function f over the values, but ensures that the result is scalar valued as well */
@@ -192,8 +198,8 @@ class DiscreteVectorField[D: NDSpace, DDomain <: DiscreteDomain[D], DO: NDSpace]
 
   def asBreezeVector: DenseVector[Double] = {
     val d = implicitly[NDSpace[DO]].dimensionality
-    val v = DenseVector.zeros[Double](domain.numberOfPoints * d)
-    for ((pt, i) <- domain.pointsWithId) {
+    val v = DenseVector.zeros[Double](pointSet.numberOfPoints * d)
+    for ((pt, i) <- pointSet.pointsWithId) {
       v(i.id * d until (i.id + 1) * d) := data(i.id).toBreezeVector
     }
     v

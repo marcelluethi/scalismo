@@ -156,7 +156,7 @@ class TransformationTests extends ScalismoTestSuite {
       val inverseTransform = TranslationSpace[_3D].transformForParameters(parameterVector).inverse
       val translatedForthBackImg = continuousImage.compose(translation).compose(inverseTransform)
 
-      for (p <- discreteImage.domain.points.filter(translatedForthBackImg.isDefinedAt))
+      for (p <- discreteImage.domain.pointSet.points.filter(translatedForthBackImg.isDefinedAt))
         assert(translatedForthBackImg(p) === continuousImage(p))
     }
 
@@ -171,7 +171,7 @@ class TransformationTests extends ScalismoTestSuite {
 
       val rotatedImage = continuousImage.compose(rotation)
 
-      for (p <- discreteImage.domain.points.filter(rotatedImage.isDefinedAt))
+      for (p <- discreteImage.domain.pointSet.points.filter(rotatedImage.isDefinedAt))
         rotatedImage(p) should equal(continuousImage(p))
     }
 

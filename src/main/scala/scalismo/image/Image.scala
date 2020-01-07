@@ -82,7 +82,7 @@ class ScalarImage[D: NDSpace, A: Scalar: ClassTag] protected (override val domai
     val supportSize = IntVector[D]((0 until dim).map(_ => numberOfPointsPerDim).toArray)
     val origin = (supportSpacing * ((numberOfPointsPerDim - 1) * -0.5f)).toPoint
 
-    val support = StructuredPoints[D](origin, supportSpacing, supportSize)
+    val support = DiscreteImageDomain[D](origin, supportSpacing, supportSize)
     val lifted = liftValues
 
     val integrator = Integrator[D](GridSampler(support))
@@ -104,10 +104,10 @@ class ScalarImage[D: NDSpace, A: Scalar: ClassTag] protected (override val domai
    * Returns a discrete scalar image with the given domain, whose values are obtained by sampling the scalarImage at the domain points.
    * If the image is not defined at a domain point, the outside value is used.
    */
-  def sample(domain: StructuredPoints[D], outsideValue: A): DiscreteScalarImage[D, A] = {
+  def sample(domain: DiscreteImageDomain[D], outsideValue: A): DiscreteScalarImage[D, A] = {
 
     val nbChunks = Runtime.getRuntime().availableProcessors() * 2
-    val parallelArrays = domain.pointsInChunks(nbChunks).par.map { chunkIterator =>
+    val parallelArrays = domain.pointSet.pointsInChunks(nbChunks).par.map { chunkIterator =>
       chunkIterator
         .map(pt => {
           if (isDefinedAt(pt)) f(pt)
@@ -179,7 +179,8 @@ class DifferentiableScalarImage[D: NDSpace, A: Scalar: ClassTag](_domain: Domain
   }
 
   override def convolve(filter: Filter[D], numberOfPointsPerDim: Int)(
-    implicit c: CreateDiscreteImageDomain[D]
+    implicit
+    c: CreateDiscreteImageDomain[D]
   ): DifferentiableScalarImage[D, A] = {
 
     val convolvedImage = super.convolve(filter, numberOfPointsPerDim)
@@ -188,7 +189,7 @@ class DifferentiableScalarImage[D: NDSpace, A: Scalar: ClassTag](_domain: Domain
     val supportSpacing = filter.support.extent * (1f / numberOfPointsPerDim.toFloat)
     val supportSize = IntVector[D]((0 until dim).map(_ => numberOfPointsPerDim).toArray)
     val origin = (supportSpacing * ((numberOfPointsPerDim - 1) * -0.5f)).toPoint
-    val support = StructuredPoints[D](origin, supportSpacing, supportSize)
+    val support = DiscreteImageDomain[D](origin, supportSpacing, supportSize)
 
     val integrator = Integrator[D](GridSampler(support))
 

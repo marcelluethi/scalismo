@@ -39,7 +39,8 @@ import scalismo.utils.{Memoize, Random}
  * @tparam Value The output type
  */
 class LowRankGaussianProcess[D: NDSpace, Value](mean: Field[D, Value], val klBasis: KLBasis[D, Value])(
-  implicit vectorizer: Vectorizer[Value]
+  implicit
+  vectorizer: Vectorizer[Value]
 ) extends GaussianProcess[D, Value](mean, LowRankGaussianProcess.covFromKLTBasis(klBasis)) {
 
   /**
@@ -82,7 +83,7 @@ class LowRankGaussianProcess[D: NDSpace, Value](mean: Field[D, Value], val klBas
   )(implicit rand: Random): DiscreteField[D, DDomain, Value] = {
     // TODO check that points are part of the domain
     val aSample = sample()
-    val values = domain.points.map(pt => aSample(pt))
+    val values = domain.pointSet.points.map(pt => aSample(pt))
     DiscreteField[D, DDomain, Value](domain, values.toIndexedSeq)
   }
 
@@ -276,7 +277,7 @@ object LowRankGaussianProcess {
   )(implicit vectorizer: Vectorizer[Value], rand: Random): LowRankGaussianProcess[D, Value] = {
 
     val (basis, scale) = PivotedCholesky.computeApproximateEig(kernel = gp.cov,
-                                                               xs = domain.points.toIndexedSeq,
+                                                               xs = domain.pointSet.points.toIndexedSeq,
                                                                stoppingCriterion = RelativeTolerance(relativeTolerance))
 
     // Assemble a discrete Gaussian process from the matrix given by the pivoted cholesky and use the interpolator
@@ -288,7 +289,7 @@ object LowRankGaussianProcess {
       DiscreteLowRankGaussianProcess.Eigenpair(scale(i), discreteEV)
     }
 
-    val mean = DiscreteField[D, DDomain, Value](domain, domain.points.toIndexedSeq.map(p => gp.mean(p)))
+    val mean = DiscreteField[D, DDomain, Value](domain, domain.pointSet.points.toIndexedSeq.map(p => gp.mean(p)))
 
     val dgp = DiscreteLowRankGaussianProcess[D, DDomain, Value](mean, klBasis)
 
@@ -416,7 +417,8 @@ object LowRankGaussianProcess {
    * vectors are transformed along the domain.
    */
   def transform[D: NDSpace](gp: LowRankGaussianProcess[D, EuclideanVector[D]], rigidTransform: RigidTransformation[D])(
-    implicit vectorizer: Vectorizer[EuclideanVector[D]]
+    implicit
+    vectorizer: Vectorizer[EuclideanVector[D]]
   ): LowRankGaussianProcess[D, EuclideanVector[D]] = {
     val invTransform = rigidTransform.inverse
 

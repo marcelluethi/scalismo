@@ -45,7 +45,7 @@ case class TetrahedralCell(ptId1: PointId, ptId2: PointId, ptId3: PointId, ptId4
 }
 
 /** Represents a tetrahedral mesh. */
-trait TetrahedralMesh[D] {
+trait TetrahedralMesh[D] extends DiscreteDomain[D] {
 
   /** Ordered list of tetrahedrals forming the tetrahedral mesh. */
   def tetrahedralization: TetrahedralList
@@ -62,6 +62,7 @@ trait TetrahedralMesh[D] {
   /** Applies the point transformation to the point set only and returns the transformed mesh. */
   def transform(transform: Point[D] => Point[D]): TetrahedralMesh[D]
 
+  def topology: Topology[D] = ???
 }
 
 object TetrahedralMesh {

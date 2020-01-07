@@ -33,7 +33,8 @@ object ModelMetrics {
    *
    */
   def specificity(pcaModel: StatisticalMeshModel, data: Iterable[TriangleMesh[_3D]], nbSamples: Int)(
-    implicit rng: Random
+    implicit
+    rng: Random
   ): Double = {
 
     (0 until nbSamples).par.map { _ =>

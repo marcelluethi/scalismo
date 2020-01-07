@@ -34,11 +34,11 @@ case class TriangleCell(ptId1: PointId, ptId2: PointId, ptId3: PointId) extends 
   def toIntVector3D = IntVector(ptId1.id, ptId2.id, ptId3.id)
 }
 
-trait TriangleMesh[D] {
+trait TriangleMesh[D] extends DiscreteDomain[D] {
   def triangulation: TriangleList
   def pointSet: UnstructuredPoints[D]
-  def transform(transform: Point[D] => Point[D]): TriangleMesh[D]
-
+  def transform(transform: Point[D] => Point[D]): TriangleMesh[D] = ???
+  def topology: Topology[D] = ???
 }
 
 object TriangleMesh {
@@ -79,8 +79,7 @@ object TriangleMesh {
 }
 
 /** Standard 3D Gravis mesh, geometry only */
-case class TriangleMesh3D(pointSet: UnstructuredPoints[_3D], triangulation: TriangleList)
-    extends TriangleMesh[_3D] {
+case class TriangleMesh3D(pointSet: UnstructuredPoints[_3D], triangulation: TriangleList) extends TriangleMesh[_3D] {
 
   val position = SurfacePointProperty(triangulation, pointSet.points.toIndexedSeq)
   val triangles = triangulation.triangles
@@ -200,8 +199,7 @@ object TriangleMesh3D {
   }
 }
 
-case class TriangleMesh2D(pointSet: UnstructuredPoints[_2D], triangulation: TriangleList)
-    extends TriangleMesh[_2D] {
+case class TriangleMesh2D(pointSet: UnstructuredPoints[_2D], triangulation: TriangleList) extends TriangleMesh[_2D] {
   val position = SurfacePointProperty(triangulation, pointSet.points.toIndexedSeq)
 
   override def transform(transform: Point[_2D] => Point[_2D]): TriangleMesh2D = {

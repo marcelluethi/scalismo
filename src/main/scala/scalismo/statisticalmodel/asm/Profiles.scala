@@ -47,12 +47,12 @@ class DiscreteFeatureField[D: NDSpace, DDomain <: DiscreteDomain[D]](domain: DDo
 
   override def apply(id: PointId) = _values(id.id)
 
-  override def isDefinedAt(id: PointId) = id.id < domain.numberOfPoints
+  override def isDefinedAt(id: PointId) = id.id < domain.pointSet.numberOfPoints
 
   override def values = _values.toIterator
 
   override def interpolateNearestNeighbor(): Field[D, DenseVector[Double]] = {
-    Field(RealSpace[D], (p: Point[D]) => apply(domain.findClosestPoint(p).id))
+    Field(RealSpace[D], (p: Point[D]) => apply(domain.pointSet.findClosestPoint(p).id))
   }
 
 }
