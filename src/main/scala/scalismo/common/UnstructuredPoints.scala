@@ -30,7 +30,8 @@ object UnstructuredPointsDomain {
   }
 
   implicit def canWarp[D: NDSpace](
-    implicit creator: UnstructuredPoints.Create[D]
+    implicit
+    creator: UnstructuredPoints.Create[D]
   ): CanWarp[D, UnstructuredPointsDomain[D]] = {
     new CanWarp[D, UnstructuredPointsDomain[D]] {
       override def warpDomain(

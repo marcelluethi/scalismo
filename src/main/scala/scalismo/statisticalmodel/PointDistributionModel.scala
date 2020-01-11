@@ -19,10 +19,8 @@ import breeze.linalg.svd.SVD
 import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.numerics.sqrt
 import scalismo.common._
-import scalismo.common.interpolation.{FieldInterpolator, TriangleMeshInterpolator}
-import scalismo.geometry.EuclideanVector._
+import scalismo.common.interpolation.{FieldInterpolator}
 import scalismo.geometry._
-import scalismo.mesh._
 import scalismo.numerics.PivotedCholesky
 import scalismo.registration.{RigidTransformation, Transformation}
 import scalismo.statisticalmodel.DiscreteLowRankGaussianProcess.Eigenpair
@@ -37,9 +35,10 @@ import scalismo.utils.Random
  * @see [[DiscreteLowRankGaussianProcess]]
  */
 case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] private (
-  reference: PointRepr,
   gp: DiscreteLowRankGaussianProcess[D, PointRepr, EuclideanVector[D]]
 )(implicit canWarp: CanWarp[D, PointRepr], vectorizer: Vectorizer[EuclideanVector[D]]) {
+
+  def reference: PointRepr = gp.domain
 
   /** @see [[scalismo.statisticalmodel.DiscreteLowRankGaussianProcess.rank]] */
   val rank = gp.rank
@@ -94,11 +93,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
   def marginal(
     ptIds: IndexedSeq[PointId]
   )(implicit creator: UnstructuredPoints.Create[D]): PointDistributionModel[D, UnstructuredPointsDomain[D]] = {
-    val pts = for (id <- ptIds) yield {
-      reference.pointSet.point(id)
-    }
-
-    PointDistributionModel(UnstructuredPointsDomain(creator.create(pts.toIndexedSeq)), gp.marginal(ptIds))
+    PointDistributionModel(gp.marginal(ptIds))
 
   }
 
@@ -108,7 +103,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
    * @param newRank: The rank of the new model.
    */
   def truncate(newRank: Int): PointDistributionModel[D, PointRepr] = {
-    PointDistributionModel(reference, gp.truncate(newRank))
+    PointDistributionModel(gp.truncate(newRank))
   }
 
   /**
@@ -147,7 +142,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
       case (id, targetPoint) => (id, targetPoint - reference.pointSet.point(id))
     }
     val posteriorGp = gp.posterior(trainingDataWithDisplacements, sigma2)
-    PointDistributionModel(reference, posteriorGp)
+    PointDistributionModel(posteriorGp)
   }
 
   /**
@@ -160,7 +155,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
       case (id, targetPoint, cov) => (id, targetPoint - reference.pointSet.point(id), cov)
     }
     val posteriorGp = gp.posterior(trainingDataWithDisplacements)
-    new PointDistributionModel[D, PointRepr](reference, posteriorGp)
+    new PointDistributionModel[D, PointRepr](posteriorGp)
   }
 
   /**
@@ -194,7 +189,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
       newBasisMat
     )
 
-    PointDistributionModel(newRef, newGp)
+    PointDistributionModel(newGp)
 
   }
 
@@ -210,7 +205,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
                                                                                      newMeanVec,
                                                                                      gp.variance,
                                                                                      gp.basisMatrix)
-    PointDistributionModel(newRef, newGp)
+    PointDistributionModel(newGp)
   }
 
   def newReference[NewRepr <: DiscreteDomain[D]](
@@ -218,7 +213,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
     interpolator: FieldInterpolator[D, PointRepr, EuclideanVector[D]]
   )(implicit canWarp: CanWarp[D, NewRepr]): PointDistributionModel[D, NewRepr] = {
     val newGP = gp.interpolate(interpolator).discretize[NewRepr](newReference)
-    PointDistributionModel(newReference, newGP)
+    PointDistributionModel(newGP)
   }
 
 }
@@ -231,10 +226,11 @@ object PointDistributionModel {
   def apply[D: NDSpace, PointRepr <: DiscreteDomain[D]](
     reference: PointRepr,
     gp: LowRankGaussianProcess[D, EuclideanVector[D]]
-  )(implicit canWarp: CanWarp[D, PointRepr],
+  )(implicit
+    canWarp: CanWarp[D, PointRepr],
     vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
     val discreteGp = DiscreteLowRankGaussianProcess(reference, gp)
-    new PointDistributionModel(reference, discreteGp)
+    new PointDistributionModel(discreteGp)
   }
 
   /**
@@ -247,11 +243,12 @@ object PointDistributionModel {
     meanVector: DenseVector[Double],
     variance: DenseVector[Double],
     basisMatrix: DenseMatrix[Double]
-  )(implicit canWarp: CanWarp[D, PointRepr],
+  )(implicit
+    canWarp: CanWarp[D, PointRepr],
     vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
     val gp =
       new DiscreteLowRankGaussianProcess[D, PointRepr, EuclideanVector[D]](reference, meanVector, variance, basisMatrix)
-    new PointDistributionModel(reference, gp)
+    new PointDistributionModel(gp)
   }
 
   /**
@@ -260,7 +257,8 @@ object PointDistributionModel {
   def augmentModel[D: NDSpace, PointRepr <: DiscreteDomain[D]](
     model: PointDistributionModel[D, PointRepr],
     biasModel: LowRankGaussianProcess[D, EuclideanVector[D]]
-  )(implicit canWarp: CanWarp[D, PointRepr],
+  )(implicit
+    canWarp: CanWarp[D, PointRepr],
     vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
 
     val discretizedBiasModel = biasModel.discretize(model.reference)
@@ -285,7 +283,7 @@ object PointDistributionModel {
       variance = breeze.numerics.pow(d, 2),
       basisMatrix = U
     )
-    new PointDistributionModel(model.reference, augmentedGP)
+    new PointDistributionModel(augmentedGP)
   }
 
   /**
@@ -299,7 +297,8 @@ object PointDistributionModel {
   def createUsingPCA[D: NDSpace, PointRepr <: DiscreteDomain[D]](
     dc: DataCollection[D, PointRepr, EuclideanVector[D]],
     stoppingCriterion: PivotedCholesky.StoppingCriterion = PivotedCholesky.RelativeTolerance(0)
-  )(implicit canWarp: CanWarp[D, PointRepr],
+  )(implicit
+    canWarp: CanWarp[D, PointRepr],
     vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
     if (dc.size < 3) {
       throw new IllegalArgumentException(s"The datacollection contains only ${dc.size} items. At least 3 are needed")
@@ -317,16 +316,17 @@ object PointDistributionModel {
    * compute only the leading principal components. See PivotedCholesky.StoppingCriterion for more details.
    *
    */
-  def createUsingPCA[D: NDSpace, PointRepr <: DiscreteDomain[D]](
-    reference: PointRepr,
-    fields: Seq[Field[D, EuclideanVector[D]]],
-    stoppingCriterion: PivotedCholesky.StoppingCriterion
-  )(implicit canWarp: CanWarp[D, PointRepr],
-    vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
+  def createUsingPCA[D: NDSpace, PointRepr <: DiscreteDomain[D]](reference: PointRepr,
+                                                                 fields: Seq[Field[D, EuclideanVector[D]]],
+                                                                 stoppingCriterion: PivotedCholesky.StoppingCriterion)(
+    implicit
+    canWarp: CanWarp[D, PointRepr],
+    vectorizer: Vectorizer[EuclideanVector[D]]
+  ): PointDistributionModel[D, PointRepr] = {
 
     val dgp: DiscreteLowRankGaussianProcess[D, PointRepr, EuclideanVector[D]] =
       DiscreteLowRankGaussianProcess.createUsingPCA(reference, fields, stoppingCriterion)
-    new PointDistributionModel(reference, dgp)
+    new PointDistributionModel(dgp)
   }
 
 }

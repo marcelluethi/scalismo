@@ -17,16 +17,15 @@ import scalismo.utils.Random
 
 import scala.annotation.tailrec
 
-case class CrossvalidationFold[D, DDomain <: DiscreteDomain[D], Value](
-  trainingData: DataCollection[D, DDomain, Value],
-  testingData: DataCollection[D, DDomain, Value]
-)
+case class CrossvalidationFold[D, DDomain <: DiscreteDomain[D], Value](trainingData: DataCollection[D, DDomain, Value],
+                                                                       testingData: DataCollection[D, DDomain, Value])
 
-case class DataCollection[D, DDomain <: DiscreteDomain[D], Value](
-  reference: DDomain,
-  dataItems: Seq[DiscreteField[D, DDomain, Value]]
-) {
+case class DataCollection[D, DDomain <: DiscreteDomain[D], Value](dataItems: Seq[DiscreteField[D, DDomain, Value]]) {
+  require(dataItems.size > 0 && dataItems.forall(di => di.domain == dataItems.head.domain))
+
   val size: Int = dataItems.size
+
+  def reference: DDomain = dataItems.head.domain
 
   def createCrossValidationFolds(
     nFolds: Int
@@ -38,11 +37,11 @@ case class DataCollection[D, DDomain <: DiscreteDomain[D], Value](
 
     val folds = for (currFold <- 0 until nFolds) yield {
       val testingDataItems = dataGroups(currFold)
-      val testingCollection = DataCollection(reference, testingDataItems)
+      val testingCollection = DataCollection(testingDataItems)
       val trainingDataItems = (dataGroups.slice(0, currFold).flatten ++: dataGroups
         .slice(currFold + 1, dataGroups.size)
         .flatten)
-      val trainingCollection = DataCollection(reference, trainingDataItems)
+      val trainingCollection = DataCollection(trainingDataItems)
 
       CrossvalidationFold(trainingCollection, testingCollection)
     }
@@ -59,7 +58,8 @@ case class DataCollection[D, DDomain <: DiscreteDomain[D], Value](
    * Perform a leave one out crossvalidation. See nFoldCrossvalidation for details
    */
   def createLeaveOneOutFolds(
-    implicit rng: scalismo.utils.Random
+    implicit
+    rng: scalismo.utils.Random
   ): Seq[CrossvalidationFold[D, DDomain, Value]] = {
     createCrossValidationFolds(size)
   }
@@ -68,12 +68,9 @@ case class DataCollection[D, DDomain <: DiscreteDomain[D], Value](
 
 object DataCollection {
 
-  type TriangleMeshDataCollection =
-    DataCollection[_3D, TriangleMesh[_3D], EuclideanVector[_3D]]
-  type TetrahedralMeshDataCollection =
-    DataCollection[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]]
-  type ScalarVolumeMeshFieldDataCollection[A] =
-    DataCollection[_3D, TetrahedralMesh[_3D], A]
+  type TriangleMeshDataCollection = DataCollection[_3D, TriangleMesh[_3D], EuclideanVector[_3D]]
+  type TetrahedralMeshDataCollection = DataCollection[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]]
+  type ScalarVolumeMeshFieldDataCollection[A] = DataCollection[_3D, TetrahedralMesh[_3D], A]
 
   /*
    * Performs a Generalized Procrustes Analysis on the data collection.
@@ -83,7 +80,8 @@ object DataCollection {
    * The reference mesh is unchanged, only the transformations in the collection are adapted
    */
   def gpa(dc: TriangleMeshDataCollection, maxIteration: Int = 3, haltDistance: Double = 1e-5)(
-    implicit rng: Random
+    implicit
+    rng: Random
   ): TriangleMeshDataCollection = {
 
     TriangleMeshDataCollection.gpa(dc, maxIteration, haltDistance)
@@ -107,7 +105,7 @@ object DataCollection {
     val dfs = for (mesh <- meshes) yield {
       differenceFieldToReference(reference, mesh)
     }
-    new DataCollection(reference, dfs)
+    new DataCollection(dfs)
   }
 
   def fromTetrahedralMeshSequence(reference: TetrahedralMesh[_3D],
@@ -128,14 +126,14 @@ object DataCollection {
     val dfs = for (mesh <- meshes) yield {
       differenceFieldToReference(reference, mesh)
     }
-    new DataCollection(reference, dfs)
+    new DataCollection(dfs)
   }
 
   def fromScalarVolumeMeshSequence[A: Scalar](
     reference: TetrahedralMesh[_3D],
     scalarVolumeMeshFields: Seq[DiscreteField[_3D, TetrahedralMesh[_3D], A]]
   ): ScalarVolumeMeshFieldDataCollection[A] = {
-    new DataCollection[_3D, TetrahedralMesh[_3D], A](reference, scalarVolumeMeshFields)
+    new DataCollection[_3D, TetrahedralMesh[_3D], A](scalarVolumeMeshFields)
   }
 
 }
@@ -166,7 +164,8 @@ object TriangleMeshDataCollection {
   }
 
   def gpa(dc: TriangleMeshDataCollection, maxIteration: Int = 5, haltDistance: Double = 1e-5)(
-    implicit rng: Random
+    implicit
+    rng: Random
   ): TriangleMeshDataCollection = {
     gpaComputation(dc, meanSurfaceFromDataCollection(dc), maxIteration, haltDistance)
   }
@@ -198,7 +197,7 @@ object TriangleMeshDataCollection {
       new DiscreteField[_3D, TriangleMesh[_3D], EuclideanVector[_3D]](dc.reference, newVecs)
     }
 
-    val newdc = DataCollection(dc.reference, newDiscreteFields.seq)
+    val newdc = DataCollection(newDiscreteFields.seq)
     val newMean = meanSurfaceFromDataCollection(newdc)
 
     if (MeshMetrics.procrustesDistance(meanShape, newMean) < haltDistance) {
