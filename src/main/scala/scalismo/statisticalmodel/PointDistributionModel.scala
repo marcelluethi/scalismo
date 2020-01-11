@@ -15,14 +15,18 @@
  */
 package scalismo.statisticalmodel
 
+import breeze.linalg.svd.SVD
 import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.numerics.sqrt
 import scalismo.common._
 import scalismo.common.interpolation.{FieldInterpolator, TriangleMeshInterpolator}
 import scalismo.geometry.EuclideanVector._
 import scalismo.geometry._
 import scalismo.mesh._
+import scalismo.numerics.PivotedCholesky
 import scalismo.registration.{RigidTransformation, Transformation}
 import scalismo.statisticalmodel.DiscreteLowRankGaussianProcess.Eigenpair
+import scalismo.statisticalmodel.dataset.DataCollection
 import scalismo.utils.Random
 
 /**
@@ -248,6 +252,81 @@ object PointDistributionModel {
     val gp =
       new DiscreteLowRankGaussianProcess[D, PointRepr, EuclideanVector[D]](reference, meanVector, variance, basisMatrix)
     new PointDistributionModel(reference, gp)
+  }
+
+  /**
+   * Adds a bias model to the given statistical shape model
+   */
+  def augmentModel[D: NDSpace, PointRepr <: DiscreteDomain[D]](
+    model: PointDistributionModel[D, PointRepr],
+    biasModel: LowRankGaussianProcess[D, EuclideanVector[D]]
+  )(implicit canWarp: CanWarp[D, PointRepr],
+    vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
+
+    val discretizedBiasModel = biasModel.discretize(model.reference)
+    val eigenvalues = DenseVector.vertcat(model.gp.variance, discretizedBiasModel.variance).map(sqrt(_))
+    val eigenvectors = DenseMatrix.horzcat(model.gp.basisMatrix, discretizedBiasModel.basisMatrix)
+
+    for (i <- 0 until eigenvalues.length) {
+      eigenvectors(::, i) :*= eigenvalues(i)
+    }
+
+    val l: DenseMatrix[Double] = eigenvectors.t * eigenvectors
+    val SVD(v, _, _) = breeze.linalg.svd(l)
+    val U: DenseMatrix[Double] = eigenvectors * v
+    val d: DenseVector[Double] = DenseVector.zeros(U.cols)
+    for (i <- 0 until U.cols) {
+      d(i) = breeze.linalg.norm(U(::, i))
+      U(::, i) := U(::, i) * (1.0 / d(i))
+    }
+
+    val augmentedGP = model.gp.copy[D, PointRepr, EuclideanVector[D]](
+      meanVector = model.gp.meanVector + discretizedBiasModel.meanVector,
+      variance = breeze.numerics.pow(d, 2),
+      basisMatrix = U
+    )
+    new PointDistributionModel(model.reference, augmentedGP)
+  }
+
+  /**
+   * Returns a PCA model with given reference mesh and a set of items in correspondence.
+   * All points of the reference mesh are considered for computing the PCA
+   *
+   * Per default, the resulting mesh model will have rank (i.e. number of principal components) corresponding to
+   * the number of linearly independent fields. By providing an explicit stopping criterion, one can, however,
+   * compute only the leading principal components. See PivotedCholesky.StoppingCriterion for more details.
+   */
+  def createUsingPCA[D: NDSpace, PointRepr <: DiscreteDomain[D]](
+    dc: DataCollection[D, PointRepr, EuclideanVector[D]],
+    stoppingCriterion: PivotedCholesky.StoppingCriterion = PivotedCholesky.RelativeTolerance(0)
+  )(implicit canWarp: CanWarp[D, PointRepr],
+    vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
+    if (dc.size < 3) {
+      throw new IllegalArgumentException(s"The datacollection contains only ${dc.size} items. At least 3 are needed")
+    }
+
+    val fields = dc.fields(NearestNeighborInterpolator[D, EuclideanVector[D]]())
+    createUsingPCA(dc.reference, fields, stoppingCriterion)
+  }
+
+  /**
+   * Creates a new Statistical mesh model, with its mean and covariance matrix estimated from the given fields.
+   *
+   * Per default, the resulting mesh model will have rank (i.e. number of principal components) corresponding to
+   * the number of linearly independent fields. By providing an explicit stopping criterion, one can, however,
+   * compute only the leading principal components. See PivotedCholesky.StoppingCriterion for more details.
+   *
+   */
+  def createUsingPCA[D: NDSpace, PointRepr <: DiscreteDomain[D]](
+    reference: PointRepr,
+    fields: Seq[Field[D, EuclideanVector[D]]],
+    stoppingCriterion: PivotedCholesky.StoppingCriterion
+  )(implicit canWarp: CanWarp[D, PointRepr],
+    vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
+
+    val dgp: DiscreteLowRankGaussianProcess[D, PointRepr, EuclideanVector[D]] =
+      DiscreteLowRankGaussianProcess.createUsingPCA(reference, fields, stoppingCriterion)
+    new PointDistributionModel(reference, dgp)
   }
 
 }

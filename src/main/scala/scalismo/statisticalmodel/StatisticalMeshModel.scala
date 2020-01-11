@@ -27,6 +27,7 @@ import scalismo.numerics.{FixedPointsUniformMeshSampler3D, PivotedCholesky}
 import scalismo.registration.RigidTransformation
 import scalismo.statisticalmodel.DiscreteLowRankGaussianProcess.Eigenpair
 import scalismo.statisticalmodel.dataset.DataCollection
+import scalismo.statisticalmodel.dataset.DataCollection.TriangleMeshDataCollection
 import scalismo.utils.Random
 
 import scala.util.{Failure, Success, Try}
@@ -311,20 +312,13 @@ object StatisticalMeshModel {
    * compute only the leading principal components. See PivotedCholesky.StoppingCriterion for more details.
    */
   def createUsingPCA(
-    dc: DataCollection,
+    dc: TriangleMeshDataCollection,
     stoppingCriterion: PivotedCholesky.StoppingCriterion = PivotedCholesky.RelativeTolerance(0)
   ): Try[StatisticalMeshModel] = {
-    if (dc.size < 3)
-      return Failure(
-        new Throwable(
-          s"A data collection with at least 3 transformations is required to build a PCA Model (only ${dc.size} were provided)"
-        )
-      )
-
-    val fields = dc.dataItems.map { i =>
-      Field[_3D, EuclideanVector[_3D]](i.transformation.domain, p => i.transformation(p) - p)
+    Try {
+      val pdm = PointDistributionModel.createUsingPCA(dc, stoppingCriterion)
+      new StatisticalMeshModel(pdm.reference, pdm.gp)
     }
-    Success(createUsingPCA(dc.reference, fields, stoppingCriterion))
   }
 
   /**
@@ -338,10 +332,10 @@ object StatisticalMeshModel {
   def createUsingPCA(referenceMesh: TriangleMesh[_3D],
                      fields: Seq[Field[_3D, EuclideanVector[_3D]]],
                      stoppingCriterion: PivotedCholesky.StoppingCriterion): StatisticalMeshModel = {
-
-    val dgp: DiscreteLowRankGaussianProcess[_3D, TriangleMesh[_3D], EuclideanVector[_3D]] =
-      DiscreteLowRankGaussianProcess.createUsingPCA(referenceMesh, fields, stoppingCriterion)
-    new StatisticalMeshModel(referenceMesh, dgp)
+    val pdm = PointDistributionModel.createUsingPCA(referenceMesh, fields, stoppingCriterion)
+    new StatisticalMeshModel(pdm.reference, pdm.gp)
   }
 
 }
+
+object PointD

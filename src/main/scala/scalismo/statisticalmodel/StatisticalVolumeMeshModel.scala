@@ -11,11 +11,11 @@ import scalismo.registration.RigidTransformation
 import scalismo.statisticalmodel.DiscreteLowRankGaussianProcess.Eigenpair
 
 import scalismo.mesh.{TetrahedralCell, TetrahedralList, TetrahedralMesh, TetrahedralMesh3D}
-import scalismo.statisticalmodel.dataset.DataCollectionOfVolumeMesh
 import scalismo.utils.Random
 
 import scala.util.{Failure, Success, Try}
 
+// FIXME, will be rem
 case class StatisticalVolumeMeshModel private (
   referenceVolumeMesh: TetrahedralMesh[_3D],
   gp: DiscreteLowRankGaussianProcess[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]]
@@ -217,65 +217,6 @@ object StatisticalVolumeMeshModel {
                                                                                                  variance,
                                                                                                  basisMatrix)
     new StatisticalVolumeMeshModel(referenceMesh, gp)
-  }
-
-  /**
-   * Creates a new DiscreteLowRankGaussianProcess, where the mean and covariance matrix are estimated from the given transformations.
-   *
-   */
-  def createUsingPCA(referenceMesh: TetrahedralMesh[_3D],
-                     fields: Seq[Field[_3D, EuclideanVector[_3D]]]): StatisticalVolumeMeshModel = {
-    val dgp: DiscreteLowRankGaussianProcess[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]] =
-      DiscreteLowRankGaussianProcess.createUsingPCA(referenceMesh, fields, PivotedCholesky.AbsoluteTolerance(1e-15))
-    new StatisticalVolumeMeshModel(referenceMesh, dgp)
-  }
-
-  /**
-   *  Adds a bias model to the given statistical shape model
-   */
-  def augmentModel(model: StatisticalVolumeMeshModel, biasModel: LowRankGaussianProcess[_3D, EuclideanVector[_3D]]) = {
-
-    val discretizedBiasModel = biasModel.discretize(model.referenceVolumeMesh)
-    val eigenvalues = DenseVector.vertcat(model.gp.variance, discretizedBiasModel.variance).map(sqrt(_))
-    val eigenvectors = DenseMatrix.horzcat(model.gp.basisMatrix, discretizedBiasModel.basisMatrix)
-
-    for (i <- 0 until eigenvalues.length) {
-      eigenvectors(::, i) :*= eigenvalues(i)
-    }
-
-    val l: DenseMatrix[Double] = eigenvectors.t * eigenvectors
-    val SVD(v, _, _) = breeze.linalg.svd(l)
-    val U: DenseMatrix[Double] = eigenvectors * v
-    val d: DenseVector[Double] = DenseVector.zeros(U.cols)
-    for (i <- 0 until U.cols) {
-      d(i) = breeze.linalg.norm(U(::, i))
-      U(::, i) := U(::, i) * (1.0 / d(i))
-    }
-
-    val r = model.gp.copy[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]](
-      meanVector = model.gp.meanVector + discretizedBiasModel.meanVector,
-      variance = breeze.numerics.pow(d, 2),
-      basisMatrix = U
-    )
-    StatisticalVolumeMeshModel(model.referenceVolumeMesh, r)
-  }
-
-  /**
-   * Returns a PCA model with given reference mesh and a set of items in correspondence.
-   * All points of the reference mesh are considered for computing the PCA
-   */
-  def createUsingPCA(dc: DataCollectionOfVolumeMesh): Try[StatisticalVolumeMeshModel] = {
-    if (dc.size < 3)
-      return Failure(
-        new Throwable(
-          s"A data collection with at least 3 transformations is required to build a PCA Model (only ${dc.size} were provided)"
-        )
-      )
-
-    val fields = dc.dataItems.map { i =>
-      Field[_3D, EuclideanVector[_3D]](i.transformation.domain, p => i.transformation(p) - p)
-    }
-    Success(createUsingPCA(dc.reference, fields))
   }
 
 }

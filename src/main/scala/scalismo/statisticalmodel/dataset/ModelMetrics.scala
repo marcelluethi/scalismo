@@ -1,8 +1,9 @@
 package scalismo.statisticalmodel.dataset
 
-import scalismo.geometry._3D
+import scalismo.common.{CanWarp, DiscreteDomain}
+import scalismo.geometry.{_3D, EuclideanVector}
 import scalismo.mesh.{MeshMetrics, TriangleMesh}
-import scalismo.statisticalmodel.StatisticalMeshModel
+import scalismo.statisticalmodel.{PointDistributionModel, StatisticalMeshModel}
 import scalismo.utils.Random
 
 import scala.util.{Failure, Success, Try}
@@ -58,11 +59,14 @@ object ModelMetrics {
    * To be able to perform the projection, it is important that the data collection is in correspondence with the model.
    * The returned value is a scala.util.Try containing the average over all test data in case of success, or an Exception otherwise
    */
-  def generalization(pcaModel: StatisticalMeshModel, dc: DataCollection): Try[Double] = {
+  def generalization[D](
+    pcaModel: PointDistributionModel[_3D, TriangleMesh[_3D]],
+    dc: DataCollection[_3D, TriangleMesh[_3D], EuclideanVector[_3D]]
+  )(implicit canWarp: CanWarp[_3D, TriangleMesh[_3D]]): Try[Double] = {
 
-    if (pcaModel.referenceMesh == dc.reference) Success {
+    if (pcaModel.reference == dc.reference) Success {
       dc.dataItems.par.map { item =>
-        val mesh = dc.reference.transform(item.transformation)
+        val mesh = canWarp.warpDomain(item)
         val projection = pcaModel.project(mesh)
         MeshMetrics.avgDistance(projection, mesh)
       }.sum / dc.size.toDouble
