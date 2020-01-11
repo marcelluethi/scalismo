@@ -17,7 +17,7 @@ package scalismo.statisticalmodel
 
 import breeze.linalg.{DenseMatrix, DenseVector}
 import scalismo.common._
-import scalismo.common.interpolation.TriangleMeshInterpolator
+import scalismo.common.interpolation.{FieldInterpolator, TriangleMeshInterpolator}
 import scalismo.geometry.EuclideanVector._
 import scalismo.geometry._
 import scalismo.mesh._
@@ -32,10 +32,10 @@ import scalismo.utils.Random
  *
  * @see [[DiscreteLowRankGaussianProcess]]
  */
-case class PointDistributionModel[D: NDSpace, PointRepr <: DeformableDomain[D, PointRepr]] private (
+case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] private (
   reference: PointRepr,
   gp: DiscreteLowRankGaussianProcess[D, PointRepr, EuclideanVector[D]]
-)(implicit vectorizer: Vectorizer[EuclideanVector[D]]) {
+)(implicit canWarp: CanWarp[D, PointRepr], vectorizer: Vectorizer[EuclideanVector[D]]) {
 
   /** @see [[scalismo.statisticalmodel.DiscreteLowRankGaussianProcess.rank]] */
   val rank = gp.rank
@@ -44,7 +44,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DeformableDomain[D, P
    * The mean shape
    * @see [[DiscreteLowRankGaussianProcess.mean]]
    */
-  lazy val mean: PointRepr = reference.warp(gp.mean)
+  lazy val mean: PointRepr = canWarp.warpDomain(gp.mean)
 
   /**
    * The covariance between two points of the  mesh with given point id.
@@ -56,7 +56,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DeformableDomain[D, P
    * draws a random shape.
    * @see [[DiscreteLowRankGaussianProcess.sample]]
    */
-  def sample()(implicit rand: Random): PointRepr = reference.warp(gp.sample())
+  def sample()(implicit rand: Random): PointRepr = canWarp.warpDomain(gp.sample())
 
   /**
    * returns the probability density for an instance of the model
@@ -72,7 +72,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DeformableDomain[D, P
    * returns a shape that corresponds to a linear combination of the basis functions with the given coefficients c.
    *  @see [[DiscreteLowRankGaussianProcess.instance]]
    */
-  def instance(c: DenseVector[Double]): PointRepr = reference.warp(gp.instance(c))
+  def instance(c: DenseVector[Double]): PointRepr = canWarp.warpDomain(gp.instance(c))
 
   /**
    *  Returns a marginal StatisticalMeshModel, modelling deformations only on the chosen points of the reference
@@ -87,8 +87,15 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DeformableDomain[D, P
    *
    * @see [[DiscreteLowRankGaussianProcess.marginal]]
    */
-  def marginal(ptIds: IndexedSeq[PointId]): PointDistributionModel[D, PointRepr] = {
-    ???
+  def marginal(
+    ptIds: IndexedSeq[PointId]
+  )(implicit creator: UnstructuredPoints.Create[D]): PointDistributionModel[D, UnstructuredPointsDomain[D]] = {
+    val pts = for (id <- ptIds) yield {
+      reference.pointSet.point(id)
+    }
+
+    PointDistributionModel(UnstructuredPointsDomain(creator.create(pts.toIndexedSeq)), gp.marginal(ptIds))
+
   }
 
   /**
@@ -111,7 +118,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DeformableDomain[D, P
         .toIndexedSeq
     val dvf =
       DiscreteField[D, PointRepr, EuclideanVector[D]](reference, displacements)
-    reference.warp(gp.project(dvf))
+    canWarp.warpDomain(gp.project(dvf))
   }
 
   /**
@@ -157,7 +164,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DeformableDomain[D, P
    * The spanned shape space is not affected by this operations.
    */
   def transform(rigidTransform: RigidTransformation[D]): PointDistributionModel[D, PointRepr] = {
-    val newRef = reference.transform(rigidTransform)
+    val newRef = canWarp.transform(reference, rigidTransform)
 
     val newMean: DenseVector[Double] = {
       val newMeanVecs = for ((pt, meanAtPoint) <- gp.mean.pointsWithValues) yield {
@@ -177,7 +184,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DeformableDomain[D, P
       newBasisMat(::, i) := DenseVector(data)
     }
     val newGp = new DiscreteLowRankGaussianProcess[D, PointRepr, EuclideanVector[D]](
-      gp.domain.transform(rigidTransform),
+      canWarp.transform(gp.domain, rigidTransform),
       newMean,
       gp.variance,
       newBasisMat
@@ -192,7 +199,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DeformableDomain[D, P
    */
   def changeReference(t: Point[D] => Point[D]): PointDistributionModel[D, PointRepr] = {
 
-    val newRef = reference.transform(Transformation(t))
+    val newRef = canWarp.transform(reference, Transformation(t))
     val newMean = gp.mean.pointsWithValues.map { case (refPt, meanVec) => (refPt - t(refPt)) + meanVec }
     val newMeanVec = DenseVector(newMean.map(_.toArray).flatten.toArray)
     val newGp = new DiscreteLowRankGaussianProcess[D, PointRepr, EuclideanVector[D]](newRef,
@@ -202,13 +209,12 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DeformableDomain[D, P
     PointDistributionModel(newRef, newGp)
   }
 
-  /**
-   * Changes the number of vertices on which the model is defined
-   * @param targetNumberOfVertices  The desired number of vertices
-   * @return The new model
-   */
-  def decimate(targetNumberOfVertices: Int): PointDistributionModel[D, PointRepr] = {
-    ???
+  def newReference[NewRepr <: DiscreteDomain[D]](
+    newReference: NewRepr,
+    interpolator: FieldInterpolator[D, PointRepr, EuclideanVector[D]]
+  )(implicit canWarp: CanWarp[D, NewRepr]): PointDistributionModel[D, NewRepr] = {
+    val newGP = gp.interpolate(interpolator).discretize[NewRepr](newReference)
+    PointDistributionModel(newReference, newGP)
   }
 
 }
@@ -218,10 +224,11 @@ object PointDistributionModel {
   /**
    * creates a StatisticalMeshModel by discretizing the given Gaussian Process on the points of the reference mesh.
    */
-  def apply[D: NDSpace, PointRepr <: DeformableDomain[D, PointRepr]](
+  def apply[D: NDSpace, PointRepr <: DiscreteDomain[D]](
     reference: PointRepr,
     gp: LowRankGaussianProcess[D, EuclideanVector[D]]
-  )(implicit vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
+  )(implicit canWarp: CanWarp[D, PointRepr],
+    vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
     val discreteGp = DiscreteLowRankGaussianProcess(reference, gp)
     new PointDistributionModel(reference, discreteGp)
   }
@@ -231,14 +238,16 @@ object PointDistributionModel {
    *
    * @see [[DiscreteLowRankGaussianProcess.apply(FiniteDiscreteDomain, DenseVector[Double], DenseVector[Double], DenseMatrix[Double]]
    */
-  private[scalismo] def apply[D: NDSpace, PointRepr <: DeformableDomain[D, PointRepr]](
+  private[scalismo] def apply[D: NDSpace, PointRepr <: DiscreteDomain[D]](
     reference: PointRepr,
     meanVector: DenseVector[Double],
     variance: DenseVector[Double],
     basisMatrix: DenseMatrix[Double]
-  )(implicit vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
+  )(implicit canWarp: CanWarp[D, PointRepr],
+    vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
     val gp =
       new DiscreteLowRankGaussianProcess[D, PointRepr, EuclideanVector[D]](reference, meanVector, variance, basisMatrix)
     new PointDistributionModel(reference, gp)
   }
+
 }

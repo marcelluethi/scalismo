@@ -6,11 +6,15 @@ import scalismo.registration.Transformation
 trait Topology[D] {}
 
 trait DiscreteDomain[D] {
-  def topology: Topology[D]
   def pointSet: PointSet[D]
 }
 
-trait DeformableDomain[D, DDomain <: DiscreteDomain[D]] extends DiscreteDomain[D] {
-  def warp(warpField: DiscreteField[D, DiscreteDomain[D], EuclideanVector[D]]): DDomain
-  def transform(transformation: Point[D] => Point[D]): DDomain
+trait CanWarp[D, DDomain <: DiscreteDomain[D]] {
+
+  /**
+   * Warp the points of the domain of the discrete field and turn it into the
+   * warped domain
+   */
+  def warpDomain(warpField: DiscreteField[D, DDomain, EuclideanVector[D]]): DDomain
+  def transform(pointSet: DDomain, transformation: Point[D] => Point[D]): DDomain
 }

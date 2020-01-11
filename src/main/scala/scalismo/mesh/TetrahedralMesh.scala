@@ -45,7 +45,7 @@ case class TetrahedralCell(ptId1: PointId, ptId2: PointId, ptId3: PointId, ptId4
 }
 
 /** Represents a tetrahedral mesh. */
-trait TetrahedralMesh[D] extends DeformableDomain[D, TetrahedralMesh[D]] {
+trait TetrahedralMesh[D] extends DiscreteDomain[D] {
 
   /** Ordered list of tetrahedrals forming the tetrahedral mesh. */
   def tetrahedralization: TetrahedralList
@@ -59,7 +59,6 @@ trait TetrahedralMesh[D] extends DeformableDomain[D, TetrahedralMesh[D]] {
    */
   def pointSet: UnstructuredPoints[D]
 
-  def topology: Topology[D] = ???
 }
 
 object TetrahedralMesh {
@@ -90,6 +89,24 @@ object TetrahedralMesh {
     tetrahedralMesh.asInstanceOf[TetrahedralMesh3D]
   }
 
+  implicit object canWarp extends CanWarp[_3D, TetrahedralMesh[_3D]] {
+
+    /**
+     * Warp the points of the domain of the discrete field and turn it into the
+     * warped domain
+     */
+    override def warpDomain(
+      warpField: DiscreteField[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]]
+    ): TetrahedralMesh[_3D] = {
+      val newPoints = warpField.pointsWithValues.map { case (pt, v) => pt + v }
+      TetrahedralMesh3D(UnstructuredPoints(newPoints.toIndexedSeq), warpField.domain.tetrahedralization)
+    }
+
+    override def transform(pointSet: TetrahedralMesh[_3D],
+                           transformation: Point[_3D] => Point[_3D]): TetrahedralMesh[_3D] = {
+      TetrahedralMesh3D(pointSet.pointSet.transform(transformation), pointSet.tetrahedralization)
+    }
+  }
 }
 
 case class TetrahedralMesh3D(pointSet: UnstructuredPoints[_3D], tetrahedralization: TetrahedralList)
@@ -111,7 +128,7 @@ case class TetrahedralMesh3D(pointSet: UnstructuredPoints[_3D], tetrahedralizati
    *
    * @param transform A function that maps a given point to a new position. All instances of [[scalismo.registration.Transformation]] being descendants of <code>Function1[Point[_3D], Point[_3D] ]</code> are valid arguments.
    */
-  override def transform(transform: Point[_3D] => Point[_3D]): TetrahedralMesh3D = {
+  def transform(transform: Point[_3D] => Point[_3D]): TetrahedralMesh3D = {
     TetrahedralMesh3D(pointSet.points.map(transform).toIndexedSeq, tetrahedralization)
   }
 
@@ -210,15 +227,11 @@ case class TetrahedralMesh3D(pointSet: UnstructuredPoints[_3D], tetrahedralizati
       t *: pointSet.point(tc.ptId3).toVector +
       u *: pointSet.point(tc.ptId4).toVector).toPoint
   }
-
-  override def warp(warpField: DiscreteField[_3D, DiscreteDomain[_3D], EuclideanVector[_3D]]): TetrahedralMesh[_3D] = {
-    val newPoints = warpField.pointsWithValues.map { case (pt, v) => pt + v }
-    TetrahedralMesh3D(UnstructuredPoints(newPoints.toIndexedSeq), tetrahedralization)
-  }
 }
 
 object TetrahedralMesh3D {
   def apply(points: IndexedSeq[Point[_3D]], topology: TetrahedralList): TetrahedralMesh3D = {
     TetrahedralMesh3D(UnstructuredPoints(points.toIndexedSeq), topology)
   }
+
 }

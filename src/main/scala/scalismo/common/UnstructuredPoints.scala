@@ -22,13 +22,31 @@ import scalismo.mesh.kdtree.{KDTreeMap, RegionBuilder}
 
 import scala.language.implicitConversions
 
-case class UnstructuredPointsDomain[D](pointSet: UnstructuredPoints[D]) extends DiscreteDomain[D] {
-  override def topology: Topology[D] = ???
-}
+case class UnstructuredPointsDomain[D](pointSet: UnstructuredPoints[D]) extends DiscreteDomain[D] {}
 
 object UnstructuredPointsDomain {
   def apply[D: NDSpace: Create](points: IndexedSeq[Point[D]]): UnstructuredPointsDomain[D] = {
     UnstructuredPointsDomain(UnstructuredPoints(points))
+  }
+
+  implicit def canWarp[D: NDSpace](
+    implicit creator: UnstructuredPoints.Create[D]
+  ): CanWarp[D, UnstructuredPointsDomain[D]] = {
+    new CanWarp[D, UnstructuredPointsDomain[D]] {
+      override def warpDomain(
+        warpField: DiscreteField[D, UnstructuredPointsDomain[D], EuclideanVector[D]]
+      ): UnstructuredPointsDomain[D] = {
+        val warpedPoints = for ((p, v) <- warpField.pointsWithValues) yield {
+          p + v
+        }
+        UnstructuredPointsDomain(UnstructuredPoints(warpedPoints.toIndexedSeq))
+      }
+
+      override def transform(pointSet: UnstructuredPointsDomain[D],
+                             transformation: Point[D] => Point[D]): UnstructuredPointsDomain[D] = {
+        UnstructuredPointsDomain(pointSet.pointSet.transform(transformation))
+      }
+    }
   }
 }
 

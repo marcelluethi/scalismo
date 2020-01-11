@@ -27,7 +27,6 @@ import scalismo.registration.{
 import scala.language.implicitConversions
 
 case class DiscreteImageDomain[D: NDSpace](structuredPoints: StructuredPoints[D]) extends DiscreteDomain[D] {
-  override def topology: Topology[D] = ???
 
   override def pointSet: StructuredPoints[D] = structuredPoints
 
