@@ -21,7 +21,7 @@ import scalismo.geometry._
 import scalismo.image.{DiscreteImageDomain, StructuredPoints}
 import scalismo.numerics.ValueInterpolator
 
-trait LinearImageInterpolator[D, A] extends FieldInterpolator[D, DiscreteImageDomain[D], A] {
+trait LinearImageInterpolator[D, A] extends FieldInterpolator[D, DiscreteImageDomain, A] {
 
   implicit protected def ndSpace: NDSpace[D]
 
@@ -61,7 +61,7 @@ case class LinearImageInterpolator1D[A: ValueInterpolator]() extends LinearImage
 
   override protected val valueInterpolator = ValueInterpolator[A]
 
-  override def interpolate(df: DiscreteField[_1D, DiscreteImageDomain[_1D], A]): Field[_1D, A] = {
+  override def interpolate(df: DiscreteField[_1D, DiscreteImageDomain, A]): Field[_1D, A] = {
 
     val domain = df.domain
     val pointSet = domain.pointSet
@@ -90,7 +90,7 @@ case class LinearImageInterpolator2D[A: ValueInterpolator]() extends LinearImage
 
   override protected val valueInterpolator = ValueInterpolator[A]
 
-  override def interpolate(df: DiscreteField[_2D, DiscreteImageDomain[_2D], A]): Field[_2D, A] = {
+  override def interpolate(df: DiscreteField[_2D, DiscreteImageDomain, A]): Field[_2D, A] = {
 
     val domain = df.domain
     val pointSet = domain.pointSet
@@ -126,7 +126,7 @@ case class LinearImageInterpolator3D[A: ValueInterpolator]() extends LinearImage
 
   override protected val valueInterpolator = ValueInterpolator[A]
 
-  override def interpolate(df: DiscreteField[_3D, DiscreteImageDomain[_3D], A]): Field[_3D, A] = {
+  override def interpolate(df: DiscreteField[_3D, DiscreteImageDomain, A]): Field[_3D, A] = {
 
     val domain = df.domain
     val pointSet = domain.pointSet

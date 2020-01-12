@@ -74,15 +74,13 @@ object TriangleMesh {
     triangleMesh.asInstanceOf[TriangleMesh3D]
   }
 
-  implicit object canWarp extends CanWarp[_3D, TriangleMesh[_3D]] {
+  implicit object canWarp extends CanWarp[_3D, TriangleMesh] {
 
     /**
      * Warp the points of the domain of the discrete field and turn it into the
      * warped domain
      */
-    override def warpDomain(
-      warpField: DiscreteField[_3D, TriangleMesh[_3D], EuclideanVector[_3D]]
-    ): TriangleMesh[_3D] = {
+    override def warpDomain(warpField: DiscreteField[_3D, TriangleMesh, EuclideanVector[_3D]]): TriangleMesh[_3D] = {
       val newPoints = for ((p, v) <- warpField.pointsWithValues) yield { p + v }
       TriangleMesh3D(newPoints.toIndexedSeq, warpField.domain.triangulation)
     }

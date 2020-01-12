@@ -30,7 +30,7 @@ import scalismo.utils.Random
  * While this is technically similar to a MultivariateNormalDistribution, we highlight with this
  * class that we represent (discrete) functions, defined on the given domain.
  */
-class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] private[scalismo] (
+class DiscreteGaussianProcess[D: NDSpace, DDomain[D] <: DiscreteDomain[D], Value] private[scalismo] (
   val mean: DiscreteField[D, DDomain, Value],
   val cov: DiscreteMatrixValuedPDKernel[D]
 )(implicit val vectorizer: Vectorizer[Value]) {
@@ -71,14 +71,14 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
   def marginal(pointIds: Seq[PointId])(
     implicit
     domainCreator: UnstructuredPoints.Create[D]
-  ): DiscreteGaussianProcess[D, UnstructuredPointsDomain[D], Value] = {
+  ): DiscreteGaussianProcess[D, UnstructuredPointsDomain, Value] = {
     val domainPts = pointSet.points.toIndexedSeq
 
     val newPts = pointIds.map(pointId => domainPts(pointId.id)).toIndexedSeq
     val newDomain = UnstructuredPointsDomain(domainCreator.create(newPts))
 
     val newMean =
-      DiscreteField[D, UnstructuredPointsDomain[D], Value](newDomain, pointIds.toIndexedSeq.map(id => mean(id)))
+      DiscreteField[D, UnstructuredPointsDomain, Value](newDomain, pointIds.toIndexedSeq.map(id => mean(id)))
     val newCov = (i: PointId, j: PointId) => {
       cov(pointIds(i.id), pointIds(j.id))
     }
@@ -142,7 +142,7 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
   /**
    * Discrete version of [[LowRankGaussianProcess.project(IndexedSeq[(Point[D], Vector[DO])], Double)]]
    */
-  def project(s: DiscreteField[D, DiscreteDomain[D], Value]): DiscreteField[D, DDomain, Value] = {
+  def project(s: DiscreteField[D, DDomain, Value]): DiscreteField[D, DDomain, Value] = {
 
     val sigma2 = 1e-5 // regularization weight to avoid numerical problems
     val noiseDist =
@@ -155,7 +155,7 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
   /**
    * Returns the probability density of the given instance
    */
-  def pdf(instance: DiscreteField[D, DiscreteDomain[D], Value]): Double = {
+  def pdf(instance: DiscreteField[D, DDomain, Value]): Double = {
     val mvnormal = MultivariateNormalDistribution(DiscreteField.vectorize[D, Value](mean.data), cov.asBreezeMatrix)
     val instvec = DiscreteField.vectorize[D, Value](instance.data)
     mvnormal.pdf(instvec)
@@ -166,7 +166,7 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
    *
    * If you are interested in ordinal comparisons of PDFs, use this as it is numerically more stable
    */
-  def logpdf(instance: DiscreteField[D, DiscreteDomain[D], Value]): Double = {
+  def logpdf(instance: DiscreteField[D, DDomain, Value]): Double = {
     val mvnormal = MultivariateNormalDistribution(DiscreteField.vectorize[D, Value](mean.data), cov.asBreezeMatrix)
     val instvec = DiscreteField.vectorize[D, Value](instance.data)
     mvnormal.logpdf(instvec)
@@ -176,14 +176,14 @@ class DiscreteGaussianProcess[D: NDSpace, +DDomain <: DiscreteDomain[D], Value] 
 
 object DiscreteGaussianProcess {
 
-  def apply[D: NDSpace, DDomain <: DiscreteDomain[D], Value](
+  def apply[D: NDSpace, DDomain[D] <: DiscreteDomain[D], Value](
     mean: DiscreteField[D, DDomain, Value],
     cov: DiscreteMatrixValuedPDKernel[D]
   )(implicit vectorizer: Vectorizer[Value]): DiscreteGaussianProcess[D, DDomain, Value] = {
     new DiscreteGaussianProcess[D, DDomain, Value](mean, cov)
   }
 
-  def apply[D: NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DDomain, gp: GaussianProcess[D, Value])(
+  def apply[D: NDSpace, DDomain[D] <: DiscreteDomain[D], Value](domain: DDomain[D], gp: GaussianProcess[D, Value])(
     implicit
     vectorizer: Vectorizer[Value]
   ): DiscreteGaussianProcess[D, DDomain, Value] = {
@@ -197,7 +197,7 @@ object DiscreteGaussianProcess {
     new DiscreteGaussianProcess[D, DDomain, Value](discreteMean, discreteCov)
   }
 
-  def regression[D: NDSpace, DDomain <: DiscreteDomain[D], Value](
+  def regression[D: NDSpace, DDomain[D] <: DiscreteDomain[D], Value](
     discreteGp: DiscreteGaussianProcess[D, DDomain, Value],
     trainingData: IndexedSeq[(Int, Value, MultivariateNormalDistribution)]
   )(implicit vectorizer: Vectorizer[Value]): DiscreteGaussianProcess[D, DDomain, Value] = {

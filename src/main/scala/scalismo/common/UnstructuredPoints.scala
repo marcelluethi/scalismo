@@ -32,10 +32,10 @@ object UnstructuredPointsDomain {
   implicit def canWarp[D: NDSpace](
     implicit
     creator: UnstructuredPoints.Create[D]
-  ): CanWarp[D, UnstructuredPointsDomain[D]] = {
-    new CanWarp[D, UnstructuredPointsDomain[D]] {
+  ): CanWarp[D, UnstructuredPointsDomain] = {
+    new CanWarp[D, UnstructuredPointsDomain] {
       override def warpDomain(
-        warpField: DiscreteField[D, UnstructuredPointsDomain[D], EuclideanVector[D]]
+        warpField: DiscreteField[D, UnstructuredPointsDomain, EuclideanVector[D]]
       ): UnstructuredPointsDomain[D] = {
         val warpedPoints = for ((p, v) <- warpField.pointsWithValues) yield {
           p + v

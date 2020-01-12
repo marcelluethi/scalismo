@@ -11,9 +11,9 @@ import scalismo.numerics.ValueInterpolator
  * of a triangle mesh (i.e. a MeshField) by means of a surface interpolation
  * on the surface defined by the mesh.
  */
-case class TriangleMeshInterpolator[A: ValueInterpolator]() extends FieldInterpolator[_3D, TriangleMesh[_3D], A] {
+case class TriangleMeshInterpolator[A: ValueInterpolator]() extends FieldInterpolator[_3D, TriangleMesh, A] {
 
-  override def interpolate(field: DiscreteField[_3D, TriangleMesh[_3D], A]): Field[_3D, A] = {
+  override def interpolate(field: DiscreteField[_3D, TriangleMesh, A]): Field[_3D, A] = {
     val mesh = field.domain
 
     // for this method to make sense, the field needs to be defined

@@ -15,6 +15,7 @@
  */
 package scalismo.utils
 
+import scalismo.common.DiscreteField.{ScalarMeshField, ScalarVolumeMeshField}
 import scalismo.common._
 import scalismo.geometry._
 import scalismo.image.{DiscreteImageDomain, DiscreteScalarImage, StructuredPoints}
@@ -235,7 +236,7 @@ object TetrahedralMeshConversion {
                                                                                  None): vtkUnstructuredGrid = {
 
     val grid = tetrahedralMeshToVTKUnstructuredGrid(tetraMeshData.mesh, template)
-    val scalarData = VtkHelpers.scalarArrayToVtkDataArray(tetraMeshData.data, 1)
+    val scalarData = VtkHelpers.scalarArrayToVtkDataArray(ScalarArray(tetraMeshData.data.toArray), 1)
     grid.GetPointData().SetScalars(scalarData)
     grid
   }
@@ -248,7 +249,7 @@ object TetrahedralMeshConversion {
       scalarData <- VtkHelpers
         .vtkDataArrayToScalarArray[S](ug.GetPointData().GetScalars().GetDataType(), ug.GetPointData().GetScalars())
     } yield {
-      ScalarVolumeMeshField(mesh, scalarData)
+      DiscreteField(mesh, scalarData)
     }
   }
 
@@ -343,7 +344,7 @@ object MeshConversion {
   def scalarMeshFieldToVtkPolyData[S: Scalar: ClassTag: TypeTag](meshData: ScalarMeshField[S],
                                                                  template: Option[vtkPolyData] = None): vtkPolyData = {
     val pd = meshToVtkPolyData(meshData.mesh, template)
-    val scalarData = VtkHelpers.scalarArrayToVtkDataArray(meshData.data, 1) // TODO make this more general
+    val scalarData = VtkHelpers.scalarArrayToVtkDataArray(ScalarArray(meshData.data.toArray), 1) // TODO make this more general
     pd.GetPointData().SetScalars(scalarData)
     pd
   }

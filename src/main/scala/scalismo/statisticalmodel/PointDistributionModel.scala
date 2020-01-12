@@ -34,11 +34,11 @@ import scalismo.utils.Random
  *
  * @see [[DiscreteLowRankGaussianProcess]]
  */
-case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] private (
+case class PointDistributionModel[D: NDSpace, PointRepr[D] <: DiscreteDomain[D]] private (
   gp: DiscreteLowRankGaussianProcess[D, PointRepr, EuclideanVector[D]]
 )(implicit canWarp: CanWarp[D, PointRepr], vectorizer: Vectorizer[EuclideanVector[D]]) {
 
-  def reference: PointRepr = gp.domain
+  def reference: PointRepr[D] = gp.domain
 
   /** @see [[scalismo.statisticalmodel.DiscreteLowRankGaussianProcess.rank]] */
   val rank = gp.rank
@@ -47,7 +47,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
    * The mean shape
    * @see [[DiscreteLowRankGaussianProcess.mean]]
    */
-  lazy val mean: PointRepr = canWarp.warpDomain(gp.mean)
+  lazy val mean: PointRepr[D] = canWarp.warpDomain(gp.mean)
 
   /**
    * The covariance between two points of the  mesh with given point id.
@@ -59,7 +59,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
    * draws a random shape.
    * @see [[DiscreteLowRankGaussianProcess.sample]]
    */
-  def sample()(implicit rand: Random): PointRepr = canWarp.warpDomain(gp.sample())
+  def sample()(implicit rand: Random): PointRepr[D] = canWarp.warpDomain(gp.sample())
 
   /**
    * returns the probability density for an instance of the model
@@ -75,7 +75,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
    * returns a shape that corresponds to a linear combination of the basis functions with the given coefficients c.
    *  @see [[DiscreteLowRankGaussianProcess.instance]]
    */
-  def instance(c: DenseVector[Double]): PointRepr = canWarp.warpDomain(gp.instance(c))
+  def instance(c: DenseVector[Double]): PointRepr[D] = canWarp.warpDomain(gp.instance(c))
 
   /**
    *  Returns a marginal StatisticalMeshModel, modelling deformations only on the chosen points of the reference
@@ -92,7 +92,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
    */
   def marginal(
     ptIds: IndexedSeq[PointId]
-  )(implicit creator: UnstructuredPoints.Create[D]): PointDistributionModel[D, UnstructuredPointsDomain[D]] = {
+  )(implicit creator: UnstructuredPoints.Create[D]): PointDistributionModel[D, UnstructuredPointsDomain] = {
     PointDistributionModel(gp.marginal(ptIds))
 
   }
@@ -109,7 +109,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
   /**
    * @see [[DiscreteLowRankGaussianProcess.project]]
    */
-  def project(pointData: PointRepr) = {
+  def project(pointData: PointRepr[D]) = {
     val displacements =
       reference.pointSet.points
         .zip(pointData.pointSet.points)
@@ -123,7 +123,7 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
   /**
    * @see [[DiscreteLowRankGaussianProcess.coefficients]]
    */
-  def coefficients(pointData: PointRepr): DenseVector[Double] = {
+  def coefficients(pointData: PointRepr[D]): DenseVector[Double] = {
     val displacements =
       reference.pointSet.points
         .zip(pointData.pointSet.points)
@@ -208,8 +208,8 @@ case class PointDistributionModel[D: NDSpace, PointRepr <: DiscreteDomain[D]] pr
     PointDistributionModel(newGp)
   }
 
-  def newReference[NewRepr <: DiscreteDomain[D]](
-    newReference: NewRepr,
+  def newReference[NewRepr[D] <: DiscreteDomain[D]](
+    newReference: NewRepr[D],
     interpolator: FieldInterpolator[D, PointRepr, EuclideanVector[D]]
   )(implicit canWarp: CanWarp[D, NewRepr]): PointDistributionModel[D, NewRepr] = {
     val newGP = gp.interpolate(interpolator).discretize[NewRepr](newReference)
@@ -223,8 +223,8 @@ object PointDistributionModel {
   /**
    * creates a StatisticalMeshModel by discretizing the given Gaussian Process on the points of the reference mesh.
    */
-  def apply[D: NDSpace, PointRepr <: DiscreteDomain[D]](
-    reference: PointRepr,
+  def apply[D: NDSpace, PointRepr[D] <: DiscreteDomain[D]](
+    reference: PointRepr[D],
     gp: LowRankGaussianProcess[D, EuclideanVector[D]]
   )(implicit
     canWarp: CanWarp[D, PointRepr],
@@ -238,8 +238,8 @@ object PointDistributionModel {
    *
    * @see [[DiscreteLowRankGaussianProcess.apply(FiniteDiscreteDomain, DenseVector[Double], DenseVector[Double], DenseMatrix[Double]]
    */
-  private[scalismo] def apply[D: NDSpace, PointRepr <: DiscreteDomain[D]](
-    reference: PointRepr,
+  private[scalismo] def apply[D: NDSpace, PointRepr[D] <: DiscreteDomain[D]](
+    reference: PointRepr[D],
     meanVector: DenseVector[Double],
     variance: DenseVector[Double],
     basisMatrix: DenseMatrix[Double]
@@ -254,7 +254,7 @@ object PointDistributionModel {
   /**
    * Adds a bias model to the given statistical shape model
    */
-  def augmentModel[D: NDSpace, PointRepr <: DiscreteDomain[D]](
+  def augmentModel[D: NDSpace, PointRepr[D] <: DiscreteDomain[D]](
     model: PointDistributionModel[D, PointRepr],
     biasModel: LowRankGaussianProcess[D, EuclideanVector[D]]
   )(implicit
@@ -294,7 +294,7 @@ object PointDistributionModel {
    * the number of linearly independent fields. By providing an explicit stopping criterion, one can, however,
    * compute only the leading principal components. See PivotedCholesky.StoppingCriterion for more details.
    */
-  def createUsingPCA[D: NDSpace, PointRepr <: DiscreteDomain[D]](
+  def createUsingPCA[D: NDSpace, PointRepr[D] <: DiscreteDomain[D]](
     dc: DataCollection[D, PointRepr, EuclideanVector[D]],
     stoppingCriterion: PivotedCholesky.StoppingCriterion = PivotedCholesky.RelativeTolerance(0)
   )(implicit
@@ -316,13 +316,13 @@ object PointDistributionModel {
    * compute only the leading principal components. See PivotedCholesky.StoppingCriterion for more details.
    *
    */
-  def createUsingPCA[D: NDSpace, PointRepr <: DiscreteDomain[D]](reference: PointRepr,
-                                                                 fields: Seq[Field[D, EuclideanVector[D]]],
-                                                                 stoppingCriterion: PivotedCholesky.StoppingCriterion)(
-    implicit
+  def createUsingPCA[D: NDSpace, PointRepr[D] <: DiscreteDomain[D]](
+    reference: PointRepr[D],
+    fields: Seq[Field[D, EuclideanVector[D]]],
+    stoppingCriterion: PivotedCholesky.StoppingCriterion
+  )(implicit
     canWarp: CanWarp[D, PointRepr],
-    vectorizer: Vectorizer[EuclideanVector[D]]
-  ): PointDistributionModel[D, PointRepr] = {
+    vectorizer: Vectorizer[EuclideanVector[D]]): PointDistributionModel[D, PointRepr] = {
 
     val dgp: DiscreteLowRankGaussianProcess[D, PointRepr, EuclideanVector[D]] =
       DiscreteLowRankGaussianProcess.createUsingPCA(reference, fields, stoppingCriterion)

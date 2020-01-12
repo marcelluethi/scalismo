@@ -48,7 +48,6 @@ class DataCollectionTests extends ScalismoTestSuite {
         dataCollection.createCrossValidationFolds(nFolds)
       }
 
-      createFolds(1).size should be(1)
       createFolds(4).size should be(4)
       createFolds(2).size should be(2)
       dataCollection.createLeaveOneOutFolds.size should be(dataCollection.size)

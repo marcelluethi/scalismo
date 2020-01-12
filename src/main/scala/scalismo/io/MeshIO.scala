@@ -18,6 +18,7 @@ package scalismo.io
 import java.io.{BufferedReader, File, FileReader, IOException}
 
 import scalismo.color.{RGB, RGBA}
+import scalismo.common.DiscreteField.{ScalarMeshField, ScalarVolumeMeshField}
 import scalismo.common.{PointId, Scalar, UnstructuredPoints}
 import scalismo.geometry._
 import scalismo.mesh.TriangleMesh._

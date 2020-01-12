@@ -60,9 +60,9 @@ object ModelMetrics {
    * The returned value is a scala.util.Try containing the average over all test data in case of success, or an Exception otherwise
    */
   def generalization[D](
-    pcaModel: PointDistributionModel[_3D, TriangleMesh[_3D]],
-    dc: DataCollection[_3D, TriangleMesh[_3D], EuclideanVector[_3D]]
-  )(implicit canWarp: CanWarp[_3D, TriangleMesh[_3D]]): Try[Double] = {
+    pcaModel: PointDistributionModel[_3D, TriangleMesh],
+    dc: DataCollection[_3D, TriangleMesh, EuclideanVector[_3D]]
+  )(implicit canWarp: CanWarp[_3D, TriangleMesh]): Try[Double] = {
 
     if (pcaModel.reference == dc.reference) Success {
       dc.dataItems.par.map { item =>

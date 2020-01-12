@@ -6,7 +6,7 @@ import scalismo.mesh.{TetrahedralCell, TetrahedralMesh, TetrahedronId}
 import scalismo.numerics.ValueInterpolator
 import scalismo.utils.Memoize
 
-trait BarycentricInterpolator[D, A] extends FieldInterpolator[D, TetrahedralMesh[D], A] {
+trait BarycentricInterpolator[D, A] extends FieldInterpolator[D, TetrahedralMesh, A] {
   implicit protected val valueInterpolator: ValueInterpolator[A]
 }
 
@@ -57,7 +57,7 @@ case class BarycentricInterpolator3D[A: ValueInterpolator]() extends Barycentric
     cell
   }
 
-  override def interpolate(df: DiscreteField[_3D, TetrahedralMesh[_3D], A]): Field[_3D, A] = {
+  override def interpolate(df: DiscreteField[_3D, TetrahedralMesh, A]): Field[_3D, A] = {
 
     val mesh = df.domain
 

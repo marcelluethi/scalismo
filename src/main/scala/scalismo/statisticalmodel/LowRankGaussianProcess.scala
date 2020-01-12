@@ -78,8 +78,8 @@ class LowRankGaussianProcess[D: NDSpace, Value](mean: Field[D, Value], val klBas
   /**
    * A random sample evaluated at the given points
    */
-  override def sampleAtPoints[DDomain <: DiscreteDomain[D]](
-    domain: DDomain
+  override def sampleAtPoints[DDomain[D] <: DiscreteDomain[D]](
+    domain: DDomain[D]
   )(implicit rand: Random): DiscreteField[D, DDomain, Value] = {
     // TODO check that points are part of the domain
     val aSample = sample()
@@ -181,7 +181,9 @@ class LowRankGaussianProcess[D: NDSpace, Value](mean: Field[D, Value], val klBas
   /**
    * Discretize the gaussian process on the given points.
    */
-  def discretize[DDomain <: DiscreteDomain[D]](domain: DDomain): DiscreteLowRankGaussianProcess[D, DDomain, Value] = {
+  def discretize[DDomain[D] <: DiscreteDomain[D]](
+    domain: DDomain[D]
+  ): DiscreteLowRankGaussianProcess[D, DDomain, Value] = {
     DiscreteLowRankGaussianProcess[D, DDomain, Value](domain, this)
   }
 
@@ -269,8 +271,8 @@ object LowRankGaussianProcess {
    *
    * @return       A low rank approximation of the Gaussian process
    */
-  def approximateGPCholesky[D: NDSpace, DDomain <: DiscreteDomain[D], Value](
-    domain: DDomain,
+  def approximateGPCholesky[D: NDSpace, DDomain[D] <: DiscreteDomain[D], Value](
+    domain: DDomain[D],
     gp: GaussianProcess[D, Value],
     relativeTolerance: Double,
     interpolator: FieldInterpolator[D, DDomain, Value]

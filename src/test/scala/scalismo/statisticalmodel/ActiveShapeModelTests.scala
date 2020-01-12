@@ -50,7 +50,7 @@ class ActiveShapeModelTests extends ScalismoTestSuite {
       val trainImages = images
 
       val dc = DataCollection.fromTriangleMeshSequence(shapeModel.referenceMesh, trainMeshes.toIndexedSeq)
-      def itemsToTransform(item: DiscreteField[_3D, TriangleMesh[_3D], EuclideanVector[_3D]]): Transformation[_3D] = {
+      def itemsToTransform(item: DiscreteField[_3D, TriangleMesh, EuclideanVector[_3D]]): Transformation[_3D] = {
         val field = item.interpolate(NearestNeighborInterpolator())
         Transformation((p: Point[_3D]) => p + field(p))
       }

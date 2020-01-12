@@ -89,14 +89,14 @@ object TetrahedralMesh {
     tetrahedralMesh.asInstanceOf[TetrahedralMesh3D]
   }
 
-  implicit object canWarp extends CanWarp[_3D, TetrahedralMesh[_3D]] {
+  implicit object canWarp extends CanWarp[_3D, TetrahedralMesh] {
 
     /**
      * Warp the points of the domain of the discrete field and turn it into the
      * warped domain
      */
     override def warpDomain(
-      warpField: DiscreteField[_3D, TetrahedralMesh[_3D], EuclideanVector[_3D]]
+      warpField: DiscreteField[_3D, TetrahedralMesh, EuclideanVector[_3D]]
     ): TetrahedralMesh[_3D] = {
       val newPoints = warpField.pointsWithValues.map { case (pt, v) => pt + v }
       TetrahedralMesh3D(UnstructuredPoints(newPoints.toIndexedSeq), warpField.domain.tetrahedralization)

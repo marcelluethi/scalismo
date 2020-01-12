@@ -509,11 +509,9 @@ object StatismoIO {
    * @tparam A The type of the values of the Gaussian process
    * @return Success of failure
    */
-  def writeStatismoImageModel[D: NDSpace, A: Vectorizer](
-    gp: DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A],
-    file: File,
-    modelPath: String
-  ): Try[Unit] = {
+  def writeStatismoImageModel[D: NDSpace, A: Vectorizer](gp: DiscreteLowRankGaussianProcess[D, DiscreteImageDomain, A],
+                                                         file: File,
+                                                         modelPath: String): Try[Unit] = {
 
     val discretizedMean = gp.meanVector.map(_.toFloat)
     val variance = gp.variance.map(_.toFloat)
@@ -554,7 +552,7 @@ object StatismoIO {
   private def writeImageRepresenter[D: NDSpace, A: Vectorizer](
     h5file: HDF5File,
     group: Group,
-    gp: DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A],
+    gp: DiscreteLowRankGaussianProcess[D, DiscreteImageDomain, A],
     modelPath: String
   ): Try[Unit] = {
 
@@ -608,7 +606,7 @@ object StatismoIO {
   def readStatismoImageModel[D: NDSpace: CreateDiscreteImageDomain, A: Vectorizer](
     file: java.io.File,
     modelPath: String = "/"
-  ): Try[DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A]] = {
+  ): Try[DiscreteLowRankGaussianProcess[D, DiscreteImageDomain, A]] = {
 
     val modelOrFailure = for {
       h5file <- HDF5Utils.openFileForReading(file)
@@ -655,10 +653,10 @@ object StatismoIO {
       }
     } yield {
 
-      val gp = new DiscreteLowRankGaussianProcess[D, DiscreteImageDomain[D], A](image,
-                                                                                meanVector.map(_.toDouble),
-                                                                                pcaVarianceVector.map(_.toDouble),
-                                                                                pcaBasisMatrix.map(_.toDouble))
+      val gp = new DiscreteLowRankGaussianProcess[D, DiscreteImageDomain, A](image,
+                                                                             meanVector.map(_.toDouble),
+                                                                             pcaVarianceVector.map(_.toDouble),
+                                                                             pcaBasisMatrix.map(_.toDouble))
       gp
 
     }
