@@ -19,7 +19,6 @@ import breeze.linalg.max
 import breeze.numerics.{abs, pow, sqrt}
 import scalismo.geometry.{_3D, EuclideanVector, Point}
 import scalismo.mesh.{TetrahedralMesh, TriangleMesh3D}
-import vtk.vtkTetra
 
 import scala.annotation.tailrec
 
@@ -329,6 +328,8 @@ private case class Sphere(center: EuclideanVector[_3D], r2: Double)
  */
 private object Sphere {
 
+  import BoundingSphereHelpers._
+
   /**
    * Create spheres around points with radius.
    */
@@ -339,42 +340,46 @@ private object Sphere {
   /**
    * Create spheres around a line.
    */
-  def fromLine(line: (Point[_3D], Point[_3D])): Sphere = {
-    val a = line._1.toVector
-    val b = line._2.toVector
-    val c = (a + b) * 0.5
-    val r = max((a - c).norm2, (b - c).norm2)
-    Sphere(c, r)
-
+  def fromLine(line: (EuclideanVector[_3D], EuclideanVector[_3D])): Sphere = {
+    val (center, r2) = minContainmentSphere(line._1, line._2)
+    Sphere(center, r2)
   }
 
   /**
    * Create sphere around a triangle
    */
   def fromTriangle(triangle: Triangle): Sphere = {
-    val sphere = triangleCircumSphere(triangle.a, triangle.b, triangle.c)
-    new Sphere(sphere._1, sphere._2)
+    val (center, r2) = minContainmentSphere(triangle.a, triangle.b, triangle.c)
+    Sphere(center, r2)
   }
 
   /**
-   * Create sphere around a tetrahedron
+   * Create sphere around a triangle
    */
   def fromTetrahedron(tetrahedron: Tetrahedron): Sphere = {
-    val center = new Array[Double](3)
-    val t = new vtkTetra()
-    val sphereradus =
-      t.Circumsphere(tetrahedron.a.toArray, tetrahedron.b.toArray, tetrahedron.c.toArray, tetrahedron.d.toArray, center)
-    val c = EuclideanVector(center(0), center(1), center(2))
-    new Sphere(c, sphereradus)
+    val (center, r2) = minContainmentSphere(tetrahedron.a, tetrahedron.b, tetrahedron.c, tetrahedron.d)
+    Sphere(center, r2)
+  }
+
+}
+
+private[mesh] object BoundingSphereHelpers {
+
+  /**
+   * Calculate minimal sphere around two points, e.g. a line segment
+   */
+  def minContainmentSphere(a: EuclideanVector[_3D], b: EuclideanVector[_3D]): (EuclideanVector[_3D], Double) = {
+    val center = (a + b) * 0.5
+    val r2 = max((a - center).norm2, (b - center).norm2)
+    (center, r2)
   }
 
   /**
-   * Calculate sphere around three points, e.g. a triangle
+   * Calculate minimal sphere around three points, e.g. a triangle
    */
-  def triangleCircumSphere(a: EuclideanVector[_3D],
+  def minContainmentSphere(a: EuclideanVector[_3D],
                            b: EuclideanVector[_3D],
                            c: EuclideanVector[_3D]): (EuclideanVector[_3D], Double) = {
-    // rather complex function taken from c++ ... TODO: should be checked if we cant reach the result more easily, pay attention to possible numerical problems
     var center = a
     var radius2 = 1.0
 
@@ -428,20 +433,6 @@ private object Sphere {
             (m(1) * normalToAB(2) - m(2) * normalToAB(1)) / d2
 
         center = aMc + normalToAC * beta1
-
-        //        {
-        //          // alpha1 should lead to the same center not checked here...
-        //          val alpha = if ((abs(normalToAB(0)) >= abs(normalToAB(1))) && (abs(normalToAB(0)) >= abs(normalToAB(2))))
-        //            (m(0) - beta1 * normalToAC(0)) / normalToAB(0);
-        //          else if ((abs(normalToAB(1)) >= abs(normalToAB(0))) && (abs(normalToAB(1)) >= abs(normalToAB(2))))
-        //            (m(1) - beta1 * normalToAC(1)) / normalToAB(1);
-        //          else //if ((std::abs(n1(2)) >= std::abs(n1(0))) && (std::abs(n1(2)) >= std::abs(n1(1))))
-        //            (m(2) - beta1 * normalToAC(2)) / normalToAB(2);
-        //
-        //          val ncenter = aMb - normalToAB * alpha;
-        //          if ((center - ncenter).norm2 > 1.0e-10)
-        //            println("Passt nicht, sollte gleich sein" + center + " != " + ncenter)
-        //        }
       }
 
       {
@@ -508,18 +499,127 @@ private object Sphere {
   /**
    * Calculate sphere around four points, e.g. a tetrahedron
    */
-  def tetrahedronCircumSphere(a: EuclideanVector[_3D],
-                              b: EuclideanVector[_3D],
-                              c: EuclideanVector[_3D],
-                              d: EuclideanVector[_3D]): (EuclideanVector[_3D], Double) = {
+  def minContainmentSphere(a: EuclideanVector[_3D],
+                           b: EuclideanVector[_3D],
+                           c: EuclideanVector[_3D],
+                           d: EuclideanVector[_3D]): (EuclideanVector[_3D], Double) = {
 
-    val v = Array[Double](3)
-    val tetra = new vtkTetra()
+    val triangles = IndexedSeq(
+      IndexedSeq(a, b, c),
+      IndexedSeq(a, d, b),
+      IndexedSeq(a, c, d),
+      IndexedSeq(b, d, c)
+    )
 
-    val redius = tetra.Circumsphere(a.toArray, b.toArray, c.toArray, d.toArray, v)
+    def testOrientation(circumCenter: EuclideanVector[_3D],
+                        a: EuclideanVector[_3D],
+                        b: EuclideanVector[_3D],
+                        c: EuclideanVector[_3D],
+                        d: EuclideanVector[_3D]): Seq[Double] = {
+      val signedTetrahedronVolume = calculateSignedVolume(a, b, c, d)
+      triangles
+        .map { t =>
+          calculateSignedVolume(circumCenter, t(0), t(1), t(2))
+        }
+        .map(_ * Math.signum(signedTetrahedronVolume))
+    }
 
-    (EuclideanVector(v(0), v(1), v(2)), redius)
+    val tetrahedronCircumsphere = calculateCircumsphere(a, b, c, d)
+    val directionTests = testOrientation(tetrahedronCircumsphere._1, a, b, c, d)
 
+    directionTests.count(_ <= 0) match {
+      case 4 => { // circum-center is inside the tetrahedron, no better possibility
+        tetrahedronCircumsphere
+      }
+      case 3 => { // circum-center is outside / on the wrong side of one triangle, use its circum-sphere
+        val t = triangles(directionTests.indexWhere(_ > 0))
+        minContainmentSphere(t(0), t(1), t(2))
+      }
+      case 2 => { // circum-center is outside / on the wrong side of two triangles
+        val i1 = directionTests.indexWhere(_ > 0)
+        val points1 = triangles(i1)
+        val i2 = directionTests.indexWhere(_ > 0, i1 + 1)
+        val points2 = triangles(i2)
+
+        val commonPoints = points1.filter(pt => {
+          points2.contains(pt)
+        })
+
+        val sphereContainingLine = minContainmentSphere(commonPoints(0), commonPoints(1))
+
+        val pts =
+          IndexedSeq(a, b, c, d).filter { p =>
+            !sphereContainsPoint(p, sphereContainingLine._1, Math.sqrt(sphereContainingLine._2))
+          }
+
+        if (pts.size > 0) {
+          minContainmentSphere(commonPoints.head, commonPoints.last, pts.head)
+        } else {
+          sphereContainingLine
+        }
+      }
+      case _ =>
+        throw new Exception(
+          "It should never be the case that more orientations are negative than 2."
+        )
+    }
   }
+
+  /**
+   * Calculate circumsphere, i.e. the sphere which touches all four points.
+   */
+  def calculateCircumsphere(
+    a: EuclideanVector[_3D],
+    b: EuclideanVector[_3D],
+    c: EuclideanVector[_3D],
+    d: EuclideanVector[_3D]
+  ): (EuclideanVector[_3D], Double) = {
+
+    val t = a - d
+    val u = b - d
+    val v = c - d
+
+    val q = u.crossproduct(v) * t.norm2 + v.crossproduct(t) * u.norm2 + t
+      .crossproduct(u) * v.norm2
+
+    val det2 = 2.0 * determinantVectorsInRows(t, u, v)
+    val center = d + q / det2
+    val radius = (q / det2).norm2
+    (center, radius)
+  }
+
+  /**
+   * Checks weather all points lie within the sphere described by the center and the radius.
+   */
+  def sphereContainsPoints(points: IndexedSeq[EuclideanVector[_3D]], center: EuclideanVector[_3D], radius: Double) = {
+    points.forall(pt => sphereContainsPoint(pt, center, radius))
+  }
+
+  /**
+   * Checks weather the point lies within the sphere described by the center and the radius.
+   */
+  def sphereContainsPoint(point: EuclideanVector[_3D], center: EuclideanVector[_3D], radius: Double) = {
+    val dist = (point - center).norm
+    dist - radius < 1e-8
+  }
+
+  /**
+   * Calculates the signed volume of the tetrahedron, i.e. if all normals point in- or out-wards
+   */
+  def calculateSignedVolume(a: EuclideanVector[_3D],
+                            b: EuclideanVector[_3D],
+                            c: EuclideanVector[_3D],
+                            d: EuclideanVector[_3D]): Double = {
+    val t = b - a
+    val u = c - a
+    val v = d - a
+    determinantVectorsInRows(t, u, v)
+  }
+
+  /**
+   * Helper function to calculate determinant of the matrix when vectors are stacked into the rows.
+   */
+  def determinantVectorsInRows(t: EuclideanVector[_3D], u: EuclideanVector[_3D], v: EuclideanVector[_3D]): Double =
+    (t.x * u.y * v.z + u.x * v.y * t.z + v.x * t.y * u.z - t.x * v.y * u.z - v.x * u.y * t.z - u.x * t.y * v.z)
 
 }
