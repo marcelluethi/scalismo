@@ -131,21 +131,19 @@ class StructuredPointsTests extends ScalismoTestSuite {
     }
 
     it("the anisotropic similarity transform defining the domain is correct and invertible") {
-
       val img = Fixture.img
-
       val trans = img.domain.pointSet.indexToPhysicalCoordinateTransform
       val inverseTrans = img.domain.pointSet.physicalCoordinateToContinuousIndex
 
+      println("origin : " +img.domain.pointSet.origin)
+      println("spacing: " +img.domain.pointSet.spacing)
+      println("directins: " +img.domain.pointSet.directions)
       assert((trans(Point(0, 0, 0)) - img.domain.origin).norm < 0.1)
       assert(inverseTrans(img.domain.origin).toVector.norm < 0.1)
 
-      (trans(Point(img.domain.size(0) - 1, img.domain.size(1) - 1, img.domain.size(2) - 1)) - img.domain.pointSet.boundingBox.oppositeCorner).norm should be < 0.1
-      (inverseTrans(img.domain.pointSet.boundingBox.oppositeCorner) - Point(
-        img.domain.size(0) - 1,
-        img.domain.size(1) - 1,
-        img.domain.size(2) - 1
-      )).norm should be < 0.1
+      val upperRightMostPoint = Point(img.domain.size(0) - 1 , img.domain.size(1) - 1, img.domain.size(2) - 1)
+      (trans(upperRightMostPoint) - img.domain.pointSet.boundingBox.oppositeCorner).norm should be < 0.1
+      (inverseTrans(img.domain.pointSet.boundingBox.oppositeCorner) - upperRightMostPoint).norm should be < 0.1
     }
 
     it("Domain points in chunks returns the correct list of points") {
